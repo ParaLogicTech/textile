@@ -5,3 +5,7 @@
 tags
 digital_printing/docs/current
 node_modules/
+__pycache__
+.idea/
+.vscode/
+dist/
