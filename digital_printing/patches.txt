@@ -1,0 +1,4 @@
+[pre_model_sync]
+digital_printing.patches.reinstall_digital_printing
+
+[post_model_sync]

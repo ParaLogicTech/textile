@@ -6,6 +6,51 @@ app_publisher = "ParaLogic"
 app_description = "Digital Printing ERP Application"
 app_email = "info@paralogic.io"
 app_license = "GNU General Public License (v3)"
+required_apps = ["erpnext"]
+
+after_install = "digital_printing.install.after_install"
+
+override_doctype_class = {
+	"Item": "digital_printing.overrides.item_hooks.ItemDP"
+}
+
+doctype_js = {"Item" : "overrides/item_hooks.js"}
+
+update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
+
+fixtures = [
+	{
+		"doctype": "Custom Field",
+		"filters": {
+			"name": ["in", [
+				'Item-print_item_type',
+				'Item-printing_tab',
+				'Item-sec_design_properties',
+				'Item-design_name',
+				'Item-design_uom',
+				'Item-process_item',
+				'Item-column_break_9y2g0',
+				'Item-design_width',
+				'Item-design_height',
+				'Item-design_gap',
+				'Item-column_break_mjbrg',
+				'Item-design_notes',
+				'Item-sec_fabric_properties',
+				'Item-fabric_item',
+				'Item-fabric_type',
+				'Item-fabric_width',
+				'Item-column_break_vknw6',
+				'Item-fabric_material',
+				'Item-column_break_fb7ki',
+				'Item-fabric_gsm',
+				'Item-fabric_construction',
+				'Item Group-print_item_type',
+				'Item Source-print_item_type',
+				'Brand-print_item_type',
+			]]
+		}
+	},
+]
 
 # Includes in <head>
 # ------------------
