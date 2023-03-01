@@ -7,9 +7,9 @@ from frappe.utils import cstr
 class ItemDP(Item):
 	def validate(self):
 		super().validate()
-		self.clean_design_properties()
-		self.clean_fabric_properties()
 		self.validate_print_item_type()
+		self.validate_fabric_properties()
+		self.validate_design_properties()
 
 	def validate_print_item_type(self):
 		match self.print_item_type:
@@ -40,7 +40,28 @@ class ItemDP(Item):
 				if frappe.get_cached_value("Item", self.process_item, "print_item_type") != "Print Process":
 					frappe.throw(_("Item {0} is not a Print Process Item").format(self.process_item))
 
-	def clean_design_properties(self):
+	def validate_fabric_properties(self):
+		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
+
+		if self.print_item_type == "Fabric":
+			if not self.design_width:
+				frappe.throw(_("Design Width is required for Fabric Item."))
+
+			if not self.fabric_material:
+				frappe.throw(_("Fabric Material is required for Fabric Item."))
+		else:
+			if self.fabric_item:
+				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
+			else:
+				fabric_doc = frappe._dict()
+
+			self.fabric_material = fabric_doc.fabric_material
+			self.fabric_type = fabric_doc.fabric_type
+			self.fabric_width = fabric_doc.fabric_width
+			self.fabric_gsm = fabric_doc.fabric_gsm
+			self.fabric_construction = fabric_doc.fabric_construction
+
+	def validate_design_properties(self):
 		if self.print_item_type != "Printed Design":
 			self.design_name = None
 			self.design_width = None
@@ -51,14 +72,6 @@ class ItemDP(Item):
 			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
-
-	def clean_fabric_properties(self):
-		if self.print_item_type not in ("Printed Design", "Fabric"):
-			self.fabric_material = None
-			self.fabric_type = None
-			self.fabric_width = None
-			self.fabric_gsm = None
-			self.fabric_construction = None
 
 
 def update_item_override_fields(item_fields, args, validate=False):
