@@ -3,6 +3,7 @@ frappe.ui.form.on('Item', {
 		frm.events.setup_custom_queries(frm);
 
 	},
+
 	setup_custom_queries(frm) {
 		frm.set_query("process_item", function() {
 			return {
@@ -15,5 +16,11 @@ frappe.ui.form.on('Item', {
 			}
 		});
 
+	},
+
+	print_item_type(frm) {
+		if (frm.doc.print_item_type != "Printed Design") {
+			frm.set_value("fabric_item", null)
+		}
 	}
 });
