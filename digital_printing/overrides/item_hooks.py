@@ -29,8 +29,6 @@ class ItemDP(Item):
 
 				if not self.design_name:
 					frappe.throw(_("Design Name is mandatory for Printed Design Item"))
-				if not self.design_uom:
-					frappe.throw(_("Design UOM is mandatory for Printed Design Item"))
 				if not self.fabric_item:
 					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
 				if not self.process_item:
@@ -45,11 +43,12 @@ class ItemDP(Item):
 	def clean_design_properties(self):
 		if self.print_item_type != "Printed Design":
 			self.design_name = None
-			self.design_uom = None
-			self.process_item = None
 			self.design_width = None
 			self.design_height = None
+			self.design_uom = None
 			self.design_gap = None
+			self.per_wastage = None
+			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
 
