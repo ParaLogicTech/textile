@@ -43,17 +43,18 @@ class ItemDP(Item):
 	def validate_fabric_properties(self):
 		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
 
-		if self.fabric_item:
-			fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
-		else:
-			fabric_doc = frappe._dict()
-
 		if self.print_item_type == "Fabric":
 			if not self.design_width:
 				frappe.throw(_("Design Width is required."))
+
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required."))
 		else:
+			if self.fabric_item:
+				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
+			else:
+				fabric_doc = frappe._dict()
+
 			self.fabric_material = fabric_doc.fabric_material
 			self.fabric_type = fabric_doc.fabric_type
 			self.fabric_width = fabric_doc.fabric_width
