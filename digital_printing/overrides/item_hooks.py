@@ -45,9 +45,9 @@ class ItemDP(Item):
 			self.design_name = None
 			self.design_width = None
 			self.design_height = None
-			self.default_uom = None
-			self.default_gap = None
-			self.default_wastage = None
+			self.design_uom = None
+			self.design_gap = None
+			self.per_wastage = None
 			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
