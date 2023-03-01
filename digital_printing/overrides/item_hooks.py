@@ -45,10 +45,10 @@ class ItemDP(Item):
 
 		if self.print_item_type == "Fabric":
 			if not self.design_width:
-				frappe.throw(_("Design Width is required."))
+				frappe.throw(_("Design Width is required for Fabric Item."))
 
 			if not self.fabric_material:
-				frappe.throw(_("Fabric Material is required."))
+				frappe.throw(_("Fabric Material is required for Fabric Item."))
 		else:
 			if self.fabric_item:
 				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
