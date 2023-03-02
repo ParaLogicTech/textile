@@ -47,6 +47,9 @@ class PrintOrder(Document):
 			validate_print_item(self.process_item, "Print Process")
 
 	def validate_design_items(self):
+		if self.docstatus == 1 and not self.items:
+			frappe.throw(_("Design Items cannot be empty."))
+
 		for d in self.items:
 			if d.design_image and not (d.design_width or d.design_height):
 				frappe.throw(_("Row #{0}: Image Dimensions cannot be empty").format(d.idx))
@@ -157,6 +160,36 @@ class PrintOrder(Document):
 	@frappe.whitelist()
 	def on_upload_complete(self):
 		self.set_missing_values()
+
+	@frappe.whitelist()
+	def create_printed_design_item(self):
+		if self.docstatus != 1:
+			frappe.throw(_("Submit the document first."))
+
+		for d in self.items:
+			if d.item_code:
+				continue
+
+			item_doc = frappe.get_doc({
+				"doctype": "Item",
+				"item_naming_by": "System Generated",
+				"item_group": "Printed Fabric",
+				"print_item_type": "Printed Design",
+				"item_name": "{0} ({1})".format(d.design_name, self.fabric_item_name),
+				"fabric_item": self.fabric_item,
+				"process_item": self.process_item,
+				"image": d.design_image,
+				"design_name": d.design_name,
+				"design_width": d.design_width,
+				"design_height": d.design_height,
+				"design_uom": d.uom,
+				"design_gap": d.design_gap,
+				"per_wastage": d.per_wastage,
+				"design_notes": d.design_notes,
+			}).save()
+
+			d.db_set("item_code", item_doc.name)
+			d.db_set("item_name", item_doc.item_name)
 
 
 def validate_print_item(item_code, print_item_type):

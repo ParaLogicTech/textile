@@ -17,6 +17,11 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 
 	refresh() {
 		erpnext.hide_company();
+		this.setup_buttons();
+	}
+
+	on_upload_complete() {
+		return this.get_items_from_attachments();
 	}
 
 	setup_queries() {
@@ -35,8 +40,11 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}
 
-	on_upload_complete() {
-		return this.get_items_from_attachments();
+	setup_buttons() {
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.items.filter(d => !d.item_code)) {
+			this.frm.add_custom_button(__('Create Items'), () => this.create_printed_design_item(),
+				__("Create"));
+		}
 	}
 
 	default_gap() {
@@ -213,6 +221,22 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			}
 		});
 	}, 1000);
+
+	create_printed_design_item() {
+		let me = this;
+
+		return frappe.call({
+			method: "create_printed_design_item",
+			doc: me.frm.doc,
+			freeze: true,
+			callback: function(r) {
+				if (!r.exc) {
+					frappe.msgprint(__("Printed Design Items created successfully."))
+					me.frm.reload_doc();
+				}
+			}
+		});
+	}
 };
 
 extend_cscript(cur_frm.cscript, new erpnext.digital_printing.PrintOrder({frm: cur_frm}));
