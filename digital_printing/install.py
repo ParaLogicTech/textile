@@ -17,6 +17,7 @@ fabric_materials = ['Viscose', 'Silk', 'Polyester', 'Cotton']
 def after_install():
 	populate_fabric_type()
 	populate_fabric_material()
+	create_printing_uom()
 
 
 def populate_fabric_type():
@@ -35,3 +36,11 @@ def populate_fabric_material():
 				"doctype": "Fabric Material",
 				"fabric_material": name
 			}).save()
+
+
+def create_printing_uom():
+	if not frappe.db.exists("UOM", "Panel"):
+		frappe.get_doc({
+			"doctype": "UOM",
+			"uom_name": "Panel"
+		}).save(ignore_permissions=True)
