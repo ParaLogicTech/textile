@@ -10,6 +10,9 @@ from PIL import Image
 
 
 class PrintOrder(Document):
+	def onload(self):
+		self.set_missing_values()
+
 	def validate(self):
 		self.set_missing_values()
 		self.validate_customer()
@@ -176,6 +179,8 @@ class PrintOrder(Document):
 				"item_group": "Printed Fabric",
 				"print_item_type": "Printed Design",
 				"item_name": "{0} ({1})".format(d.design_name, self.fabric_item_name),
+				"stock_uom": d.stock_uom,
+				"sales_uom": d.uom,
 				"fabric_item": self.fabric_item,
 				"process_item": self.process_item,
 				"image": d.design_image,
@@ -186,10 +191,27 @@ class PrintOrder(Document):
 				"design_gap": d.design_gap,
 				"per_wastage": d.per_wastage,
 				"design_notes": d.design_notes,
-			}).save()
+			})
 
-			d.db_set("item_code", item_doc.name)
-			d.db_set("item_name", item_doc.item_name)
+			item_doc.append("uom_conversion_graph", {
+				"from_uom": "Panel",
+				"from_qty": 1,
+				"to_uom": "Meter",
+				"to_qty": d.panel_length_meter
+			})
+
+			if "Yard" in [d.stock_uom, d.uom]:
+				item_doc.append("uom_conversion_graph", {
+					"from_uom": "Yard",
+					"from_qty": 1,
+					"to_uom": "Meter",
+					"to_qty": 0.9144
+				})
+
+			item_doc.save()
+
+			frappe.db.set_value(d.doctype, d.name, "item_code", item_doc.name)
+			frappe.db.set_value(d.doctype, d.name, "item_name", item_doc.item_name)
 
 
 def validate_print_item(item_code, print_item_type):
