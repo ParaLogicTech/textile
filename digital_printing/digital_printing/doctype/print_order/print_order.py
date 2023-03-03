@@ -213,6 +213,35 @@ class PrintOrder(Document):
 			frappe.db.set_value(d.doctype, d.name, "item_code", item_doc.name)
 			frappe.db.set_value(d.doctype, d.name, "item_name", item_doc.item_name)
 
+	@frappe.whitelist()
+	def create_design_item_bom(self):
+		if self.docstatus != 1:
+			frappe.throw(_("Submit the document first."))
+
+		for d in self.items:
+			if d.item_code and d.design_bom:
+				continue
+
+			bom_doc = frappe.get_doc({
+				"doctype": "BOM",
+				"item": d.item_code,
+				"quantity": 1
+			})
+
+			bom_doc.append("items", {
+				"item_code": self.fabric_item,
+				"qty": 1
+			})
+			bom_doc.append("items", {
+				"item_code": self.process_item,
+				"qty": 1
+			})
+
+			bom_doc.save()
+			bom_doc.submit()
+
+			frappe.db.set_value(d.doctype, d.name, "design_bom", bom_doc.name)
+
 
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)
