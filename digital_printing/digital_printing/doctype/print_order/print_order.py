@@ -164,83 +164,110 @@ class PrintOrder(Document):
 	def on_upload_complete(self):
 		self.set_missing_values()
 
-	@frappe.whitelist()
-	def create_printed_design_item(self):
-		if self.docstatus != 1:
-			frappe.throw(_("Submit the document first."))
 
-		for d in self.items:
-			if d.item_code:
-				continue
+@frappe.whitelist()
+def make_printed_design_item(print_order):
+	doc = get_print_order_doc(print_order)
 
-			item_doc = frappe.get_doc({
-				"doctype": "Item",
-				"item_naming_by": "System Generated",
-				"item_group": "Printed Fabric",
-				"print_item_type": "Printed Design",
-				"item_name": "{0} ({1})".format(d.design_name, self.fabric_item_name),
-				"stock_uom": d.stock_uom,
-				"sales_uom": d.uom,
-				"fabric_item": self.fabric_item,
-				"process_item": self.process_item,
-				"image": d.design_image,
-				"design_name": d.design_name,
-				"design_width": d.design_width,
-				"design_height": d.design_height,
-				"design_uom": d.uom,
-				"design_gap": d.design_gap,
-				"per_wastage": d.per_wastage,
-				"design_notes": d.design_notes,
-			})
+	if all(d.item_code for d in doc.items):
+		frappe.throw(_("Printed Design Items alerady exist."))
 
+	default_item_group = frappe.db.get_single_value("Digital Printing Settings", "default_item_group_for_printed_design_item")
+
+	if not default_item_group:
+		frappe.throw(_("Select Default Item Group for Printed Design Item in Digital Printing Settings."))
+
+	for d in doc.items:
+		if d.item_code:
+			continue
+
+		item_doc = frappe.new_doc("Item")
+		item_doc.update({
+			"item_naming_by": item_doc.item_naming_by or "Item Code",
+			"item_group": default_item_group,
+			"print_item_type": "Printed Design",
+			"item_name": "{0} ({1})".format(d.design_name, doc.fabric_item_name),
+			"stock_uom": d.stock_uom,
+			"sales_uom": d.uom,
+			"fabric_item": doc.fabric_item,
+			"process_item": doc.process_item,
+			"image": d.design_image,
+			"design_name": d.design_name,
+			"design_width": d.design_width,
+			"design_height": d.design_height,
+			"design_gap": d.design_gap,
+			"per_wastage": d.per_wastage,
+			"design_notes": d.design_notes,
+		})
+
+		item_doc.append("uom_conversion_graph", {
+			"from_uom": "Panel",
+			"from_qty": 1,
+			"to_uom": "Meter",
+			"to_qty": d.panel_length_meter
+		})
+
+		if "Yard" in [d.stock_uom, d.uom]:
 			item_doc.append("uom_conversion_graph", {
-				"from_uom": "Panel",
+				"from_uom": "Yard",
 				"from_qty": 1,
 				"to_uom": "Meter",
-				"to_qty": d.panel_length_meter
+				"to_qty": 0.9144
 			})
 
-			if "Yard" in [d.stock_uom, d.uom]:
-				item_doc.append("uom_conversion_graph", {
-					"from_uom": "Yard",
-					"from_qty": 1,
-					"to_uom": "Meter",
-					"to_qty": 0.9144
-				})
+		item_doc.save()
 
-			item_doc.save()
+		d.db_set({
+			"item_code": item_doc.name,
+			"item_name": item_doc.item_name
+		})
 
-			frappe.db.set_value(d.doctype, d.name, "item_code", item_doc.name)
-			frappe.db.set_value(d.doctype, d.name, "item_name", item_doc.item_name)
 
-	@frappe.whitelist()
-	def create_design_item_bom(self):
-		if self.docstatus != 1:
-			frappe.throw(_("Submit the document first."))
+@frappe.whitelist()
+def make_design_item_bom(print_order):
+	doc = get_print_order_doc(print_order)
 
-		for d in self.items:
-			if d.item_code and d.design_bom:
-				continue
+	if not all(d.item_code for d in doc.items):
+		frappe.throw(_("Create Printed Design Item first."))
 
-			bom_doc = frappe.get_doc({
-				"doctype": "BOM",
-				"item": d.item_code,
-				"quantity": 1
-			})
+	if all(d.design_bom for d in doc.items):
+		frappe.throw(_("BOM alerady exist for all items."))
 
-			bom_doc.append("items", {
-				"item_code": self.fabric_item,
-				"qty": 1
-			})
-			bom_doc.append("items", {
-				"item_code": self.process_item,
-				"qty": 1
-			})
+	for d in doc.items:
+		if d.design_bom:
+			continue
 
-			bom_doc.save()
-			bom_doc.submit()
+		bom_doc = frappe.get_doc({
+			"doctype": "BOM",
+			"item": d.item_code,
+			"quantity": 1
+		})
 
-			frappe.db.set_value(d.doctype, d.name, "design_bom", bom_doc.name)
+		bom_doc.append("items", {
+			"item_code": doc.fabric_item,
+			"qty": 1
+		})
+		bom_doc.append("items", {
+			"item_code": doc.process_item,
+			"qty": 1
+		})
+
+		bom_doc.save()
+		bom_doc.submit()
+
+		d.db_set({"design_bom": bom_doc.name})
+
+
+def get_print_order_doc(print_order):
+	if frappe.db.exists('Print Order', print_order):
+		doc = frappe.get_doc('Print Order', print_order)
+	else:
+		frappe.throw(_('Print Order {0} does not exist.'.format(print_order)))
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Submit the Print Order first."))
+
+	return doc
 
 
 def validate_print_item(item_code, print_item_type):

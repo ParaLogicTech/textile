@@ -43,11 +43,11 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	setup_buttons() {
 		if (this.frm.doc.docstatus == 1) {
 			if (this.frm.doc.items.filter(d => !d.item_code).length) {
-				this.frm.add_custom_button(__('Create Items'), () => this.create_printed_design_item(),
+				this.frm.add_custom_button(__('Create Items'), () => this.make_printed_design_item(),
 					__("Create"));
 
 			} else if (this.frm.doc.items.filter( d => !d.design_bom).length) {
-				this.frm.add_custom_button(__('Create BOM'), () => this.create_design_item_bom(),
+				this.frm.add_custom_button(__('Create BOM'), () => this.make_design_item_bom(),
 					__("Create"));
 			}
 		}
@@ -228,12 +228,14 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}, 1000);
 
-	create_printed_design_item() {
+	make_printed_design_item() {
 		let me = this;
 
 		return frappe.call({
-			method: "create_printed_design_item",
-			doc: me.frm.doc,
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.make_printed_design_item",
+			args: {
+				print_order: this.frm.doc.name
+			},
 			freeze: true,
 			callback: function(r) {
 				if (!r.exc) {
@@ -244,12 +246,14 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}
 
-	create_design_item_bom() {
+	make_design_item_bom() {
 		let me = this;
 
 		return frappe.call({
-			method: "create_design_item_bom",
-			doc: me.frm.doc,
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.make_design_item_bom",
+			args: {
+				print_order: this.frm.doc.name
+			},
 			freeze: true,
 			callback: function(r) {
 				if (!r.exc) {
