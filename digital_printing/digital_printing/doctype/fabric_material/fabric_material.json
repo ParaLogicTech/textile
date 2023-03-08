@@ -20,6 +20,7 @@
    "unique": 1
   },
   {
+   "allow_in_quick_entry": 1,
    "fieldname": "abbreviation",
    "fieldtype": "Data",
    "label": "Abbreviation"
@@ -27,7 +28,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-03-01 15:03:01.086211",
+ "modified": "2023-03-02 17:54:15.852328",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Material",

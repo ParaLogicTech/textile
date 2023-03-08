@@ -44,11 +44,15 @@ class ItemDP(Item):
 		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
 
 		if self.print_item_type == "Fabric":
-			if not self.design_width:
-				frappe.throw(_("Design Width is required for Fabric Item."))
+			if not self.fabric_width:
+				frappe.throw(_("Fabric Width is required for Fabric Item."))
 
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required for Fabric Item."))
+
+			if self.fabric_gsm:
+				self.net_weight_per_unit = self.fabric_gsm * self.fabric_width * 0.0254 / 1000
+
 		else:
 			if self.fabric_item:
 				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)

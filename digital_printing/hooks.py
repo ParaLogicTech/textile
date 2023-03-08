@@ -45,6 +45,7 @@ fixtures = [
 				'Item-column_break_vknw6',
 				'Item-fabric_construction',
 				'Item-fabric_item',
+				'Item-fabric_item_name',
 				'Item Group-print_item_type',
 				'Item Source-print_item_type',
 				'Brand-print_item_type',
