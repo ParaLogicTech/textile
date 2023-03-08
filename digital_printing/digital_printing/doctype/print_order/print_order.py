@@ -182,8 +182,10 @@ def make_printed_design_item(print_order):
 			continue
 
 		item_doc = frappe.new_doc("Item")
+		if item_doc.item_naming_by == "Item Code":
+			item_doc.item_naming_by = "Naming Series"
+
 		item_doc.update({
-			"item_naming_by": item_doc.item_naming_by or "Item Code",
 			"item_group": default_item_group,
 			"print_item_type": "Printed Design",
 			"item_name": "{0} ({1})".format(d.design_name, doc.fabric_item_name),
