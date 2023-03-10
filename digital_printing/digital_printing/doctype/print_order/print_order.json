@@ -50,7 +50,8 @@
   "column_break_tll13",
   "total_fabric_length",
   "column_break_ufxoo",
-  "total_panel_qty"
+  "total_panel_qty",
+  "status"
  ],
  "fields": [
   {
@@ -333,12 +334,26 @@
    "fieldtype": "Float",
    "label": "Default Gap (Inch)",
    "precision": "1"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nTo Create Items\nTo Receive Fabric\nTo Confirm Order\nTo Order Production\nTo Finish Production\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-03-01 13:29:27.594934",
+ "modified": "2023-03-10 18:35:50.113868",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

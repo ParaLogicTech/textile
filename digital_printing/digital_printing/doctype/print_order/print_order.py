@@ -25,6 +25,24 @@ class PrintOrder(Document):
 		self.set_design_details_from_image()
 		self.calculate_totals()
 
+	def set_status(self, status=None, update=False, update_modified=True):
+		previous_status = self.status
+
+		if self.docstatus == 0:
+			self.status = "Draft"
+
+		elif self.docstatus == 1:
+			if not all(d.item_code and d.design_bom for d in self.items):
+				self.status = "To Create Items"
+
+		else:
+			self.status = "Cancelled"
+
+		self.add_status_comment(previous_status)
+
+		if update:
+			self.db_set('status', self.status, update_modified=update_modified)
+
 	def validate_customer(self):
 		if self.get("customer"):
 			validate_party_frozen_disabled("Customer", self.customer)
