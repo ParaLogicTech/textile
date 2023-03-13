@@ -43,7 +43,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	setup_buttons() {
 		if (this.frm.doc.docstatus == 1) {
 			if (this.frm.doc.items.filter(d => !d.item_code && !d.design_bom).length) {
-				this.frm.add_custom_button(__('Create Item and BOM'), () => this.create_design_items_and_boms(),
+				this.frm.add_custom_button(__('Create Items and BOMs'), () => this.create_design_items_and_boms(),
 					__("Create"));
 			}
 		}
