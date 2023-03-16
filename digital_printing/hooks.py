@@ -11,10 +11,18 @@ required_apps = ["erpnext"]
 after_install = "digital_printing.install.after_install"
 
 override_doctype_class = {
-	"Item": "digital_printing.overrides.item_hooks.ItemDP"
+	"Item": "digital_printing.overrides.item_hooks.ItemDP",
+	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 }
 
-doctype_js = {"Item" : "overrides/item_hooks.js"}
+override_doctype_dashboards = {
+	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_invoice_dashboard",
+}
+
+doctype_js = {
+    "Item": "overrides/item_hooks.js",
+    "Sales Order": "overrides/sales_order_hooks.js",
+}
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
 
@@ -30,7 +38,6 @@ fixtures = [
 				'Item-design_width',
 				'Item-design_height',
 				'Item-column_break_9y2g0',
-				'Item-design_uom',
 				'Item-design_gap',
 				'Item-per_wastage',
 				'Item-column_break_mjbrg',
@@ -49,6 +56,8 @@ fixtures = [
 				'Item Group-print_item_type',
 				'Item Source-print_item_type',
 				'Brand-print_item_type',
+				'Sales Order Item-print_order',
+				'Sales Order Item-print_order_item',
 			]]
 		}
 	},

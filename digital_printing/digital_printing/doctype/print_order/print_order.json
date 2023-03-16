@@ -7,13 +7,14 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "naming_series",
+  "title",
   "customer",
   "customer_name",
   "is_fabric_provided_by_customer",
   "column_break_mb5rm",
   "customer_reference",
   "column_break_kji8i",
+  "naming_series",
   "company",
   "transaction_date",
   "delivery_date",
@@ -51,7 +52,9 @@
   "total_fabric_length",
   "column_break_ufxoo",
   "total_panel_qty",
-  "status"
+  "tab_status",
+  "status",
+  "per_ordered"
  ],
  "fields": [
   {
@@ -339,21 +342,43 @@
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nTo Create Items\nTo Receive Fabric\nTo Confirm Order\nTo Order Production\nTo Finish Production\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Receive Fabric\nTo Order Production\nTo Finish Production\nTo Deliver\nTo Bill\nCompleted\nCancelled",
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "tab_status",
+   "fieldtype": "Tab Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "per_ordered",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Ordered",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "no_copy": 1,
+   "print_hide": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-03-10 18:35:50.113868",
+ "modified": "2023-03-16 17:11:59.757581",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
@@ -396,6 +421,7 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "customer",
+ "title_field": "title",
  "track_changes": 1,
  "track_seen": 1
 }
