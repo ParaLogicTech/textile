@@ -53,6 +53,8 @@ fixtures = [
 				'Item Group-print_item_type',
 				'Item Source-print_item_type',
 				'Brand-print_item_type',
+				'Sales Order Item-print_order',
+				'Sales Order Item-print_order_item',
 			]]
 		}
 	},

@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
-from frappe.utils import cstr
+from frappe.utils import flt
 
 
 class ItemDP(Item):
@@ -10,6 +10,7 @@ class ItemDP(Item):
 		self.validate_print_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
+		self.calculate_net_weight_per_unit()
 
 	def validate_print_item_type(self):
 		match self.print_item_type:
@@ -50,9 +51,6 @@ class ItemDP(Item):
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required for Fabric Item."))
 
-			if self.fabric_gsm:
-				self.net_weight_per_unit = self.fabric_gsm * self.fabric_width * 0.0254 / 1000
-
 		else:
 			if self.fabric_item:
 				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
@@ -76,6 +74,10 @@ class ItemDP(Item):
 			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
+
+	def calculate_net_weight_per_unit(self):
+		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:
+			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254 / 1000
 
 
 def update_item_override_fields(item_fields, args, validate=False):
