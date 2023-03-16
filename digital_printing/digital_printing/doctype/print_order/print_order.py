@@ -25,6 +25,7 @@ class PrintOrder(StatusUpdater):
 		self.validate_process_item()
 		self.validate_design_items()
 		self.set_status()
+		self.set_title()
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
@@ -54,6 +55,9 @@ class PrintOrder(StatusUpdater):
 
 		if update:
 			self.db_set('status', self.status, update_modified=update_modified)
+
+	def set_title(self):
+		self.title = self.customer_name or self.customer
 
 	def set_ordered_status(self, update=False, update_modified=True):
 		data = self.get_ordered_status_data()

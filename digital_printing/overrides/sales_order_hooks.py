@@ -23,5 +23,5 @@ class SalesOrderDP(SalesOrder):
 def override_sales_invoice_dashboard(data):
 	data["internal_links"]["Print Order"] = ["items", "print_order"]
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Reference")][0]
-	ref_section["items"].insert(1, "Print Order")
+	ref_section["items"].insert(0, "Print Order")
 	return data
