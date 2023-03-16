@@ -51,7 +51,9 @@
   "total_fabric_length",
   "column_break_ufxoo",
   "total_panel_qty",
-  "status"
+  "tab_status",
+  "status",
+  "per_ordered"
  ],
  "fields": [
   {
@@ -339,7 +341,6 @@
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -348,12 +349,26 @@
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "tab_status",
+   "fieldtype": "Tab Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "per_ordered",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Ordered",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-03-10 18:35:50.113868",
+ "modified": "2023-03-16 13:21:55.135342",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

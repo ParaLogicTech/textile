@@ -11,7 +11,8 @@ required_apps = ["erpnext"]
 after_install = "digital_printing.install.after_install"
 
 override_doctype_class = {
-	"Item": "digital_printing.overrides.item_hooks.ItemDP"
+	"Item": "digital_printing.overrides.item_hooks.ItemDP",
+	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 }
 
 doctype_js = {"Item" : "overrides/item_hooks.js"}

@@ -3,14 +3,19 @@
 
 import frappe
 from frappe import _
-from frappe.model.document import Document
 from frappe.utils import flt
+from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.party import validate_party_frozen_disabled
+from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 
 
-class PrintOrder(Document):
+class PrintOrder(StatusUpdater):
 	def onload(self):
+		self.set_missing_values()
+
+	@frappe.whitelist()
+	def on_upload_complete(self):
 		self.set_missing_values()
 
 	def validate(self):
@@ -19,6 +24,7 @@ class PrintOrder(Document):
 		self.validate_fabric_item()
 		self.validate_process_item()
 		self.validate_design_items()
+		self.set_status()
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
@@ -34,6 +40,12 @@ class PrintOrder(Document):
 		elif self.docstatus == 1:
 			if not all(d.item_code and d.design_bom for d in self.items):
 				self.status = "To Create Items"
+			elif self.per_ordered < 100:
+				self.status = "To Confirm Order"
+
+			#TODO: logic for rest of the statuses
+			else:
+				self.status = "Completed"
 
 		else:
 			self.status = "Cancelled"
@@ -42,6 +54,46 @@ class PrintOrder(Document):
 
 		if update:
 			self.db_set('status', self.status, update_modified=update_modified)
+
+	def set_ordered_status(self, update=False, update_modified=True):
+		data = self.get_ordered_status_data()
+
+		for d in self.items:
+			d.ordered_qty = flt(data.ordered_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'ordered_qty': d.ordered_qty
+				}, update_modified=update_modified)
+
+		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
+		if update:
+			self.db_set({
+				'per_ordered': self.per_ordered
+			}, update_modified=update_modified)
+
+	def get_ordered_status_data(self):
+		out = frappe._dict()
+		out.ordered_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				ordered_data = frappe.db.sql("""
+					SELECT i.print_order_item, i.qty
+					FROM `tabSales Order Item` i
+					INNER JOIN `tabSales Order` s ON s.name = i.parent
+					WHERE s.docstatus = 1 AND i.print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in ordered_data:
+					out.ordered_qty_map.setdefault(d.print_order_item, 0)
+					out.ordered_qty_map[d.print_order_item] += d.qty
+
+		return out
+
+	def validate_ordered_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('ordered_qty', 'qty', self.items,
+			from_doctype=from_doctype, row_names=row_names)
 
 	def validate_customer(self):
 		if self.get("customer"):
@@ -178,9 +230,16 @@ class PrintOrder(Document):
 		self.total_fabric_length = flt(self.total_fabric_length, self.precision("total_fabric_length"))
 		self.total_panel_qty = flt(self.total_panel_qty, self.precision("total_panel_qty"))
 
-	@frappe.whitelist()
-	def on_upload_complete(self):
-		self.set_missing_values()
+
+def validate_print_item(item_code, print_item_type):
+	item = frappe.get_cached_doc("Item", item_code)
+
+	if print_item_type:
+		if item.print_item_type != print_item_type:
+			frappe.throw(_("{0} is not a {1} Item").format(frappe.bold(item_code), print_item_type))
+
+	from erpnext.stock.doctype.item.item import validate_end_of_life
+	validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
 
 @frappe.whitelist()
@@ -293,12 +352,40 @@ def make_design_bom(design_item, fabric_item, process_item):
 	return bom_doc
 
 
-def validate_print_item(item_code, print_item_type):
-	item = frappe.get_cached_doc("Item", item_code)
+@frappe.whitelist()
+def make_sales_order(source_name, target_doc=None):
+	def set_missing_values(source, target):
+		target.run_method("set_missing_values")
+		target.run_method("calculate_taxes_and_totals")
+		target.run_method("set_payment_schedule")
 
-	if print_item_type:
-		if item.print_item_type != print_item_type:
-			frappe.throw(_("{0} is not a {1} Item").format(frappe.bold(item_code), print_item_type))
+	def item_condition(source, source_parent, target_parent):
+		if source.name in [d.print_order_item for d in target_parent.get('items') if d.print_order_item]:
+			return False
 
-	from erpnext.stock.doctype.item.item import validate_end_of_life
-	validate_end_of_life(item.name, item.end_of_life, item.disabled)
+		return abs(source.ordered_qty) < abs(source.qty)
+
+	def update_item(source, target, source_parent, target_parent):
+		target.qty = flt(source.qty) - flt(source.ordered_qty)
+
+	doc = get_mapped_doc("Print Order", source_name,	{
+		"Print Order": {
+			"doctype": "Sales Order",
+			"validation": {
+				"docstatus": ["=", 1],
+			}
+		},
+		"Print Order Item": {
+			"doctype": "Sales Order Item",
+			"field_map": {
+				"name": "print_order_item",
+				"parent": "print_order",
+				"bom": "bom",
+				"item_code": "item_code"
+			},
+			"postprocess": update_item,
+			"condition": item_condition,
+		}
+	}, target_doc, set_missing_values)
+
+	return doc
