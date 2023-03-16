@@ -320,7 +320,7 @@ def make_design_item(design_item_row, fabric_item, process_item):
 		"to_qty": design_item_row.panel_length_meter
 	})
 
-	if "Yard" in [design_item_row.stock_uom, design_item_row.uom]:
+	if "Yard" in [design_item_row.length_uom, design_item_row.uom]:
 		item_doc.append("uom_conversion_graph", {
 			"from_uom": "Yard",
 			"from_qty": 1,
