@@ -78,6 +78,8 @@ class ItemDP(Item):
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:
 			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
+			self.net_weight_per_unit = flt(self.net_weight_per_unit, self.precision("net_weight_per_unit"))
+
 			self.gross_weight_per_unit = 0
 			self.weight_uom = "Gram"
 

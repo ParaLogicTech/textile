@@ -365,6 +365,9 @@ def make_sales_order(source_name, target_doc=None):
 		target.run_method("set_payment_schedule")
 
 	def item_condition(source, source_parent, target_parent):
+		if not source.item_code:
+			return False
+
 		if source.name in [d.print_order_item for d in target_parent.get('items') if d.print_order_item]:
 			return False
 

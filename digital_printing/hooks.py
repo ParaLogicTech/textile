@@ -19,7 +19,10 @@ override_doctype_dashboards = {
 	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_invoice_dashboard",
 }
 
-doctype_js = {"Item" : "overrides/item_hooks.js"}
+doctype_js = {
+    "Item": "overrides/item_hooks.js",
+    "Sales Order": "overrides/sales_order_hooks.js",
+}
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
 
