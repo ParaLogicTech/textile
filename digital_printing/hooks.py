@@ -30,7 +30,6 @@ fixtures = [
 				'Item-design_width',
 				'Item-design_height',
 				'Item-column_break_9y2g0',
-				'Item-design_uom',
 				'Item-design_gap',
 				'Item-per_wastage',
 				'Item-column_break_mjbrg',
