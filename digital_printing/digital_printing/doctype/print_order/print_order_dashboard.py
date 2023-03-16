@@ -5,10 +5,14 @@ def get_data():
 
 	return {
 		'fieldname': 'print_order',
+		'internal_links': {
+			'Item': ['items', 'item_code'],
+			'BOM': ['items', 'design_bom']
+		},
 		'transactions': [
 			{
 				'label': _("Reference"),
-				'items': ['Sales Order']
+				'items': ['Item', 'BOM', 'Sales Order']
 			},
 		]
 	}
