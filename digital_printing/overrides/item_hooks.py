@@ -6,11 +6,11 @@ from frappe.utils import flt
 
 class ItemDP(Item):
 	def validate(self):
+		self.calculate_net_weight_per_unit()
 		super().validate()
 		self.validate_print_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
-		self.calculate_net_weight_per_unit()
 
 	def validate_print_item_type(self):
 		match self.print_item_type:
@@ -77,7 +77,9 @@ class ItemDP(Item):
 
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:
-			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254 / 1000
+			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
+			self.gross_weight_per_unit = 0
+			self.weight_uom = "Gram"
 
 
 def update_item_override_fields(item_fields, args, validate=False):

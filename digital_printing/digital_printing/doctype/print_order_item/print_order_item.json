@@ -332,7 +332,9 @@
   {
    "fieldname": "ordered_qty",
    "fieldtype": "Float",
-   "label": "Ordered Qty"
+   "label": "Ordered Qty",
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "status_section",
@@ -343,7 +345,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-03-15 13:02:39.486242",
+ "modified": "2023-03-16 17:35:21.916156",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order Item",
