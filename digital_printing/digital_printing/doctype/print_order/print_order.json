@@ -12,7 +12,7 @@
   "customer_name",
   "is_fabric_provided_by_customer",
   "column_break_mb5rm",
-  "customer_reference",
+  "notes",
   "column_break_kji8i",
   "naming_series",
   "company",
@@ -32,7 +32,7 @@
   "process_item",
   "column_break_o7rkb",
   "process_item_name",
-  "design_details_section",
+  "order_defaults_section",
   "default_uom",
   "column_break_zafpu",
   "default_qty_type",
@@ -70,13 +70,6 @@
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "label": "Customer Name",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "customer.reference",
-   "fieldname": "customer_reference",
-   "fieldtype": "Data",
-   "label": "Reference",
    "read_only": 1
   },
   {
@@ -164,11 +157,6 @@
    "label": "Fabric Width (Inch)",
    "precision": "1",
    "read_only": 1
-  },
-  {
-   "fieldname": "design_details_section",
-   "fieldtype": "Section Break",
-   "label": "Design Details"
   },
   {
    "fieldname": "column_break_vz52p",
@@ -373,12 +361,24 @@
    "label": "Title",
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "order_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Order Defaults"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "no_copy": 1,
+   "print_hide": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-03-20 17:29:56.049084",
+ "modified": "2023-03-21 15:59:50.253256",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
