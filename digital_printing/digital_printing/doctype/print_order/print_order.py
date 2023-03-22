@@ -27,6 +27,7 @@ class PrintOrder(StatusUpdater):
 		self.set_missing_values()
 
 	def validate(self):
+		self.validate_order_defaults()
 		self.set_missing_values()
 		self.validate_customer()
 		self.validate_fabric_item()
@@ -44,10 +45,9 @@ class PrintOrder(StatusUpdater):
 		self.set_order_defaults_for_customer()
 
 	def set_order_defaults_for_customer(self):
-		if not frappe.db.exists("Customer", self.customer):
-			frappe.throw(_("Customer not found"))
-
 		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
+		if not customer_defaults:
+			frappe.throw(_("Customer {0} not found").format(self.customer))
 
 		if any(val for val in customer_defaults.values()):
 			return
@@ -124,6 +124,9 @@ class PrintOrder(StatusUpdater):
 	def validate_ordered_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('ordered_qty', 'qty', self.items,
 			from_doctype=from_doctype, row_names=row_names)
+
+	def validate_order_defaults(self):
+		validate_uom_and_qty_type(self)
 
 	def validate_customer(self):
 		if self.get("customer"):
@@ -222,6 +225,7 @@ class PrintOrder(StatusUpdater):
 		}
 
 		for d in self.items:
+			validate_uom_and_qty_type(d)
 			self.round_floats_in(d)
 
 			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap)
@@ -440,3 +444,31 @@ def get_order_defaults_from_customer(customer):
 			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
 
 	return customer_order_defaults
+
+
+def validate_uom_and_qty_type(doc):
+	fn_map = frappe._dict()
+
+	if doc.doctype == "Print Order":
+		fn_map.uom_fn = 'default_uom'
+		fn_map.length_uom_fn = 'default_length_uom'
+		fn_map.qty_type_fn = 'default_qty_type'
+
+	elif doc.doctype == "Print Order Item":
+		fn_map.uom_fn = 'uom'
+		fn_map.length_uom_fn = 'length_uom'
+		fn_map.qty_type_fn = 'qty_type'
+
+	else:
+		fn_map.uom_fn = 'default_printing_uom'
+		fn_map.length_uom_fn = 'default_printing_length_uom'
+		fn_map.qty_type_fn = 'default_printing_qty_type'
+
+	if doc.get(fn_map.uom_fn) == "Panel":
+		doc.set(fn_map.qty_type_fn, "Print Qty")
+	else:
+		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
+
+
+def customer_order_default_validate(self, hook):
+	validate_uom_and_qty_type(self)

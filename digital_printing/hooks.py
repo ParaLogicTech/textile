@@ -10,6 +10,12 @@ required_apps = ["erpnext"]
 
 after_install = "digital_printing.install.after_install"
 
+doc_events = {
+	"Customer": {
+		"validate": "digital_printing.digital_printing.doctype.print_order.print_order.customer_order_default_validate",
+	}
+}
+
 override_doctype_class = {
 	"Item": "digital_printing.overrides.item_hooks.ItemDP",
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
