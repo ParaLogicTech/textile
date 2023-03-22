@@ -21,6 +21,7 @@ override_doctype_dashboards = {
 
 doctype_js = {
     "Item": "overrides/item_hooks.js",
+    "Customer": "overrides/customer_hooks.js",
     "Sales Order": "overrides/sales_order_hooks.js",
 }
 
@@ -31,6 +32,11 @@ fixtures = [
 		"doctype": "Custom Field",
 		"filters": {
 			"name": ["in", [
+				'Customer-printing_tab',
+				'Customer-default_printing_uom',
+				'Customer-default_printing_gap',
+				'Customer-default_printing_qty_type',
+				'Customer-default_printing_length_uom',
 				'Item-print_item_type',
 				'Item-printing_tab',
 				'Item-sec_design_properties',

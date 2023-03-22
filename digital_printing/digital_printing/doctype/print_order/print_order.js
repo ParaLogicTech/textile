@@ -53,6 +53,10 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		}
 	}
 
+	customer() {
+		this.get_order_defaults_from_customer();
+	}
+
 	default_gap() {
 		this.override_default_value_in_items('design_gap');
 	}
@@ -247,6 +251,22 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		frappe.model.open_mapped_doc({
 			method: "digital_printing.digital_printing.doctype.print_order.print_order.make_sales_order",
 			frm: this.frm
+		});
+	}
+
+	get_order_defaults_from_customer() {
+		if (!this.frm.doc.customer) return
+
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_order_defaults_from_customer",
+			args: {
+				customer: this.frm.doc.customer
+			},
+			callback: (r) => {
+				if (r.message) {
+					this.frm.set_value(r.message);
+				}
+			}
 		});
 	}
 };

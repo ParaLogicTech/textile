@@ -10,6 +10,14 @@ from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 
 
+default_fields_map = {
+	"default_printing_uom": "default_uom",
+	"default_printing_gap": "default_gap",
+	"default_printing_qty_type": "default_qty_type",
+	"default_printing_length_uom": "default_length_uom"
+}
+
+
 class PrintOrder(StatusUpdater):
 	def onload(self):
 		self.set_missing_values()
@@ -31,6 +39,24 @@ class PrintOrder(StatusUpdater):
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
 		self.calculate_totals()
+
+	def on_submit(self):
+		self.set_order_defaults_for_customer()
+
+	def set_order_defaults_for_customer(self):
+		if not frappe.db.exists("Customer", self.customer):
+			frappe.throw(_("Customer not found"))
+
+		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
+
+		if any(val for val in customer_defaults.values()):
+			return
+
+		new_values_to_update = {}
+		for customer_fn, print_order_fn in default_fields_map.items():
+			new_values_to_update[customer_fn] = self.get(print_order_fn)
+
+		frappe.db.set_value("Customer", self.customer, new_values_to_update, notify=True)
 
 	def set_status(self, status=None, update=False, update_modified=True):
 		previous_status = self.status
@@ -379,6 +405,9 @@ def make_sales_order(source_name, target_doc=None):
 	doc = get_mapped_doc("Print Order", source_name,	{
 		"Print Order": {
 			"doctype": "Sales Order",
+			"field_map": {
+				"delivery_date": "delivery_date"
+			},
 			"validation": {
 				"docstatus": ["=", 1],
 			}
@@ -397,3 +426,17 @@ def make_sales_order(source_name, target_doc=None):
 	}, target_doc, set_missing_values)
 
 	return doc
+
+
+@frappe.whitelist()
+def get_order_defaults_from_customer(customer):
+	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
+	if not customer_defaults:
+		frappe.throw(_("Customer {0} not found").format(customer))
+
+	customer_order_defaults = {}
+	for customer_fn, print_order_fn in default_fields_map.items():
+		if customer_defaults.get(customer_fn):
+			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
+
+	return customer_order_defaults
