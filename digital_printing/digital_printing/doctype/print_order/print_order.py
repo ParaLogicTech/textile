@@ -20,29 +20,32 @@ default_fields_map = {
 
 class PrintOrder(StatusUpdater):
 	def onload(self):
-		self.set_missing_values()
+		if self.docstatus == 0:
+			self.set_missing_values()
+			self.calculate_totals()
 
 	@frappe.whitelist()
 	def on_upload_complete(self):
 		self.set_missing_values()
+		self.calculate_totals()
 
 	def validate(self):
-		self.validate_order_defaults()
 		self.set_missing_values()
 		self.validate_customer()
 		self.validate_fabric_item()
 		self.validate_process_item()
 		self.validate_design_items()
+		self.validate_order_defaults()
+		self.calculate_totals()
 		self.set_status()
 		self.set_title()
+
+	def on_submit(self):
+		self.set_order_defaults_for_customer()
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
-		self.calculate_totals()
-
-	def on_submit(self):
-		self.set_order_defaults_for_customer()
 
 	def set_order_defaults_for_customer(self):
 		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
@@ -190,9 +193,9 @@ class PrintOrder(StatusUpdater):
 
 	def set_design_details_from_image(self):
 		for d in self.items:
-			if d.design_width and d.design_height:
-				continue
 			if not d.design_image:
+				continue
+			if d.design_width and d.design_height:
 				continue
 
 			design_details = self.get_image_details(d.design_image)
@@ -203,14 +206,17 @@ class PrintOrder(StatusUpdater):
 		doc_name = frappe.get_value('File', filters={'file_url': image_url})
 
 		if not doc_name:
-			frappe.throw(_("File not found error"))
+			frappe.throw(_("File {0} not found").format(image_url))
 
-		out = frappe._dict()
 		file_doc = frappe.get_doc("File", doc_name)
 
-		out.design_name = file_doc.file_name.split('.')[0]
+		out = frappe._dict()
+		out.design_name = ".".join(file_doc.file_name.split('.')[:-1]) or file_doc.file_name
+
 		im = Image.open(file_doc.get_full_path())
-		out.design_width, out.design_height = im.size[0] / 10, im.size[1] / 10
+		out.design_width = im.size[0] / 10
+		out.design_height = im.size[1] / 10
+
 		return out
 
 	def calculate_totals(self):
