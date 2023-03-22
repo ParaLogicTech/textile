@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+ "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Digital Printing Documents</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
  "creation": "2023-03-08 13:30:34.124082",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -14,8 +14,26 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Transactions",
+   "label": "Settings",
    "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Digital Printing Settings",
+   "link_count": 0,
+   "link_to": "Digital Printing Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Transactions",
+   "link_count": 7,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -26,6 +44,66 @@
    "link_count": 0,
    "link_to": "Print Order",
    "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Order",
+   "link_count": 0,
+   "link_to": "Sales Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Work Order",
+   "link_count": 0,
+   "link_to": "Work Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Entry",
+   "link_count": 0,
+   "link_to": "Stock Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Packing Slip",
+   "link_count": 0,
+   "link_to": "Packing Slip",
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   },
@@ -33,9 +111,39 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Masters",
-   "link_count": 2,
+   "link_count": 5,
    "onboard": 0,
    "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "BOM",
+   "link_count": 0,
+   "link_to": "BOM",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -56,27 +164,9 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 1,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Digital Printing Settings",
-   "link_count": 0,
-   "link_to": "Digital Printing Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
   }
  ],
- "modified": "2023-03-08 14:49:05.715453",
+ "modified": "2023-03-21 15:23:18.644403",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",
@@ -88,21 +178,21 @@
  "sequence_id": 21.0,
  "shortcuts": [
   {
-   "color": "Orange",
-   "doc_view": "List",
-   "format": "{} Print Orders",
-   "label": "Print Order",
-   "link_to": "Print Order",
-   "stats_filter": "{\"docstatus\":[\"=\",\"1\"]}",
-   "type": "DocType"
-  },
-  {
    "color": "Blue",
    "doc_view": "List",
    "format": "{} Print Items",
    "label": "Item",
    "link_to": "Item",
    "stats_filter": "{\"print_item_type\":[\"is\",\"set\"],\"disabled\":[\"=\",0]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} In Progress",
+   "label": "Print Order",
+   "link_to": "Print Order",
+   "stats_filter": "{\"docstatus\":[\"=\",\"1\"],\"status\":[\"!=\",\"Completed\"]}",
    "type": "DocType"
   },
   {
