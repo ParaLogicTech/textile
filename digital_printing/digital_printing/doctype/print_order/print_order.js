@@ -25,6 +25,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	on_upload_complete() {
+		this.frm.dirty();
 		return this.get_items_from_attachments();
 	}
 
