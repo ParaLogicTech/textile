@@ -12,7 +12,7 @@
   "customer_name",
   "is_fabric_provided_by_customer",
   "column_break_mb5rm",
-  "customer_reference",
+  "notes",
   "column_break_kji8i",
   "naming_series",
   "company",
@@ -32,7 +32,7 @@
   "process_item",
   "column_break_o7rkb",
   "process_item_name",
-  "design_details_section",
+  "order_defaults_section",
   "default_uom",
   "column_break_zafpu",
   "default_qty_type",
@@ -66,17 +66,11 @@
    "reqd": 1
   },
   {
+   "depends_on": "eval:doc.customer && doc.customer_name != doc.customer",
    "fetch_from": "customer.customer_name",
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "label": "Customer Name",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "customer.reference",
-   "fieldname": "customer_reference",
-   "fieldtype": "Data",
-   "label": "Reference",
    "read_only": 1
   },
   {
@@ -164,11 +158,6 @@
    "label": "Fabric Width (Inch)",
    "precision": "1",
    "read_only": 1
-  },
-  {
-   "fieldname": "design_details_section",
-   "fieldtype": "Section Break",
-   "label": "Design Details"
   },
   {
    "fieldname": "column_break_vz52p",
@@ -373,12 +362,24 @@
    "label": "Title",
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "order_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Order Defaults"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "no_copy": 1,
+   "print_hide": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-03-16 17:11:59.757581",
+ "modified": "2023-03-22 18:25:29.130374",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
@@ -401,19 +402,40 @@
    "write": 1
   },
   {
-   "amend": 1,
-   "cancel": 1,
-   "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "Manufacturing User",
-   "share": 1,
-   "submit": 1,
-   "write": 1
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User (Read Only)",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1
   }
  ],
  "search_fields": "customer, customer_name, transaction_date, fabric_item_name, process_item_name",

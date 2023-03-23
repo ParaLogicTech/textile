@@ -28,7 +28,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-03-02 17:54:15.852328",
+ "modified": "2023-03-21 15:16:43.349736",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Material",
@@ -93,7 +93,7 @@
   }
  ],
  "quick_entry": 1,
- "sort_field": "modified",
+ "sort_field": "idx",
  "sort_order": "DESC",
  "states": []
 }

@@ -12,6 +12,10 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	setup() {
+		this.frm.custom_make_buttons = {
+			'Sales Order': 'Sales Order',
+		}
+
 		this.setup_queries();
 	}
 
@@ -21,6 +25,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	on_upload_complete() {
+		this.frm.dirty();
 		return this.get_items_from_attachments();
 	}
 
@@ -51,6 +56,10 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 					__("Create"));
 			}
 		}
+	}
+
+	customer() {
+		this.get_order_defaults_from_customer();
 	}
 
 	default_gap() {
@@ -247,6 +256,22 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		frappe.model.open_mapped_doc({
 			method: "digital_printing.digital_printing.doctype.print_order.print_order.make_sales_order",
 			frm: this.frm
+		});
+	}
+
+	get_order_defaults_from_customer() {
+		if (!this.frm.doc.customer) return
+
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_order_defaults_from_customer",
+			args: {
+				customer: this.frm.doc.customer
+			},
+			callback: (r) => {
+				if (r.message) {
+					this.frm.set_value(r.message);
+				}
+			}
 		});
 	}
 };

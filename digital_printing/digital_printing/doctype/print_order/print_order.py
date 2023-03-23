@@ -10,13 +10,24 @@ from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 
 
+default_fields_map = {
+	"default_printing_uom": "default_uom",
+	"default_printing_gap": "default_gap",
+	"default_printing_qty_type": "default_qty_type",
+	"default_printing_length_uom": "default_length_uom"
+}
+
+
 class PrintOrder(StatusUpdater):
 	def onload(self):
-		self.set_missing_values()
+		if self.docstatus == 0:
+			self.set_missing_values()
+			self.calculate_totals()
 
 	@frappe.whitelist()
 	def on_upload_complete(self):
 		self.set_missing_values()
+		self.calculate_totals()
 
 	def validate(self):
 		self.set_missing_values()
@@ -24,13 +35,31 @@ class PrintOrder(StatusUpdater):
 		self.validate_fabric_item()
 		self.validate_process_item()
 		self.validate_design_items()
+		self.validate_order_defaults()
+		self.calculate_totals()
 		self.set_status()
 		self.set_title()
+
+	def on_submit(self):
+		self.set_order_defaults_for_customer()
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
-		self.calculate_totals()
+
+	def set_order_defaults_for_customer(self):
+		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
+		if not customer_defaults:
+			frappe.throw(_("Customer {0} not found").format(self.customer))
+
+		if any(val for val in customer_defaults.values()):
+			return
+
+		new_values_to_update = {}
+		for customer_fn, print_order_fn in default_fields_map.items():
+			new_values_to_update[customer_fn] = self.get(print_order_fn)
+
+		frappe.db.set_value("Customer", self.customer, new_values_to_update, notify=True)
 
 	def set_status(self, status=None, update=False, update_modified=True):
 		previous_status = self.status
@@ -99,6 +128,9 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('ordered_qty', 'qty', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
+	def validate_order_defaults(self):
+		validate_uom_and_qty_type(self)
+
 	def validate_customer(self):
 		if self.get("customer"):
 			validate_party_frozen_disabled("Customer", self.customer)
@@ -161,9 +193,9 @@ class PrintOrder(StatusUpdater):
 
 	def set_design_details_from_image(self):
 		for d in self.items:
-			if d.design_width and d.design_height:
-				continue
 			if not d.design_image:
+				continue
+			if d.design_width and d.design_height:
 				continue
 
 			design_details = self.get_image_details(d.design_image)
@@ -174,14 +206,17 @@ class PrintOrder(StatusUpdater):
 		doc_name = frappe.get_value('File', filters={'file_url': image_url})
 
 		if not doc_name:
-			frappe.throw(_("File not found error"))
+			frappe.throw(_("File {0} not found").format(image_url))
 
-		out = frappe._dict()
 		file_doc = frappe.get_doc("File", doc_name)
 
-		out.design_name = file_doc.file_name.split('.')[0]
+		out = frappe._dict()
+		out.design_name = ".".join(file_doc.file_name.split('.')[:-1]) or file_doc.file_name
+
 		im = Image.open(file_doc.get_full_path())
-		out.design_width, out.design_height = im.size[0] / 10, im.size[1] / 10
+		out.design_width = im.size[0] / 10
+		out.design_height = im.size[1] / 10
+
 		return out
 
 	def calculate_totals(self):
@@ -196,6 +231,7 @@ class PrintOrder(StatusUpdater):
 		}
 
 		for d in self.items:
+			validate_uom_and_qty_type(d)
 			self.round_floats_in(d)
 
 			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap)
@@ -379,6 +415,9 @@ def make_sales_order(source_name, target_doc=None):
 	doc = get_mapped_doc("Print Order", source_name,	{
 		"Print Order": {
 			"doctype": "Sales Order",
+			"field_map": {
+				"delivery_date": "delivery_date"
+			},
 			"validation": {
 				"docstatus": ["=", 1],
 			}
@@ -397,3 +436,45 @@ def make_sales_order(source_name, target_doc=None):
 	}, target_doc, set_missing_values)
 
 	return doc
+
+
+@frappe.whitelist()
+def get_order_defaults_from_customer(customer):
+	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
+	if not customer_defaults:
+		frappe.throw(_("Customer {0} not found").format(customer))
+
+	customer_order_defaults = {}
+	for customer_fn, print_order_fn in default_fields_map.items():
+		if customer_defaults.get(customer_fn):
+			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
+
+	return customer_order_defaults
+
+
+def validate_uom_and_qty_type(doc):
+	fn_map = frappe._dict()
+
+	if doc.doctype == "Print Order":
+		fn_map.uom_fn = 'default_uom'
+		fn_map.length_uom_fn = 'default_length_uom'
+		fn_map.qty_type_fn = 'default_qty_type'
+
+	elif doc.doctype == "Print Order Item":
+		fn_map.uom_fn = 'uom'
+		fn_map.length_uom_fn = 'length_uom'
+		fn_map.qty_type_fn = 'qty_type'
+
+	else:
+		fn_map.uom_fn = 'default_printing_uom'
+		fn_map.length_uom_fn = 'default_printing_length_uom'
+		fn_map.qty_type_fn = 'default_printing_qty_type'
+
+	if doc.get(fn_map.uom_fn) == "Panel":
+		doc.set(fn_map.qty_type_fn, "Print Qty")
+	else:
+		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
+
+
+def customer_order_default_validate(self, hook):
+	validate_uom_and_qty_type(self)
