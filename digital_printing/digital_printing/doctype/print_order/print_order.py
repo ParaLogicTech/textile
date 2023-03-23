@@ -474,7 +474,3 @@ def validate_uom_and_qty_type(doc):
 		doc.set(fn_map.qty_type_fn, "Print Qty")
 	else:
 		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
-
-
-def customer_order_default_validate(self, hook):
-	validate_uom_and_qty_type(self)

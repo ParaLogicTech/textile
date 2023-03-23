@@ -12,7 +12,7 @@ after_install = "digital_printing.install.after_install"
 
 doc_events = {
 	"Customer": {
-		"validate": "digital_printing.digital_printing.doctype.print_order.print_order.customer_order_default_validate",
+		"validate": "digital_printing.overrides.customer_hooks.customer_order_default_validate",
 	}
 }
 
