@@ -22,7 +22,7 @@ override_doctype_class = {
 }
 
 override_doctype_dashboards = {
-	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_invoice_dashboard",
+	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
 }
 
 doctype_js = {
