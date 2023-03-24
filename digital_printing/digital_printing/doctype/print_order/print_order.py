@@ -37,6 +37,10 @@ class PrintOrder(StatusUpdater):
 		self.validate_design_items()
 		self.validate_order_defaults()
 		self.calculate_totals()
+
+		if self.docstatus == 1:
+			self.set_existing_items_and_boms()
+
 		self.set_status()
 		self.set_title()
 
@@ -178,7 +182,7 @@ class PrintOrder(StatusUpdater):
 		unlinked_images = attached_images - linked_images
 
 		if not unlinked_images:
-			return 
+			return
 
 		for file_url in unlinked_images:
 			row = frappe.new_doc("Print Order Item")
@@ -214,8 +218,8 @@ class PrintOrder(StatusUpdater):
 		out.design_name = ".".join(file_doc.file_name.split('.')[:-1]) or file_doc.file_name
 
 		im = Image.open(file_doc.get_full_path())
-		out.design_width = im.size[0] / 10
-		out.design_height = im.size[1] / 10
+		out.design_width = flt(im.size[0] / 10, 1)
+		out.design_height = flt(im.size[1] / 10, 1)
 
 		return out
 
@@ -269,6 +273,44 @@ class PrintOrder(StatusUpdater):
 		self.total_print_length = flt(self.total_print_length, self.precision("total_print_length"))
 		self.total_fabric_length = flt(self.total_fabric_length, self.precision("total_fabric_length"))
 		self.total_panel_qty = flt(self.total_panel_qty, self.precision("total_panel_qty"))
+
+	def set_existing_items_and_boms(self):
+		filters = frappe._dict({
+			'customer': self.customer,
+			'fabric_item': self.fabric_item,
+			'process_item': self.process_item,
+		})
+
+		for d in self.items:
+			if d.item_code:
+				continue
+
+			filters.update({
+				"design_image": d.design_image,
+				"design_width": d.design_width,
+				"design_height": d.design_height,
+			})
+
+			res = frappe.db.sql("""
+				SELECT i.item_code
+				FROM `tabPrint Order Item` i
+				INNER JOIN `tabPrint Order` p ON p.name = i.parent
+				WHERE p.docstatus = 1 AND p.customer = %(customer)s AND p.fabric_item = %(fabric_item)s
+				AND p.process_item = %(process_item)s AND i.design_image = %(design_image)s
+				AND i.design_width = %(design_width)s AND i.design_height = %(design_height)s
+				AND ifnull(i.item_code, '') != '' AND ifnull(i.design_bom, '') != ''
+				ORDER BY p.creation DESC
+			""", filters, as_dict=1)
+
+			if not res:
+				continue
+
+			d.item_code = res[0].item_code or None
+			if d.item_code:
+				d.item_name = frappe.get_cached_value("Item", d.item_code, "item_name") if d.item_code else None
+				d.design_bom = frappe.db.get_value("BOM", filters={
+					"item": d.item_code, "is_default": 1, "docstatus": 1
+				})
 
 
 def validate_print_item(item_code, print_item_type):

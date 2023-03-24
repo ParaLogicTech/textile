@@ -95,6 +95,10 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.set_default_values_in_item(cdt, cdn);
 	}
 
+	items_remove() {
+		this.calculate_totals();
+	}
+
 	before_items_remove(doc, cdt, cdn) {
 		let row = frappe.get_doc(cdt, cdn);
 		let file_name = this.frm.attachments.get_file_id_from_file_url(row.design_image);
