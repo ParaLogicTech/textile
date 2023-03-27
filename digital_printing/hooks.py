@@ -26,9 +26,9 @@ override_doctype_dashboards = {
 }
 
 doctype_js = {
-    "Item": "overrides/item_hooks.js",
-    "Customer": "overrides/customer_hooks.js",
-    "Sales Order": "overrides/sales_order_hooks.js",
+	"Item": "overrides/item_hooks.js",
+	"Customer": "overrides/customer_hooks.js",
+	"Sales Order": "overrides/sales_order_hooks.js",
 }
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"

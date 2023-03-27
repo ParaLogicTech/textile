@@ -92,46 +92,6 @@ class PrintOrder(StatusUpdater):
 	def set_title(self):
 		self.title = self.customer_name or self.customer
 
-	def set_ordered_status(self, update=False, update_modified=True):
-		data = self.get_ordered_status_data()
-
-		for d in self.items:
-			d.ordered_qty = flt(data.ordered_qty_map.get(d.name))
-			if update:
-				d.db_set({
-					'ordered_qty': d.ordered_qty
-				}, update_modified=update_modified)
-
-		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
-		if update:
-			self.db_set({
-				'per_ordered': self.per_ordered
-			}, update_modified=update_modified)
-
-	def get_ordered_status_data(self):
-		out = frappe._dict()
-		out.ordered_qty_map = {}
-
-		if self.docstatus == 1:
-			row_names = [d.name for d in self.items]
-			if row_names:
-				ordered_data = frappe.db.sql("""
-					SELECT i.print_order_item, i.qty
-					FROM `tabSales Order Item` i
-					INNER JOIN `tabSales Order` s ON s.name = i.parent
-					WHERE s.docstatus = 1 AND i.print_order_item IN %s
-				""", [row_names], as_dict=1)
-
-				for d in ordered_data:
-					out.ordered_qty_map.setdefault(d.print_order_item, 0)
-					out.ordered_qty_map[d.print_order_item] += d.qty
-
-		return out
-
-	def validate_ordered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('ordered_qty', 'qty', self.items,
-			from_doctype=from_doctype, row_names=row_names)
-
 	def validate_order_defaults(self):
 		validate_uom_and_qty_type(self)
 
@@ -311,6 +271,46 @@ class PrintOrder(StatusUpdater):
 				d.design_bom = frappe.db.get_value("BOM", filters={
 					"item": d.item_code, "is_default": 1, "docstatus": 1
 				})
+
+	def set_ordered_status(self, update=False, update_modified=True):
+		data = self.get_ordered_status_data()
+
+		for d in self.items:
+			d.ordered_qty = flt(data.ordered_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'ordered_qty': d.ordered_qty
+				}, update_modified=update_modified)
+
+		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
+		if update:
+			self.db_set({
+				'per_ordered': self.per_ordered
+			}, update_modified=update_modified)
+
+	def get_ordered_status_data(self):
+		out = frappe._dict()
+		out.ordered_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				ordered_data = frappe.db.sql("""
+					SELECT i.print_order_item, i.qty
+					FROM `tabSales Order Item` i
+					INNER JOIN `tabSales Order` s ON s.name = i.parent
+					WHERE s.docstatus = 1 AND i.print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in ordered_data:
+					out.ordered_qty_map.setdefault(d.print_order_item, 0)
+					out.ordered_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_ordered_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('ordered_qty', 'qty', self.items,
+			from_doctype=from_doctype, row_names=row_names)
 
 
 def validate_print_item(item_code, print_item_type):
