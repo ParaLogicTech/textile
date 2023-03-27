@@ -258,7 +258,7 @@ class PrintOrder(StatusUpdater):
 				WHERE p.docstatus = 1 AND p.customer = %(customer)s AND p.fabric_item = %(fabric_item)s
 				AND p.process_item = %(process_item)s AND i.design_image = %(design_image)s
 				AND i.design_width = %(design_width)s AND i.design_height = %(design_height)s
-				AND ifnull(i.item_code, '') != '' AND ifnull(i.design_bom, '') != ''
+				AND ifnull(i.item_code, '') != ''
 				ORDER BY p.creation DESC
 			""", filters, as_dict=1)
 
