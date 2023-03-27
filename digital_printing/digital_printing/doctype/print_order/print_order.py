@@ -282,7 +282,7 @@ class PrintOrder(StatusUpdater):
 					'ordered_qty': d.ordered_qty
 				}, update_modified=update_modified)
 
-		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
+		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'print_length', self.items))
 		if update:
 			self.db_set({
 				'per_ordered': self.per_ordered
@@ -296,7 +296,7 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				ordered_data = frappe.db.sql("""
-					SELECT i.print_order_item, i.qty
+					SELECT i.print_order_item, i.qty, i.conversion_factor
 					FROM `tabSales Order Item` i
 					INNER JOIN `tabSales Order` s ON s.name = i.parent
 					WHERE s.docstatus = 1 AND i.print_order_item IN %s
@@ -304,12 +304,12 @@ class PrintOrder(StatusUpdater):
 
 				for d in ordered_data:
 					out.ordered_qty_map.setdefault(d.print_order_item, 0)
-					out.ordered_qty_map[d.print_order_item] += flt(d.qty)
+					out.ordered_qty_map[d.print_order_item] += flt(d.qty) * flt(d.conversion_factor)
 
 		return out
 
 	def validate_ordered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('ordered_qty', 'qty', self.items,
+		self.validate_completed_qty('ordered_qty', 'print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
 
