@@ -48,6 +48,10 @@
   "conversion_factor",
   "status_section",
   "ordered_qty",
+  "column_break_7pjlp",
+  "work_order_qty",
+  "column_break_djowp",
+  "produced_qty",
   "image_section",
   "design_image",
   "design_image_view"
@@ -341,12 +345,34 @@
    "fieldname": "status_section",
    "fieldtype": "Section Break",
    "label": "Status"
+  },
+  {
+   "fieldname": "column_break_7pjlp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_djowp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "produced_qty",
+   "fieldtype": "Float",
+   "label": "Produced Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "work_order_qty",
+   "fieldtype": "Float",
+   "label": "Work Order Qty",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-03-22 18:38:12.452592",
+ "modified": "2023-03-24 16:22:20.020933",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order Item",
