@@ -25,3 +25,14 @@ def override_sales_order_dashboard(data):
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Reference")][0]
 	ref_section["items"].insert(0, "Print Order")
 	return data
+
+
+def set_print_order_reference_in_work_order(work_order):
+	if not work_order.get('sales_order_item'):
+		return
+
+	res = frappe.db.get_value("Sales Order Item", work_order.sales_order_item, ["print_order", "print_order_item"], as_dict=1)
+
+	if res:
+		work_order.print_order = res.print_order
+		work_order.print_order_item = res.print_order_item

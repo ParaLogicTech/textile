@@ -33,6 +33,10 @@ doctype_js = {
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
 
+update_work_order_from_sales_order = [
+	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order"
+]
+
 fixtures = [
 	{
 		"doctype": "Custom Field",
