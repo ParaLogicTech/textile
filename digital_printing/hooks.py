@@ -70,6 +70,8 @@ fixtures = [
 				'Brand-print_item_type',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
+				'Work Order-print_order',
+				'Work Order-print_order_item',
 			]]
 		}
 	},
