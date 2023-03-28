@@ -12,7 +12,7 @@ after_install = "digital_printing.install.after_install"
 
 doc_events = {
 	"Customer": {
-		"validate": "digital_printing.digital_printing.doctype.print_order.print_order.customer_order_default_validate",
+		"validate": "digital_printing.overrides.customer_hooks.customer_order_default_validate",
 	}
 }
 
@@ -22,13 +22,13 @@ override_doctype_class = {
 }
 
 override_doctype_dashboards = {
-	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_invoice_dashboard",
+	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
 }
 
 doctype_js = {
-    "Item": "overrides/item_hooks.js",
-    "Customer": "overrides/customer_hooks.js",
-    "Sales Order": "overrides/sales_order_hooks.js",
+	"Item": "overrides/item_hooks.js",
+	"Customer": "overrides/customer_hooks.js",
+	"Sales Order": "overrides/sales_order_hooks.js",
 }
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
