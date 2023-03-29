@@ -565,6 +565,36 @@ def make_sales_order(source_name, target_doc=None):
 
 
 @frappe.whitelist()
+def create_work_orders(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
+	doc = frappe.get_doc('Print Order', print_order)
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Submit the Print Order first."))
+
+	if not all(d.item_code and d.design_bom for d in doc.items):
+		frappe.throw(_("Create Items and BOMs first"))
+
+	if all(d.qty and d.ordered_qty < d.qty for d in doc.items):
+		frappe.throw(_("Create Sales Order first"))
+
+	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
+	sales_orders = {d.parent for d in sales_orders}
+
+	wo_list = []
+	for so in sales_orders:
+		so_doc = frappe.get_doc('Sales Order', so)
+		wo_items = so_doc.get_work_order_items()
+		wo = make_work_orders(wo_items, so, so_doc.company)
+		wo_list += wo
+
+
+	frappe.msgprint(_("Work Orders Created: {0}").format(
+		', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+	), indicator='green')
+
+
+@frappe.whitelist()
 def get_order_defaults_from_customer(customer):
 	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
 	if not customer_defaults:
