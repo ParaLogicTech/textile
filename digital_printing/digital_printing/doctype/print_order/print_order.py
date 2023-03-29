@@ -328,7 +328,7 @@ class PrintOrder(StatusUpdater):
 					'work_order_qty': d.work_order_qty
 				}, update_modified=update_modified)
 
-		self.per_work_ordered = flt(self.calculate_status_percentage('work_order_qty', 'print_length', self.items))
+		self.per_work_ordered = flt(self.calculate_status_percentage('work_order_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_work_ordered': self.per_work_ordered
@@ -354,7 +354,7 @@ class PrintOrder(StatusUpdater):
 		return out
 
 	def validate_work_order_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('work_order_qty', 'print_length', self.items,
+		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
 	def set_produced_status(self, update=False, update_modified=True):
@@ -367,7 +367,7 @@ class PrintOrder(StatusUpdater):
 					'produced_qty': d.produced_qty
 				}, update_modified=update_modified)
 
-		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'print_length', self.items))
+		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_produced': self.per_produced
@@ -393,7 +393,7 @@ class PrintOrder(StatusUpdater):
 		return out
 
 	def validate_produced_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('produced_qty', 'print_length', self.items,
+		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
 
