@@ -351,6 +351,45 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('work_order_qty', 'print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
+	def set_produced_status(self, update=False, update_modified=True):
+		data = self.get_produced_status_data()
+
+		for d in self.items:
+			d.produced_qty = flt(data.produced_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'produced_qty': d.produced_qty
+				}, update_modified=update_modified)
+
+		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'print_length', self.items))
+		if update:
+			self.db_set({
+				'per_produced': self.per_produced
+			}, update_modified=update_modified)
+
+	def get_produced_status_data(self):
+		out = frappe._dict()
+		out.produced_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				produced_data = frappe.db.sql("""
+					SELECT print_order_item, produced_qty
+					FROM `tabWork Order`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in produced_data:
+					out.produced_qty_map.setdefault(d.print_order_item, 0)
+					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
+
+		return out
+
+	def validate_produced_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('produced_qty', 'print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+
 
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)

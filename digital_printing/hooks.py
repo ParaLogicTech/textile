@@ -17,7 +17,8 @@ doc_events = {
 	"Work Order": {
 		"on_submit": "digital_printing.overrides.work_order_hooks.update_print_order_status",
 		"on_cancel": "digital_printing.overrides.work_order_hooks.update_print_order_status",
-	}
+		"update_work_order_qty": "digital_printing.overrides.work_order_hooks.update_print_order_status",
+	},
 }
 
 override_doctype_class = {
