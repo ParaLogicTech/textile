@@ -76,8 +76,14 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
-
-			#TODO: logic for rest of the statuses
+			elif self.per_work_ordered < 100:
+				self.status = "To Order Production"
+			elif self.per_produced < 100:
+				self.status = "To Finish Production"
+			elif self.per_delivered < 100:
+				self.status = "To Deliver"
+			elif self.per_invoiced < 100:
+				self.status = "To Bill"
 			else:
 				self.status = "Completed"
 
@@ -312,6 +318,84 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('ordered_qty', 'qty', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
+	def set_work_order_status(self, update=False, update_modified=True):
+		data = self.get_work_order_status_data()
+
+		for d in self.items:
+			d.work_order_qty = flt(data.work_order_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'work_order_qty': d.work_order_qty
+				}, update_modified=update_modified)
+
+		self.per_work_ordered = flt(self.calculate_status_percentage('work_order_qty', 'stock_print_length', self.items))
+		if update:
+			self.db_set({
+				'per_work_ordered': self.per_work_ordered
+			}, update_modified=update_modified)
+
+	def get_work_order_status_data(self):
+		out = frappe._dict()
+		out.work_order_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				work_order_data = frappe.db.sql("""
+					SELECT print_order_item, qty
+					FROM `tabWork Order`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in work_order_data:
+					out.work_order_qty_map.setdefault(d.print_order_item, 0)
+					out.work_order_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_work_order_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+
+	def set_produced_status(self, update=False, update_modified=True):
+		data = self.get_produced_status_data()
+
+		for d in self.items:
+			d.produced_qty = flt(data.produced_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'produced_qty': d.produced_qty
+				}, update_modified=update_modified)
+
+		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
+		if update:
+			self.db_set({
+				'per_produced': self.per_produced
+			}, update_modified=update_modified)
+
+	def get_produced_status_data(self):
+		out = frappe._dict()
+		out.produced_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				produced_data = frappe.db.sql("""
+					SELECT print_order_item, produced_qty
+					FROM `tabWork Order`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in produced_data:
+					out.produced_qty_map.setdefault(d.print_order_item, 0)
+					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
+
+		return out
+
+	def validate_produced_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+
 
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)
@@ -478,6 +562,35 @@ def make_sales_order(source_name, target_doc=None):
 	}, target_doc, set_missing_values)
 
 	return doc
+
+
+@frappe.whitelist()
+def create_work_orders(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
+	doc = frappe.get_doc('Print Order', print_order)
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Submit the Print Order first."))
+
+	if not all(d.item_code and d.design_bom for d in doc.items):
+		frappe.throw(_("Create Items and BOMs first"))
+
+	if all(d.qty and d.ordered_qty < d.qty for d in doc.items):
+		frappe.throw(_("Create Sales Order first"))
+
+	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
+	sales_orders = {d.parent for d in sales_orders}
+
+	wo_list = []
+	for so in sales_orders:
+		so_doc = frappe.get_doc('Sales Order', so)
+		wo_items = so_doc.get_work_order_items()
+		wo = make_work_orders(wo_items, so, so_doc.company)
+		wo_list += wo
+
+	frappe.msgprint(_("Work Orders Created: {0}").format(
+		', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+	), indicator='green')
 
 
 @frappe.whitelist()

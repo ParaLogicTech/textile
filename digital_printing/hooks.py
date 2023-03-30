@@ -13,7 +13,12 @@ after_install = "digital_printing.install.after_install"
 doc_events = {
 	"Customer": {
 		"validate": "digital_printing.overrides.customer_hooks.customer_order_default_validate",
-	}
+	},
+	"Work Order": {
+		"on_submit": "digital_printing.overrides.work_order_hooks.update_print_order_status",
+		"on_cancel": "digital_printing.overrides.work_order_hooks.update_print_order_status",
+		"update_work_order_qty": "digital_printing.overrides.work_order_hooks.update_print_order_status",
+	},
 }
 
 override_doctype_class = {
@@ -32,6 +37,10 @@ doctype_js = {
 }
 
 update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
+
+update_work_order_from_sales_order = [
+	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order"
+]
 
 fixtures = [
 	{
@@ -70,6 +79,8 @@ fixtures = [
 				'Brand-print_item_type',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
+				'Work Order-print_order',
+				'Work Order-print_order_item',
 			]]
 		}
 	},

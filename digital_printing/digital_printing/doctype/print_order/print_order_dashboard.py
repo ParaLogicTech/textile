@@ -11,8 +11,12 @@ def get_data():
 		},
 		'transactions': [
 			{
-				'label': _("Reference"),
-				'items': ['Item', 'BOM', 'Sales Order']
+				'label': _("Design Item"),
+				'items': ['Item', 'BOM']
 			},
+			{
+				'label': _("Order"),
+				'items': ['Sales Order', 'Work Order']
+			}
 		]
 	}
