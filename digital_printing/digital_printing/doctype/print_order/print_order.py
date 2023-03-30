@@ -355,7 +355,7 @@ class PrintOrder(StatusUpdater):
 
 	def validate_work_order_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names)
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
 	def set_produced_status(self, update=False, update_modified=True):
 		data = self.get_produced_status_data()
@@ -587,7 +587,6 @@ def create_work_orders(print_order):
 		wo_items = so_doc.get_work_order_items()
 		wo = make_work_orders(wo_items, so, so_doc.company)
 		wo_list += wo
-
 
 	frappe.msgprint(_("Work Orders Created: {0}").format(
 		', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
