@@ -81,6 +81,10 @@ fixtures = [
 				'Sales Order Item-print_order_item',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
+				'Delivery Note Item-print_order',
+				'Delivery Note Item-print_order_item',
+				'Sales Invoice Item-print_order',
+				'Sales Invoice Item-print_order_item',
 			]]
 		}
 	},
