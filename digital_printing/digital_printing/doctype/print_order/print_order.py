@@ -578,6 +578,9 @@ def create_work_orders(print_order):
 	if all(d.qty and d.ordered_qty < d.qty for d in doc.items):
 		frappe.throw(_("Create Sales Order first"))
 
+	if doc.per_work_ordered >= 100:
+		frappe.throw(_("Work Orders already created."))
+
 	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
 	sales_orders = {d.parent for d in sales_orders}
 
@@ -588,9 +591,12 @@ def create_work_orders(print_order):
 		wo = make_work_orders(wo_items, so, so_doc.company)
 		wo_list += wo
 
-	frappe.msgprint(_("Work Orders Created: {0}").format(
-		', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
-	), indicator='green')
+	if wo_list:
+		frappe.msgprint(_("Work Orders Created: {0}").format(
+			', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+		), indicator='green')
+	else:
+		frappe.msgprint(_("Work Order already created in Draft."))
 
 
 @frappe.whitelist()
