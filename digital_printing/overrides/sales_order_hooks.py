@@ -36,3 +36,21 @@ def set_print_order_reference_in_work_order(work_order):
 	if res:
 		work_order.print_order = res.print_order
 		work_order.print_order_item = res.print_order_item
+
+
+def map_print_order_reference_in_delivery_note_item(mapper):
+	if not mapper.get("Sales Order Item"):
+		return
+
+	field_map = mapper["Sales Order Item"]["field_map"]
+	field_map["print_order"] = "print_order"
+	field_map["print_order_item"] = "print_order_item"
+
+
+def map_print_order_reference_in_sales_invoice_item(mapper):
+	if not mapper.get("Sales Order Item"):
+		return
+
+	field_map = mapper["Sales Order Item"]["field_map"]
+	field_map["print_order"] = "print_order"
+	field_map["print_order_item"] = "print_order_item"
