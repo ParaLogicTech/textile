@@ -25,6 +25,7 @@ override_doctype_class = {
 	"Item": "digital_printing.overrides.item_hooks.ItemDP",
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
+	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.SalesInvoiceDP",
 }
 
 override_doctype_dashboards = {

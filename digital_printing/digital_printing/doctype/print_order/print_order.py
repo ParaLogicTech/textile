@@ -435,6 +435,45 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
 
+	def set_billed_status(self, update=False, update_modified=True):
+		data = self.get_billed_status_data()
+
+		for d in self.items:
+			d.billed_qty = flt(data.billed_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'billed_qty': d.billed_qty
+				}, update_modified=update_modified)
+
+		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
+		if update:
+			self.db_set({
+				'per_billed': self.per_billed
+			}, update_modified=update_modified)
+
+	def get_billed_status_data(self):
+		out = frappe._dict()
+		out.billed_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				billed_data = frappe.db.sql("""
+					SELECT print_order_item, qty
+					FROM `tabSales Invoice Item`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in billed_data:
+					out.billed_qty_map.setdefault(d.print_order_item, 0)
+					out.billed_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_billed_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="bililng")
+
 
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)
