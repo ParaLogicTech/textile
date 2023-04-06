@@ -82,7 +82,7 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Finish Production"
 			elif self.per_delivered < 100:
 				self.status = "To Deliver"
-			elif self.per_invoiced < 100:
+			elif self.per_billled < 100:
 				self.status = "To Bill"
 			else:
 				self.status = "Completed"
