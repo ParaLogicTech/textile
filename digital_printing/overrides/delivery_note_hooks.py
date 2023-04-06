@@ -27,3 +27,10 @@ def map_print_order_reference_in_delivery_note_item(mapper):
 	field_map = mapper["Delivery Note Item"]["field_map"]
 	field_map["print_order"] = "print_order"
 	field_map["print_order_item"] = "print_order_item"
+
+
+def override_delivery_note_dashboard(data):
+	data["internal_links"]["Print Order"] = ["items", "print_order"]
+	ref_section = [d for d in data["transactions"] if d["label"] == _("Reference")][0]
+	ref_section["items"].insert(0, "Print Order")
+	return data

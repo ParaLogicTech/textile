@@ -18,3 +18,10 @@ class SalesInvoiceDP(SalesInvoice):
 
 			doc.set_status(update=True)
 			doc.notify_update()
+
+
+def override_sales_invoice_dashboard(data):
+	data["internal_links"]["Print Order"] = ["items", "print_order"]
+	ref_section = [d for d in data["transactions"] if d["label"] == _("Reference")][0]
+	ref_section["items"].insert(0, "Print Order")
+	return data
