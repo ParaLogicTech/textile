@@ -24,6 +24,7 @@ doc_events = {
 override_doctype_class = {
 	"Item": "digital_printing.overrides.item_hooks.ItemDP",
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
+	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
 }
 
 override_doctype_dashboards = {
