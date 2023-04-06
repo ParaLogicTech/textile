@@ -15,6 +15,8 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
 			'Work Order': 'Work Order',
+			'Delivery Note': 'Delivery Note',
+			'Sales Invoice': 'Sales Invoice',
 		}
 
 		this.setup_queries();
