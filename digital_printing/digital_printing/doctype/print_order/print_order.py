@@ -486,6 +486,44 @@ def validate_print_item(item_code, print_item_type):
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
 
+def validate_uom_and_qty_type(doc):
+	fn_map = frappe._dict()
+
+	if doc.doctype == "Print Order":
+		fn_map.uom_fn = 'default_uom'
+		fn_map.length_uom_fn = 'default_length_uom'
+		fn_map.qty_type_fn = 'default_qty_type'
+
+	elif doc.doctype == "Print Order Item":
+		fn_map.uom_fn = 'uom'
+		fn_map.length_uom_fn = 'length_uom'
+		fn_map.qty_type_fn = 'qty_type'
+
+	else:
+		fn_map.uom_fn = 'default_printing_uom'
+		fn_map.length_uom_fn = 'default_printing_length_uom'
+		fn_map.qty_type_fn = 'default_printing_qty_type'
+
+	if doc.get(fn_map.uom_fn) == "Panel":
+		doc.set(fn_map.qty_type_fn, "Print Qty")
+	else:
+		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
+
+
+@frappe.whitelist()
+def get_order_defaults_from_customer(customer):
+	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
+	if not customer_defaults:
+		frappe.throw(_("Customer {0} not found").format(customer))
+
+	customer_order_defaults = {}
+	for customer_fn, print_order_fn in default_fields_map.items():
+		if customer_defaults.get(customer_fn):
+			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
+
+	return customer_order_defaults
+
+
 @frappe.whitelist()
 def create_design_items_and_boms(print_order):
 	doc = frappe.get_doc('Print Order', print_order)
@@ -675,41 +713,3 @@ def create_work_orders(print_order):
 		), indicator='green')
 	else:
 		frappe.msgprint(_("Work Order already created in Draft."))
-
-
-@frappe.whitelist()
-def get_order_defaults_from_customer(customer):
-	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
-	if not customer_defaults:
-		frappe.throw(_("Customer {0} not found").format(customer))
-
-	customer_order_defaults = {}
-	for customer_fn, print_order_fn in default_fields_map.items():
-		if customer_defaults.get(customer_fn):
-			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
-
-	return customer_order_defaults
-
-
-def validate_uom_and_qty_type(doc):
-	fn_map = frappe._dict()
-
-	if doc.doctype == "Print Order":
-		fn_map.uom_fn = 'default_uom'
-		fn_map.length_uom_fn = 'default_length_uom'
-		fn_map.qty_type_fn = 'default_qty_type'
-
-	elif doc.doctype == "Print Order Item":
-		fn_map.uom_fn = 'uom'
-		fn_map.length_uom_fn = 'length_uom'
-		fn_map.qty_type_fn = 'qty_type'
-
-	else:
-		fn_map.uom_fn = 'default_printing_uom'
-		fn_map.length_uom_fn = 'default_printing_length_uom'
-		fn_map.qty_type_fn = 'default_printing_qty_type'
-
-	if doc.get(fn_map.uom_fn) == "Panel":
-		doc.set(fn_map.qty_type_fn, "Print Qty")
-	else:
-		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
