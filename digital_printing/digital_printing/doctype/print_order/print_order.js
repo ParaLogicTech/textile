@@ -65,6 +65,11 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 				this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 					__("Create"));
 			}
+
+			if (doc.per_produced && doc.per_delivered < doc.per_produced) {
+				this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
+					__("Create"));
+			}
 		}
 	}
 
@@ -299,6 +304,21 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			callback: (r) => {
 				if (!r.exc) {
 					this.frm.reload_doc();
+				}
+			}
+		});
+	}
+
+	make_delivery_note() {
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_delivery_note",
+			args: {
+				"print_order": this.frm.doc.name,
+			},
+			callback: function (r) {
+				if (!r.exc) {
+					var doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 				}
 			}
 		});

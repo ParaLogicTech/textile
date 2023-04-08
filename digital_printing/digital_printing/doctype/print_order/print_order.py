@@ -713,3 +713,41 @@ def create_work_orders(print_order):
 		), indicator='green')
 	else:
 		frappe.msgprint(_("Work Order already created in Draft."))
+
+
+@frappe.whitelist()
+def get_delivery_note(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+
+	doc = frappe.get_doc("Print Order", print_order)
+
+	if doc.per_produced <= doc.per_delivered:
+		frappe.throw(_("Nothing to deliver in stock."))
+
+	target_doc = frappe.new_doc("Delivery Note")
+
+	sales_orders = frappe.db.sql("""
+		SELECT DISTINCT s.name
+		FROM `tabSales Order Item` i
+		INNER JOIN `tabSales Order` s ON s.name = i.parent
+		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+		AND s.per_delivered < 99.99 AND s.skip_delivery_note = 0
+		AND s.company = %(company)s AND i.print_order = %(name)s
+	""", doc.as_dict(),  as_dict=1)
+
+	if not sales_orders:
+		frappe.throw(_("No Sales Order found."))
+
+	for d in sales_orders:
+		target_doc = make_delivery_note(d.name, target_doc=target_doc)
+
+	# Remove Taxes (so they are reloaded)
+	target_doc.taxes_and_charges = None
+	target_doc.taxes = []
+
+	# Missing Values and Forced Values
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("reset_taxes_and_charges")
+	target_doc.run_method("calculate_taxes_and_totals")
+
+	return target_doc
