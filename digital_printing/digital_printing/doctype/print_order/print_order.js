@@ -50,14 +50,18 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	setup_buttons() {
-		if (this.frm.doc.docstatus == 1) {
-			if (this.frm.doc.items.filter(d => !d.item_code && !d.design_bom).length) {
+		let doc = this.frm.doc;
+
+		if (doc.docstatus == 1) {
+			if (doc.items.filter(d => !d.item_code && !d.design_bom).length) {
 				this.frm.add_custom_button(__('Items and BOMs'), () => this.create_design_items_and_boms(),
 					__("Create"));
-			} else if(flt(this.frm.doc.per_ordered) < 100) {
+			} else if(flt(doc.per_ordered) < 100) {
 				this.frm.add_custom_button(__('Sales Order'), () => this.create_sales_order(),
 					__("Create"));
-			} else if(flt(this.frm.doc.per_work_ordered) < 100) {
+			}
+
+			if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
 				this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 					__("Create"));
 			}
