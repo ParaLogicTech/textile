@@ -82,7 +82,7 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Finish Production"
 			elif self.per_delivered < 100:
 				self.status = "To Deliver"
-			elif self.per_billled < 100:
+			elif self.per_billed < 100:
 				self.status = "To Bill"
 			else:
 				self.status = "Completed"
@@ -406,7 +406,7 @@ class PrintOrder(StatusUpdater):
 					'delivered_qty': d.delivered_qty
 				}, update_modified=update_modified)
 
-		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'stock_print_length', self.items))
+		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'qty', self.items))
 		if update:
 			self.db_set({
 				'per_delivered': self.per_delivered
@@ -432,7 +432,7 @@ class PrintOrder(StatusUpdater):
 		return out
 
 	def validate_delivered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
+		self.validate_completed_qty('delivered_qty', 'qty', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
 
 	def set_billed_status(self, update=False, update_modified=True):
@@ -445,7 +445,7 @@ class PrintOrder(StatusUpdater):
 					'billed_qty': d.billed_qty
 				}, update_modified=update_modified)
 
-		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
+		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'qty', self.items))
 		if update:
 			self.db_set({
 				'per_billed': self.per_billed
@@ -471,8 +471,8 @@ class PrintOrder(StatusUpdater):
 		return out
 
 	def validate_billed_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="bililng")
+		self.validate_completed_qty('billed_qty', 'qty', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
 
 
 def validate_print_item(item_code, print_item_type):
