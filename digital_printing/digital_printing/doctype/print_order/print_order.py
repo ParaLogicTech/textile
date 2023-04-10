@@ -721,9 +721,6 @@ def get_delivery_note(print_order):
 
 	doc = frappe.get_doc("Print Order", print_order)
 
-	if doc.per_produced <= doc.per_delivered:
-		frappe.throw(_("Nothing to deliver in stock."))
-
 	target_doc = frappe.new_doc("Delivery Note")
 
 	sales_orders = frappe.db.sql("""
@@ -736,7 +733,7 @@ def get_delivery_note(print_order):
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
 	if not sales_orders:
-		frappe.throw(_("No Sales Order found."))
+		frappe.throw(_("There are no Sales Orders to be delivered"))
 
 	for d in sales_orders:
 		target_doc = make_delivery_note(d.name, target_doc=target_doc)
@@ -747,7 +744,6 @@ def get_delivery_note(print_order):
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
-	target_doc.run_method("reset_taxes_and_charges")
 	target_doc.run_method("calculate_taxes_and_totals")
 
 	return target_doc
@@ -760,9 +756,6 @@ def get_sales_invoice(print_order):
 
 	doc = frappe.get_doc("Print Order", print_order)
 
-	if doc.per_ordered <= doc.per_billed:
-		frappe.throw(_("Nothing to bill."))
-
 	target_doc = frappe.new_doc("Sales Invoice")
 
 	delivery_note_filters = ["""EXISTS(
@@ -772,12 +765,12 @@ def get_sales_invoice(print_order):
 			AND dni.print_order = {0}
 	)""".format(frappe.db.escape(doc.name))]
 
-	sales_orders = _get_delivery_notes_to_be_billed(filters=delivery_note_filters)
+	delivery_notes = _get_delivery_notes_to_be_billed(filters=delivery_note_filters)
 
-	if not sales_orders:
-		frappe.throw(_("No Sales Order found."))
+	if not delivery_notes:
+		frappe.throw(_("There are no Delivery Notes to be billed"))
 
-	for d in sales_orders:
+	for d in delivery_notes:
 		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
 
 	# Remove Taxes (so they are reloaded)
@@ -785,7 +778,6 @@ def get_sales_invoice(print_order):
 	target_doc.taxes = []
 
 	# Missing Values and Forced Values
-	target_doc.run_method("reset_taxes_and_charges")
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_taxes_and_totals")
 

@@ -71,7 +71,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 					__("Create"));
 			}
 
-			if (doc.per_ordered && doc.per_billed < doc.per_ordered) {
+			if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
 				this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
 					__("Create"));
 			}
