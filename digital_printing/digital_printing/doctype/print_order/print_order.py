@@ -732,8 +732,8 @@ def get_delivery_note(print_order):
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
 		AND s.per_delivered < 99.99 AND s.skip_delivery_note = 0
-		AND s.company = %(company)s AND i.print_order = %(name)s
-	""", doc.as_dict(),  as_dict=1)
+		AND s.company = %(company)s AND i.print_order = %(print_order)s
+	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
 	if not sales_orders:
 		frappe.throw(_("No Sales Order found."))
@@ -748,6 +748,45 @@ def get_delivery_note(print_order):
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("reset_taxes_and_charges")
+	target_doc.run_method("calculate_taxes_and_totals")
+
+	return target_doc
+
+
+@frappe.whitelist()
+def get_sales_invoice(print_order):
+	from erpnext.controllers.queries import _get_delivery_notes_to_be_billed
+	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+	doc = frappe.get_doc("Print Order", print_order)
+
+	if doc.per_ordered <= doc.per_billed:
+		frappe.throw(_("Nothing to bill."))
+
+	target_doc = frappe.new_doc("Sales Invoice")
+
+	delivery_note_filters = ["""EXISTS(
+		SELECT dni.name
+		FROM `tabDelivery Note Item` dni
+		WHERE dni.parent = `tabDelivery Note`.name
+			AND dni.print_order = {0}
+	)""".format(frappe.db.escape(doc.name))]
+
+	sales_orders = _get_delivery_notes_to_be_billed(filters=delivery_note_filters)
+
+	if not sales_orders:
+		frappe.throw(_("No Sales Order found."))
+
+	for d in sales_orders:
+		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
+
+	# Remove Taxes (so they are reloaded)
+	target_doc.taxes_and_charges = None
+	target_doc.taxes = []
+
+	# Missing Values and Forced Values
+	target_doc.run_method("reset_taxes_and_charges")
+	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_taxes_and_totals")
 
 	return target_doc
