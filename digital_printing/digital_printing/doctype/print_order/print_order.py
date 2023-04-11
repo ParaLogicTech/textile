@@ -8,6 +8,7 @@ from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
+import json
 
 
 default_fields_map = {
@@ -554,6 +555,32 @@ def create_design_items_and_boms(print_order):
 
 	doc.set_status(update=True)
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
+
+
+@frappe.whitelist()
+def make_customer_fabric_stock_entry(source_name, target_doc=None):
+	po_doc = frappe.get_doc('Print Order', source_name)
+
+	if po_doc.docstatus != 1:
+		frappe.throw(_("Print Order {0} is not submitted").format(po_doc.name))
+
+	if not target_doc:
+		target_doc = frappe.new_doc("Stock Entry")
+
+	if isinstance(target_doc, str):
+		target_doc = frappe.get_doc(json.loads(target_doc))
+
+	target_doc.append("items", {
+		"item_code": po_doc.fabric_item,
+		"qty": po_doc.total_fabric_length,
+		"t_warehouse": po_doc.fabric_warehouse,
+		"uom": "Meter",
+	})
+
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("calculate_rate_and_amount")
+
+	return target_doc
 
 
 def make_design_item(design_item_row, fabric_item, process_item):
