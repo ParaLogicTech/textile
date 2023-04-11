@@ -336,7 +336,6 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 				"print_order": this.frm.doc.name,
 			},
 			callback: function (r) {
-				console.log(r)
 				if (!r.exc) {
 					var doclist = frappe.model.sync(r.message);
 					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);

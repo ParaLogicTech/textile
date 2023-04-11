@@ -738,10 +738,6 @@ def get_delivery_note(print_order):
 	for d in sales_orders:
 		target_doc = make_delivery_note(d.name, target_doc=target_doc)
 
-	# Remove Taxes (so they are reloaded)
-	target_doc.taxes_and_charges = None
-	target_doc.taxes = []
-
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_taxes_and_totals")
@@ -772,10 +768,6 @@ def get_sales_invoice(print_order):
 
 	for d in delivery_notes:
 		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
-
-	# Remove Taxes (so they are reloaded)
-	target_doc.taxes_and_charges = None
-	target_doc.taxes = []
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
