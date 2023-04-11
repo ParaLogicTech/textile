@@ -7,7 +7,7 @@ def get_data():
 		'fieldname': 'print_order',
 		'internal_links': {
 			'Item': ['items', 'item_code'],
-			'BOM': ['items', 'design_bom']
+			'BOM': ['items', 'design_bom'],
 		},
 		'transactions': [
 			{
@@ -15,8 +15,12 @@ def get_data():
 				'items': ['Item', 'BOM']
 			},
 			{
-				'label': _("Order"),
-				'items': ['Sales Order', 'Work Order']
+				'label': _("Sales"),
+				'items': ['Sales Order','Delivery Note', 'Sales Invoice']
+			},
+			{
+				'label': _("Production"),
+				'items': [ 'Work Order']
 			}
 		]
 	}

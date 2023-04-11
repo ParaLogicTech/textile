@@ -24,10 +24,15 @@ doc_events = {
 override_doctype_class = {
 	"Item": "digital_printing.overrides.item_hooks.ItemDP",
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
+	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
+	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.SalesInvoiceDP",
 }
 
 override_doctype_dashboards = {
-	"Sales Order":"digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
+	"Item": "digital_printing.overrides.item_hooks.override_item_dashboard",
+	"Sales Order": "digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
+	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.override_delivery_note_dashboard",
+	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.override_sales_invoice_dashboard",
 }
 
 doctype_js = {
@@ -36,10 +41,24 @@ doctype_js = {
 	"Sales Order": "overrides/sales_order_hooks.js",
 }
 
-update_item_override_fields = "digital_printing.overrides.item_hooks.update_item_override_fields"
+update_item_override_fields = [
+    "digital_printing.overrides.item_hooks.update_item_override_fields",
+]
 
 update_work_order_from_sales_order = [
-	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order"
+	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order",
+]
+
+update_delivery_note_from_sales_order_mapper = [
+	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_delivery_note_item",
+]
+
+update_sales_invoice_from_sales_order_mapper = [
+	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_sales_invoice_item",
+]
+
+update_sales_invoice_from_delivery_note_mapper = [
+	"digital_printing.overrides.delivery_note_hooks.map_print_order_reference_in_delivery_note_item",
 ]
 
 fixtures = [
@@ -81,6 +100,10 @@ fixtures = [
 				'Sales Order Item-print_order_item',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
+				'Delivery Note Item-print_order',
+				'Delivery Note Item-print_order_item',
+				'Sales Invoice Item-print_order',
+				'Sales Invoice Item-print_order_item',
 			]]
 		}
 	},

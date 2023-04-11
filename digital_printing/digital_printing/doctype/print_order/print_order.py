@@ -82,7 +82,7 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Finish Production"
 			elif self.per_delivered < 100:
 				self.status = "To Deliver"
-			elif self.per_invoiced < 100:
+			elif self.per_billed < 100:
 				self.status = "To Bill"
 			else:
 				self.status = "Completed"
@@ -396,6 +396,84 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
+	def set_delivered_status(self, update=False, update_modified=True):
+		data = self.get_delivered_status_data()
+
+		for d in self.items:
+			d.delivered_qty = flt(data.delivered_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'delivered_qty': d.delivered_qty
+				}, update_modified=update_modified)
+
+		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'qty', self.items))
+		if update:
+			self.db_set({
+				'per_delivered': self.per_delivered
+			}, update_modified=update_modified)
+
+	def get_delivered_status_data(self):
+		out = frappe._dict()
+		out.delivered_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				delivered_data = frappe.db.sql("""
+					SELECT print_order_item, qty
+					FROM `tabDelivery Note Item`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in delivered_data:
+					out.delivered_qty_map.setdefault(d.print_order_item, 0)
+					out.delivered_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_delivered_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('delivered_qty', 'qty', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
+
+	def set_billed_status(self, update=False, update_modified=True):
+		data = self.get_billed_status_data()
+
+		for d in self.items:
+			d.billed_qty = flt(data.billed_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'billed_qty': d.billed_qty
+				}, update_modified=update_modified)
+
+		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'qty', self.items))
+		if update:
+			self.db_set({
+				'per_billed': self.per_billed
+			}, update_modified=update_modified)
+
+	def get_billed_status_data(self):
+		out = frappe._dict()
+		out.billed_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				billed_data = frappe.db.sql("""
+					SELECT print_order_item, qty
+					FROM `tabSales Invoice Item`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in billed_data:
+					out.billed_qty_map.setdefault(d.print_order_item, 0)
+					out.billed_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_billed_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('billed_qty', 'qty', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
+
 
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)
@@ -406,6 +484,44 @@ def validate_print_item(item_code, print_item_type):
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)
+
+
+def validate_uom_and_qty_type(doc):
+	fn_map = frappe._dict()
+
+	if doc.doctype == "Print Order":
+		fn_map.uom_fn = 'default_uom'
+		fn_map.length_uom_fn = 'default_length_uom'
+		fn_map.qty_type_fn = 'default_qty_type'
+
+	elif doc.doctype == "Print Order Item":
+		fn_map.uom_fn = 'uom'
+		fn_map.length_uom_fn = 'length_uom'
+		fn_map.qty_type_fn = 'qty_type'
+
+	else:
+		fn_map.uom_fn = 'default_printing_uom'
+		fn_map.length_uom_fn = 'default_printing_length_uom'
+		fn_map.qty_type_fn = 'default_printing_qty_type'
+
+	if doc.get(fn_map.uom_fn) == "Panel":
+		doc.set(fn_map.qty_type_fn, "Print Qty")
+	else:
+		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
+
+
+@frappe.whitelist()
+def get_order_defaults_from_customer(customer):
+	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
+	if not customer_defaults:
+		frappe.throw(_("Customer {0} not found").format(customer))
+
+	customer_order_defaults = {}
+	for customer_fn, print_order_fn in default_fields_map.items():
+		if customer_defaults.get(customer_fn):
+			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
+
+	return customer_order_defaults
 
 
 @frappe.whitelist()
@@ -578,6 +694,9 @@ def create_work_orders(print_order):
 	if all(d.qty and d.ordered_qty < d.qty for d in doc.items):
 		frappe.throw(_("Create Sales Order first"))
 
+	if doc.per_work_ordered >= 100:
+		frappe.throw(_("Work Orders already created."))
+
 	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
 	sales_orders = {d.parent for d in sales_orders}
 
@@ -588,44 +707,70 @@ def create_work_orders(print_order):
 		wo = make_work_orders(wo_items, so, so_doc.company)
 		wo_list += wo
 
-	frappe.msgprint(_("Work Orders Created: {0}").format(
-		', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
-	), indicator='green')
+	if wo_list:
+		frappe.msgprint(_("Work Orders Created: {0}").format(
+			', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+		), indicator='green')
+	else:
+		frappe.msgprint(_("Work Order already created in Draft."))
 
 
 @frappe.whitelist()
-def get_order_defaults_from_customer(customer):
-	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
-	if not customer_defaults:
-		frappe.throw(_("Customer {0} not found").format(customer))
+def get_delivery_note(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 
-	customer_order_defaults = {}
-	for customer_fn, print_order_fn in default_fields_map.items():
-		if customer_defaults.get(customer_fn):
-			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
+	doc = frappe.get_doc("Print Order", print_order)
 
-	return customer_order_defaults
+	target_doc = frappe.new_doc("Delivery Note")
+
+	sales_orders = frappe.db.sql("""
+		SELECT DISTINCT s.name
+		FROM `tabSales Order Item` i
+		INNER JOIN `tabSales Order` s ON s.name = i.parent
+		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+		AND s.per_delivered < 99.99 AND s.skip_delivery_note = 0
+		AND s.company = %(company)s AND i.print_order = %(print_order)s
+	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
+
+	if not sales_orders:
+		frappe.throw(_("There are no Sales Orders to be delivered"))
+
+	for d in sales_orders:
+		target_doc = make_delivery_note(d.name, target_doc=target_doc)
+
+	# Missing Values and Forced Values
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("calculate_taxes_and_totals")
+
+	return target_doc
 
 
-def validate_uom_and_qty_type(doc):
-	fn_map = frappe._dict()
+@frappe.whitelist()
+def get_sales_invoice(print_order):
+	from erpnext.controllers.queries import _get_delivery_notes_to_be_billed
+	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
-	if doc.doctype == "Print Order":
-		fn_map.uom_fn = 'default_uom'
-		fn_map.length_uom_fn = 'default_length_uom'
-		fn_map.qty_type_fn = 'default_qty_type'
+	doc = frappe.get_doc("Print Order", print_order)
 
-	elif doc.doctype == "Print Order Item":
-		fn_map.uom_fn = 'uom'
-		fn_map.length_uom_fn = 'length_uom'
-		fn_map.qty_type_fn = 'qty_type'
+	target_doc = frappe.new_doc("Sales Invoice")
 
-	else:
-		fn_map.uom_fn = 'default_printing_uom'
-		fn_map.length_uom_fn = 'default_printing_length_uom'
-		fn_map.qty_type_fn = 'default_printing_qty_type'
+	delivery_note_filters = ["""EXISTS(
+		SELECT dni.name
+		FROM `tabDelivery Note Item` dni
+		WHERE dni.parent = `tabDelivery Note`.name
+			AND dni.print_order = {0}
+	)""".format(frappe.db.escape(doc.name))]
 
-	if doc.get(fn_map.uom_fn) == "Panel":
-		doc.set(fn_map.qty_type_fn, "Print Qty")
-	else:
-		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
+	delivery_notes = _get_delivery_notes_to_be_billed(filters=delivery_note_filters)
+
+	if not delivery_notes:
+		frappe.throw(_("There are no Delivery Notes to be billed"))
+
+	for d in delivery_notes:
+		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
+
+	# Missing Values and Forced Values
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("calculate_taxes_and_totals")
+
+	return target_doc

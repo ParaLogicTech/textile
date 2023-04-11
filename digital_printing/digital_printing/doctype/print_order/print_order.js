@@ -15,6 +15,8 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
 			'Work Order': 'Work Order',
+			'Delivery Note': 'Delivery Note',
+			'Sales Invoice': 'Sales Invoice',
 		}
 
 		this.setup_queries();
@@ -48,15 +50,29 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	setup_buttons() {
-		if (this.frm.doc.docstatus == 1) {
-			if (this.frm.doc.items.filter(d => !d.item_code && !d.design_bom).length) {
+		let doc = this.frm.doc;
+
+		if (doc.docstatus == 1) {
+			if (doc.items.filter(d => !d.item_code && !d.design_bom).length) {
 				this.frm.add_custom_button(__('Items and BOMs'), () => this.create_design_items_and_boms(),
 					__("Create"));
-			} else if(flt(this.frm.doc.per_ordered) < 100) {
+			} else if(flt(doc.per_ordered) < 100) {
 				this.frm.add_custom_button(__('Sales Order'), () => this.create_sales_order(),
 					__("Create"));
-			} else if(flt(this.frm.doc.per_work_ordered) < 100) {
+			}
+
+			if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
 				this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
+					__("Create"));
+			}
+
+			if (doc.per_produced && doc.per_delivered < doc.per_produced) {
+				this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
+					__("Create"));
+			}
+
+			if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
+				this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
 					__("Create"));
 			}
 		}
@@ -157,6 +173,22 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 
 	length_uom() {
 		this.calculate_totals();
+	}
+
+	get_order_defaults_from_customer() {
+		if (!this.frm.doc.customer) return
+
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_order_defaults_from_customer",
+			args: {
+				customer: this.frm.doc.customer
+			},
+			callback: (r) => {
+				if (r.message) {
+					this.frm.set_value(r.message);
+				}
+			}
+		});
 	}
 
 	override_default_value_in_items(cdf) {
@@ -282,17 +314,31 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}
 
-	get_order_defaults_from_customer() {
-		if (!this.frm.doc.customer) return
-
+	make_delivery_note() {
 		return frappe.call({
-			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_order_defaults_from_customer",
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_delivery_note",
 			args: {
-				customer: this.frm.doc.customer
+				"print_order": this.frm.doc.name,
 			},
-			callback: (r) => {
-				if (r.message) {
-					this.frm.set_value(r.message);
+			callback: function (r) {
+				if (!r.exc) {
+					var doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+				}
+			}
+		});
+	}
+
+	make_sales_invoice() {
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.get_sales_invoice",
+			args: {
+				"print_order": this.frm.doc.name,
+			},
+			callback: function (r) {
+				if (!r.exc) {
+					var doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 				}
 			}
 		});
