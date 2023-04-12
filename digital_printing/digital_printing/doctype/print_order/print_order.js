@@ -24,6 +24,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 
 	refresh() {
 		erpnext.hide_company();
+		this.set_default_warehouse();
 		this.setup_buttons();
 	}
 
@@ -74,6 +75,15 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
 				this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
 					__("Create"));
+			}
+		}
+	}
+
+	set_default_warehouse() {
+		if (this.frm.doc.docstatus == 0 && this.frm.doc.__islocal) {
+			let default_warehouse = frappe.defaults.get_default("default_warehouse");
+			if (!this.frm.doc.set_warehouse && default_warehouse) {
+				this.frm.set_value("set_warehouse", default_warehouse);
 			}
 		}
 	}

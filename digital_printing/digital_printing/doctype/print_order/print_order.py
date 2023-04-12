@@ -685,7 +685,8 @@ def make_sales_order(source_name, target_doc=None):
 		"Print Order": {
 			"doctype": "Sales Order",
 			"field_map": {
-				"delivery_date": "delivery_date"
+				"delivery_date": "delivery_date",
+				"set_warehouse": "set_warehouse",
 			},
 			"validation": {
 				"docstatus": ["=", 1],
