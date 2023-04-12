@@ -39,6 +39,7 @@ doctype_js = {
 	"Item": "overrides/item_hooks.js",
 	"Customer": "overrides/customer_hooks.js",
 	"Sales Order": "overrides/sales_order_hooks.js",
+	"Stock Entry": "overrides/stock_entry_hooks.js",
 }
 
 update_item_override_fields = [
