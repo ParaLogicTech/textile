@@ -11,6 +11,7 @@
   "customer",
   "customer_name",
   "is_fabric_provided_by_customer",
+  "packing_slip_required",
   "column_break_mb5rm",
   "notes",
   "column_break_kji8i",
@@ -60,6 +61,7 @@
   "per_work_ordered",
   "per_produced",
   "column_break_rwkru",
+  "per_packed",
   "per_delivered",
   "per_billed"
  ],
@@ -429,12 +431,26 @@
    "fieldtype": "Link",
    "label": "Target Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "per_packed",
+   "fieldtype": "Percent",
+   "label": "% Packed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "packing_slip_required",
+   "fieldtype": "Check",
+   "label": "Packing Slip Required for Delivery"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-04-11 17:32:05.760318",
+ "modified": "2023-04-14 14:21:26.138953",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
