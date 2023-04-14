@@ -59,7 +59,7 @@ update_sales_invoice_from_sales_order_mapper = [
 ]
 
 update_sales_invoice_from_delivery_note_mapper = [
-	"digital_printing.overrides.delivery_note_hooks.map_print_order_reference_in_delivery_note_item",
+	"digital_printing.overrides.delivery_note_hooks.map_print_order_reference_in_sales_invoice_item",
 ]
 
 fixtures = [

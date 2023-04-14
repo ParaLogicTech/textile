@@ -20,7 +20,7 @@ class DeliveryNoteDP(DeliveryNote):
 			doc.notify_update()
 
 
-def map_print_order_reference_in_delivery_note_item(mapper):
+def map_print_order_reference_in_sales_invoice_item(mapper, target_doctype):
 	if not mapper.get("Delivery Note Item"):
 		return
 
