@@ -20,6 +20,15 @@ class PackingSlipDP(PackingSlip):
 			doc.notify_update()
 
 
+def map_print_order_reference_in_delivery_note_item(item_mapper, source_doctype):
+	if not item_mapper.get('field_map'):
+		item_mapper['field_map'] = {}
+
+	field_map = item_mapper["field_map"]
+	field_map["print_order"] = "print_order"
+	field_map["print_order_item"] = "print_order_item"
+
+
 def override_packing_slip_dashboard(data):
 	data["internal_links"]["Print Order"] = ["items", "print_order"]
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Previous Documents")][0]

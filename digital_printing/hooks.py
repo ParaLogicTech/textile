@@ -68,6 +68,10 @@ update_sales_invoice_from_delivery_note_mapper = [
 	"digital_printing.overrides.delivery_note_hooks.map_print_order_reference_in_sales_invoice_item",
 ]
 
+update_delivery_note_from_packing_slip_mapper = [
+	"digital_printing.overrides.packing_slip_hooks.map_print_order_reference_in_delivery_note_item",
+]
+
 fixtures = [
 	{
 		"doctype": "Custom Field",
