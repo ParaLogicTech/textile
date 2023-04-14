@@ -596,32 +596,6 @@ def create_design_items_and_boms(print_order):
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
 
-@frappe.whitelist()
-def make_customer_fabric_stock_entry(source_name, target_doc=None):
-	po_doc = frappe.get_doc('Print Order', source_name)
-
-	if po_doc.docstatus != 1:
-		frappe.throw(_("Print Order {0} is not submitted").format(po_doc.name))
-
-	if not target_doc:
-		target_doc = frappe.new_doc("Stock Entry")
-
-	if isinstance(target_doc, str):
-		target_doc = frappe.get_doc(json.loads(target_doc))
-
-	target_doc.append("items", {
-		"item_code": po_doc.fabric_item,
-		"qty": po_doc.total_fabric_length,
-		"t_warehouse": po_doc.fabric_warehouse,
-		"uom": "Meter",
-	})
-
-	target_doc.run_method("set_missing_values")
-	target_doc.run_method("calculate_rate_and_amount")
-
-	return target_doc
-
-
 def make_design_item(design_item_row, fabric_item, process_item):
 	if not design_item_row:
 		frappe.throw(_('Print Order Row is mandatory.'))
@@ -783,7 +757,7 @@ def create_work_orders(print_order):
 
 
 @frappe.whitelist()
-def get_packing_slip(print_order):
+def make_packing_slip(print_order):
 	from erpnext.selling.doctype.sales_order.sales_order import make_packing_slip
 
 	doc = frappe.get_doc("Print Order", print_order)
@@ -813,9 +787,8 @@ def get_packing_slip(print_order):
 
 
 @frappe.whitelist()
-def get_delivery_note(print_order):
-	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note, \
-		make_delivery_note_from_packing_slips
+def make_delivery_note(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note_from_packing_slips
 
 	doc = frappe.get_doc("Print Order", print_order)
 
@@ -833,11 +806,10 @@ def get_delivery_note(print_order):
 	if not sales_orders:
 		frappe.throw(_("There are no Sales Orders to be delivered"))
 
+	packing_filter = "Packed Items Only" if doc.packing_slip_required else None
+
 	for d in sales_orders:
-		if doc.packing_slip_required:
-			target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter="Packed Items Only")
-		else:
-			target_doc = make_delivery_note(d.name, target_doc=target_doc)
+			target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
@@ -847,7 +819,7 @@ def get_delivery_note(print_order):
 
 
 @frappe.whitelist()
-def get_sales_invoice(print_order):
+def make_sales_invoice(print_order):
 	from erpnext.controllers.queries import _get_delivery_notes_to_be_billed
 	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
@@ -873,5 +845,31 @@ def get_sales_invoice(print_order):
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_taxes_and_totals")
+
+	return target_doc
+
+
+@frappe.whitelist()
+def make_customer_fabric_stock_entry(source_name, target_doc=None):
+	po_doc = frappe.get_doc('Print Order', source_name)
+
+	if po_doc.docstatus != 1:
+		frappe.throw(_("Print Order {0} is not submitted").format(po_doc.name))
+
+	if not target_doc:
+		target_doc = frappe.new_doc("Stock Entry")
+
+	if isinstance(target_doc, str):
+		target_doc = frappe.get_doc(json.loads(target_doc))
+
+	target_doc.append("items", {
+		"item_code": po_doc.fabric_item,
+		"qty": po_doc.total_fabric_length,
+		"t_warehouse": po_doc.fabric_warehouse,
+		"uom": "Meter",
+	})
+
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("calculate_rate_and_amount")
 
 	return target_doc
