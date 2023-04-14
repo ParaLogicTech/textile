@@ -814,7 +814,8 @@ def get_packing_slip(print_order):
 
 @frappe.whitelist()
 def get_delivery_note(print_order):
-	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note, \
+		make_delivery_note_from_packing_slips
 
 	doc = frappe.get_doc("Print Order", print_order)
 
@@ -833,7 +834,10 @@ def get_delivery_note(print_order):
 		frappe.throw(_("There are no Sales Orders to be delivered"))
 
 	for d in sales_orders:
-		target_doc = make_delivery_note(d.name, target_doc=target_doc)
+		if doc.packing_slip_required:
+			target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter="Packed Items Only")
+		else:
+			target_doc = make_delivery_note(d.name, target_doc=target_doc)
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
