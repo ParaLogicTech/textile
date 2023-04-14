@@ -72,7 +72,9 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 					__("Create"));
 			}
 
-			if (doc.per_produced && doc.per_delivered < doc.per_produced) {
+			if (doc.per_produced && doc.per_delivered < doc.per_produced
+					&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
+			) {
 				this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
 					__("Create"));
 			}
