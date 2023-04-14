@@ -397,6 +397,45 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
+	def set_packed_status(self, update=False, update_modified=True):
+		data = self.get_packed_status_data()
+
+		for d in self.items:
+			d.packed_qty = flt(data.packed_qty_map.get(d.name))
+			if update:
+				d.db_set({
+					'packed_qty': d.packed_qty
+				}, update_modified=update_modified)
+
+		self.per_packed = flt(self.calculate_status_percentage('packed_qty', 'stock_print_length', self.items))
+		if update:
+			self.db_set({
+				'per_packed': self.per_packed
+			}, update_modified=update_modified)
+
+	def get_packed_status_data(self):
+		out = frappe._dict()
+		out.packed_qty_map = {}
+
+		if self.docstatus == 1:
+			row_names = [d.name for d in self.items]
+			if row_names:
+				packed_data = frappe.db.sql("""
+					SELECT print_order_item, qty
+					FROM `tabPacking Slip Item`
+					WHERE docstatus = 1 AND print_order_item IN %s
+				""", [row_names], as_dict=1)
+
+				for d in packed_data:
+					out.packed_qty_map.setdefault(d.print_order_item, 0)
+					out.packed_qty_map[d.print_order_item] += flt(d.qty)
+
+		return out
+
+	def validate_packed_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('packed_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+
 	def set_delivered_status(self, update=False, update_modified=True):
 		data = self.get_delivered_status_data()
 
@@ -741,6 +780,36 @@ def create_work_orders(print_order):
 		), indicator='green')
 	else:
 		frappe.msgprint(_("Work Order already created in Draft."))
+
+
+@frappe.whitelist()
+def get_packing_slip(print_order):
+	from erpnext.selling.doctype.sales_order.sales_order import make_packing_slip
+
+	doc = frappe.get_doc("Print Order", print_order)
+
+	target_doc = frappe.new_doc("Packing Slip")
+
+	sales_orders = frappe.db.sql("""
+		SELECT DISTINCT s.name
+		FROM `tabSales Order Item` i
+		INNER JOIN `tabSales Order` s ON s.name = i.parent
+		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+		AND s.per_packed < 99.99 AND s.company = %(company)s AND
+		i.print_order = %(print_order)s
+	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
+
+	if not sales_orders:
+		frappe.throw(_("There are no Sales Orders to be packed"))
+
+	for d in sales_orders:
+		target_doc = make_packing_slip(d.name, target_doc=target_doc)
+
+	# Missing Values and Forced Values
+	target_doc.run_method("set_missing_values")
+	target_doc.run_method("calculate_totals")
+
+	return target_doc
 
 
 @frappe.whitelist()

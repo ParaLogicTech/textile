@@ -20,7 +20,7 @@ def get_data():
 			},
 			{
 				'label': _("Production"),
-				'items': [ 'Work Order']
+				'items': [ 'Work Order', 'Packing Slip']
 			}
 		]
 	}

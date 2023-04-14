@@ -26,6 +26,7 @@ override_doctype_class = {
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
 	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.SalesInvoiceDP",
+	"Packing Slip": "digital_printing.overrides.packing_slip_hooks.PackingSlipDP",
 }
 
 override_doctype_dashboards = {
@@ -33,6 +34,7 @@ override_doctype_dashboards = {
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.override_delivery_note_dashboard",
 	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.override_sales_invoice_dashboard",
+	"Packing Slip": "digital_printing.overrides.packing_slip_hooks.override_packing_slip_dashboard",
 }
 
 doctype_js = {
@@ -48,6 +50,10 @@ update_item_override_fields = [
 
 update_work_order_from_sales_order = [
 	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order",
+]
+
+update_packing_slip_from_sales_order_mapper = [
+	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
 ]
 
 update_delivery_note_from_sales_order_mapper = [
@@ -105,6 +111,8 @@ fixtures = [
 				'Delivery Note Item-print_order_item',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
+				'Packing Slip Item-print_order',
+				'Packing Slip Item-print_order_item',
 			]]
 		}
 	},

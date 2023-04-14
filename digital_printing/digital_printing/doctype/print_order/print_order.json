@@ -60,6 +60,7 @@
   "per_work_ordered",
   "per_produced",
   "column_break_rwkru",
+  "per_packed",
   "per_delivered",
   "per_billed"
  ],
@@ -429,12 +430,20 @@
    "fieldtype": "Link",
    "label": "Target Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "per_packed",
+   "fieldtype": "Percent",
+   "label": "% Packed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-04-11 17:32:05.760318",
+ "modified": "2023-04-12 16:27:39.619811",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
