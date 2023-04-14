@@ -809,7 +809,7 @@ def make_delivery_note(print_order):
 	packing_filter = "Packed Items Only" if doc.packing_slip_required else None
 
 	for d in sales_orders:
-			target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
+		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
