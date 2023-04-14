@@ -51,11 +51,11 @@ update_work_order_from_sales_order = [
 ]
 
 update_delivery_note_from_sales_order_mapper = [
-	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_delivery_note_item",
+	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
 ]
 
 update_sales_invoice_from_sales_order_mapper = [
-	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_sales_invoice_item",
+	"digital_printing.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
 ]
 
 update_sales_invoice_from_delivery_note_mapper = [
