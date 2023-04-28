@@ -593,6 +593,7 @@ def create_design_items_and_boms(print_order):
 			d.db_set("design_bom", bom_doc.name)
 
 	doc.set_status(update=True)
+	doc.notify_update()
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
 
