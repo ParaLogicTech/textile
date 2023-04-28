@@ -38,7 +38,6 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.set_query("fabric_item", () => {
 			let filters = {
 				'print_item_type': 'Fabric',
-				'is_customer_provided_item': this.frm.doc.is_fabric_provided_by_customer,
 			}
 			if (this.frm.doc.is_fabric_provided_by_customer) {
 				filters.customer = this.frm.doc.customer;
