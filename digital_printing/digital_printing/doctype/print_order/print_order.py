@@ -110,15 +110,15 @@ class PrintOrder(StatusUpdater):
 		if self.get("fabric_item"):
 			validate_print_item(self.fabric_item, "Fabric")
 
+			if not self.is_fabric_provided_by_customer:
+				return
+
 			item_details = frappe.get_cached_value("Item", self.fabric_item, ["is_customer_provided_item", "customer"], as_dict=1)
 
-			if self.is_fabric_provided_by_customer != item_details.is_customer_provided_item:
-				if not item_details.is_customer_provided_item:
-					frappe.throw(_("Fabric Item {0} is not a Customer Provided Item").format(frappe.bold(self.fabric_item)))
-				else:
-					frappe.throw(_("Fabric Item {0} is a Customer Provided Item").format(frappe.bold(self.fabric_item)))
+			if not item_details.is_customer_provided_item:
+				frappe.throw(_("Fabric Item {0} is not a Customer Provided Item").format(frappe.bold(self.fabric_item)))
 
-			if self.is_fabric_provided_by_customer and self.customer and self.customer != item_details.customer:
+			if item_details.customer != self.customer:
 				frappe.throw(_("Customer Provided Fabric Item {0} does not belong to Customer {1}").format(
 					frappe.bold(self.fabric_item), frappe.bold(self.customer)))
 
