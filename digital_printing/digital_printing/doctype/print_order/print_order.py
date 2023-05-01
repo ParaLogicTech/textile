@@ -287,7 +287,7 @@ class PrintOrder(StatusUpdater):
 					'ordered_qty': d.ordered_qty
 				}, update_modified=update_modified)
 
-		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
+		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_ordered': self.per_ordered
@@ -301,7 +301,7 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				ordered_data = frappe.db.sql("""
-					SELECT i.print_order_item, i.qty
+					SELECT i.print_order_item, i.stock_qty
 					FROM `tabSales Order Item` i
 					INNER JOIN `tabSales Order` s ON s.name = i.parent
 					WHERE s.docstatus = 1 AND i.print_order_item IN %s
@@ -309,12 +309,12 @@ class PrintOrder(StatusUpdater):
 
 				for d in ordered_data:
 					out.ordered_qty_map.setdefault(d.print_order_item, 0)
-					out.ordered_qty_map[d.print_order_item] += flt(d.qty)
+					out.ordered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_ordered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('ordered_qty', 'qty', self.items,
+		self.validate_completed_qty('ordered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
 	def set_work_order_status(self, update=False, update_modified=True):
@@ -419,14 +419,14 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				packed_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabPacking Slip Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in packed_data:
 					out.packed_qty_map.setdefault(d.print_order_item, 0)
-					out.packed_qty_map[d.print_order_item] += flt(d.qty)
+					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
@@ -444,7 +444,7 @@ class PrintOrder(StatusUpdater):
 					'delivered_qty': d.delivered_qty
 				}, update_modified=update_modified)
 
-		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'qty', self.items))
+		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_delivered': self.per_delivered
@@ -458,19 +458,19 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				delivered_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabDelivery Note Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in delivered_data:
 					out.delivered_qty_map.setdefault(d.print_order_item, 0)
-					out.delivered_qty_map[d.print_order_item] += flt(d.qty)
+					out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_delivered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('delivered_qty', 'qty', self.items,
+		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
 
 	def set_billed_status(self, update=False, update_modified=True):
@@ -483,7 +483,7 @@ class PrintOrder(StatusUpdater):
 					'billed_qty': d.billed_qty
 				}, update_modified=update_modified)
 
-		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'qty', self.items))
+		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_billed': self.per_billed
@@ -497,19 +497,19 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				billed_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabSales Invoice Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in billed_data:
 					out.billed_qty_map.setdefault(d.print_order_item, 0)
-					out.billed_qty_map[d.print_order_item] += flt(d.qty)
+					out.billed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_billed_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('billed_qty', 'qty', self.items,
+		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
 
 
@@ -691,7 +691,8 @@ def make_sales_order(source_name, target_doc=None):
 		return abs(source.ordered_qty) < abs(source.qty)
 
 	def update_item(source, target, source_parent, target_parent):
-		target.qty = flt(source.qty) - flt(source.ordered_qty)
+		qty = source.qty if source.qty_type == "Print Qty" else source.print_length
+		target.qty = flt(qty) - flt(source.ordered_qty)
 
 	doc = get_mapped_doc("Print Order", source_name,	{
 		"Print Order": {
