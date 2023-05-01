@@ -77,10 +77,8 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
-			elif self.per_work_ordered < 100:
-				self.status = "To Order Production"
 			elif self.per_produced < 100:
-				self.status = "To Finish Production"
+				self.status = "To Produce"
 			elif self.per_delivered < 100:
 				self.status = "To Deliver"
 			elif self.per_billed < 100:

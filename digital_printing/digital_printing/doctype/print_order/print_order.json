@@ -346,7 +346,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Receive Fabric\nTo Order Production\nTo Finish Production\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Receive Fabric\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
@@ -452,7 +452,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-04-20 14:35:10.830674",
+ "modified": "2023-05-01 17:15:06.813942",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
