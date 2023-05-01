@@ -737,7 +737,11 @@ def create_work_orders(print_order):
 	if doc.per_work_ordered >= 100:
 		frappe.throw(_("Work Orders already created."))
 
-	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
+	sales_orders = frappe.get_all("Sales Order Item", 'parent', {
+		'print_order': doc.name,
+		'docstatus': 1
+	})
+
 	sales_orders = {d.parent for d in sales_orders}
 
 	wo_list = []
@@ -864,7 +868,6 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 	target_doc.append("items", {
 		"item_code": po_doc.fabric_item,
 		"qty": po_doc.total_fabric_length,
-		"t_warehouse": po_doc.fabric_warehouse,
 		"uom": "Meter",
 	})
 
