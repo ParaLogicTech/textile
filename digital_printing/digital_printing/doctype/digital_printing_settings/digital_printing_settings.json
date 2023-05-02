@@ -11,7 +11,7 @@
   "column_break_ao9pt",
   "default_printing_source_warehouse",
   "default_printing_wip_warehouse",
-  "default_printing_target_warehouse"
+  "default_printing_fg_warehouse"
  ],
  "fields": [
   {
@@ -37,7 +37,7 @@
    "options": "Warehouse"
   },
   {
-   "fieldname": "default_printing_target_warehouse",
+   "fieldname": "default_printing_fg_warehouse",
    "fieldtype": "Link",
    "label": "Default Target Warehouse",
    "options": "Warehouse"
@@ -46,7 +46,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-05-01 19:04:30.576404",
+ "modified": "2023-05-02 16:43:45.154332",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing Settings",

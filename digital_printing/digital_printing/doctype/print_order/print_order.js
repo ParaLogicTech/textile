@@ -91,7 +91,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			const po_to_dps_warehouse_fn_map = {
 				'source_warehouse': 'default_printing_source_warehouse',
 				'wip_warehouse': 'default_printing_wip_warehouse',
-				'set_warehouse': 'default_printing_target_warehouse',
+				'fg_warehouse': 'default_printing_fg_warehouse',
 			}
 
 			for (let [po_warehouse_fn, dps_warehouse_fn] of Object.entries(po_to_dps_warehouse_fn_map)) {

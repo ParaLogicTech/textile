@@ -12,7 +12,7 @@ class DigitalPrintingSettings(Document):
 		global_default_fields = [
 			"default_printing_source_warehouse",
 			"default_printing_wip_warehouse",
-			"default_printing_target_warehouse"
+			"default_printing_fg_warehouse"
 		]
 
 		for fn in global_default_fields:

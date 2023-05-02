@@ -45,7 +45,7 @@ def set_print_order_warehouses_in_work_order(work_order):
 	po_to_wo_warehouse_fn_map = {
 		'source_warehouse': 'source_warehouse',
 		'wip_warehouse': 'wip_warehouse',
-		'set_warehouse': 'fg_warehouse',
+		'fg_warehouse': 'fg_warehouse',
 	}
 
 	for po_warehouse_fn, wo_warehouse_fn in po_to_wo_warehouse_fn_map.items():

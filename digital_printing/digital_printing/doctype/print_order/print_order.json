@@ -50,7 +50,7 @@
   "column_break_6wauy",
   "wip_warehouse",
   "column_break_2iwkk",
-  "set_warehouse",
+  "fg_warehouse",
   "section_break_2vfzf",
   "items",
   "totals_section",
@@ -434,12 +434,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "set_warehouse",
-   "fieldtype": "Link",
-   "label": "Target Warehouse",
-   "options": "Warehouse"
-  },
-  {
    "fieldname": "per_packed",
    "fieldtype": "Percent",
    "label": "% Packed",
@@ -476,12 +470,18 @@
    "fieldtype": "Link",
    "label": "Raw Material Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-02 13:57:42.056193",
+ "modified": "2023-05-02 16:43:23.210773",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
