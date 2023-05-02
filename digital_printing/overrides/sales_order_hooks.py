@@ -38,6 +38,23 @@ def set_print_order_reference_in_work_order(work_order):
 		work_order.print_order_item = res.print_order_item
 
 
+def set_print_order_warehouses_in_work_order(work_order):
+	if not work_order.get('print_order'):
+		return
+
+	po_to_wo_warehouse_fn_map = {
+		'source_warehouse': 'source_warehouse',
+		'wip_warehouse': 'wip_warehouse',
+		'set_warehouse': 'fg_warehouse',
+	}
+
+	for po_warehouse_fn, wo_warehouse_fn in po_to_wo_warehouse_fn_map.items():
+		warehouse = frappe.get_cached_value("Print Order", work_order.print_order, po_warehouse_fn)
+
+		if warehouse:
+			work_order.set(wo_warehouse_fn, warehouse)
+
+
 def map_print_order_reference_in_target_item(mapper, target_doctype):
 	if not mapper.get("Sales Order Item"):
 		return

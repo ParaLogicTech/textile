@@ -87,10 +87,19 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	set_default_warehouse() {
-		if (this.frm.doc.docstatus == 0 && this.frm.doc.__islocal) {
-			let default_warehouse = frappe.defaults.get_default("default_warehouse");
-			if (!this.frm.doc.set_warehouse && default_warehouse) {
-				this.frm.set_value("set_warehouse", default_warehouse);
+		if (this.frm.is_new()) {
+			const po_to_dps_warehouse_fn_map = {
+				'source_warehouse': 'default_printing_source_warehouse',
+				'wip_warehouse': 'default_printing_wip_warehouse',
+				'set_warehouse': 'default_printing_target_warehouse',
+			}
+
+			for (let [po_warehouse_fn, dps_warehouse_fn] of Object.entries(po_to_dps_warehouse_fn_map)) {
+				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
+				if (!this.frm.doc[po_warehouse_fn] && warehouse) {
+					this.frm.set_value(po_warehouse_fn, warehouse);
+				}
+
 			}
 		}
 	}
