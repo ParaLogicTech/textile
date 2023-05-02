@@ -25,8 +25,8 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 
 	refresh() {
 		erpnext.hide_company();
-		this.set_default_warehouse();
 		this.setup_buttons();
+		this.set_default_warehouse();
 	}
 
 	on_upload_complete() {
@@ -48,6 +48,12 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.set_query("process_item", () => {
 			return erpnext.queries.item({ print_item_type: 'Print Process' });
 		});
+
+		for (let warehouse_field of ["source_warehouse", "wip_warehouse", "fg_warehouse"]) {
+			this.frm.set_query(warehouse_field, () => {
+				return erpnext.queries.warehouse(this.frm.doc);
+			});
+		}
 	}
 
 	setup_buttons() {
