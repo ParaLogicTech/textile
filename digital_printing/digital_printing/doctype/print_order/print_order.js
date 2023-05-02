@@ -110,8 +110,35 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		}
 	}
 
+	get_fabric_stock_qty() {
+		if (this.frm.doc.fabric_item && this.frm.doc.source_warehouse) {
+			return this.frm.call({
+				method: "erpnext.stock.get_item_details.get_bin_details",
+				args: {
+					item_code: this.frm.doc.fabric_item,
+					warehouse: this.frm.doc.source_warehouse
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value("fabric_stock_qty", flt(r.message.actual_qty));
+					}
+				}
+			});
+		} else {
+			this.frm.set_value('fabric_stock_qty', 0);
+		}
+	}
+
 	customer() {
 		this.get_order_defaults_from_customer();
+	}
+
+	fabric_item() {
+		this.get_fabric_stock_qty();
+	}
+
+	source_warehouse() {
+		this.get_fabric_stock_qty();
 	}
 
 	default_gap() {

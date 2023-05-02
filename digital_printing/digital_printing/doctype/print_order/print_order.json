@@ -28,7 +28,7 @@
   "fabric_width",
   "column_break_ymmyn",
   "fabric_gsm",
-  "net_weight_per_unit",
+  "fabric_stock_qty",
   "process_details_section",
   "process_item",
   "column_break_o7rkb",
@@ -245,14 +245,6 @@
    "fieldname": "is_fabric_provided_by_customer",
    "fieldtype": "Check",
    "label": "Is Fabric Provided By Customer"
-  },
-  {
-   "fetch_from": "fabric_item.net_weight_per_unit",
-   "fieldname": "net_weight_per_unit",
-   "fieldtype": "Float",
-   "label": "Fabric Weight Per Unit",
-   "precision": "1",
-   "read_only": 1
   },
   {
    "fieldname": "items_section",
@@ -472,6 +464,14 @@
    "options": "Warehouse"
   },
   {
+   "depends_on": "eval:doc.fabric_item && doc.source_warehouse",
+   "fieldname": "fabric_stock_qty",
+   "fieldtype": "Float",
+   "label": "Fabric Stock Qty",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
    "fieldname": "fg_warehouse",
    "fieldtype": "Link",
    "label": "Target Warehouse",
@@ -481,7 +481,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-02 16:43:23.210773",
+ "modified": "2023-05-02 16:50:10.101287",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

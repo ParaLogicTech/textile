@@ -6,6 +6,7 @@ from frappe import _
 from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.party import validate_party_frozen_disabled
+from erpnext.stock.get_item_details import get_bin_details
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -24,6 +25,8 @@ class PrintOrder(StatusUpdater):
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
+
+		self.set_fabric_stock_qty()
 
 	@frappe.whitelist()
 	def on_upload_complete(self):
@@ -47,6 +50,13 @@ class PrintOrder(StatusUpdater):
 
 	def on_submit(self):
 		self.set_order_defaults_for_customer()
+
+	def set_fabric_stock_qty(self):
+		if not (self.fabric_item and self.source_warehouse):
+			return
+
+		bin_details = get_bin_details(self.fabric_item, self.source_warehouse)
+		self.fabric_stock_qty = flt(bin_details.get("actual_qty"))
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
