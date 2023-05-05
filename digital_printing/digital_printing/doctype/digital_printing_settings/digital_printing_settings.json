@@ -7,7 +7,11 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "default_item_group_for_printed_design_item"
+  "default_item_group_for_printed_design_item",
+  "column_break_ao9pt",
+  "default_printing_source_warehouse",
+  "default_printing_wip_warehouse",
+  "default_printing_fg_warehouse"
  ],
  "fields": [
   {
@@ -15,12 +19,34 @@
    "fieldtype": "Link",
    "label": "Default Item Group For Printed Design Item",
    "options": "Item Group"
+  },
+  {
+   "fieldname": "column_break_ao9pt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_printing_source_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Raw Material Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_printing_wip_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Work In Progress Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_printing_fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Target Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-03-06 13:12:38.914433",
+ "modified": "2023-05-02 16:43:45.154332",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing Settings",

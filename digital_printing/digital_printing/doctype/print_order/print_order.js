@@ -25,8 +25,8 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 
 	refresh() {
 		erpnext.hide_company();
-		this.set_default_warehouse();
 		this.setup_buttons();
+		this.set_default_warehouse();
 	}
 
 	on_upload_complete() {
@@ -38,7 +38,6 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.set_query("fabric_item", () => {
 			let filters = {
 				'print_item_type': 'Fabric',
-				'is_customer_provided_item': this.frm.doc.is_fabric_provided_by_customer,
 			}
 			if (this.frm.doc.is_fabric_provided_by_customer) {
 				filters.customer = this.frm.doc.customer;
@@ -49,6 +48,12 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.set_query("process_item", () => {
 			return erpnext.queries.item({ print_item_type: 'Print Process' });
 		});
+
+		for (let warehouse_field of ["source_warehouse", "wip_warehouse", "fg_warehouse"]) {
+			this.frm.set_query(warehouse_field, () => {
+				return erpnext.queries.warehouse(this.frm.doc);
+			});
+		}
 	}
 
 	setup_buttons() {
@@ -88,16 +93,52 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	set_default_warehouse() {
-		if (this.frm.doc.docstatus == 0 && this.frm.doc.__islocal) {
-			let default_warehouse = frappe.defaults.get_default("default_warehouse");
-			if (!this.frm.doc.set_warehouse && default_warehouse) {
-				this.frm.set_value("set_warehouse", default_warehouse);
+		if (this.frm.is_new()) {
+			const po_to_dps_warehouse_fn_map = {
+				'source_warehouse': 'default_printing_source_warehouse',
+				'wip_warehouse': 'default_printing_wip_warehouse',
+				'fg_warehouse': 'default_printing_fg_warehouse',
 			}
+
+			for (let [po_warehouse_fn, dps_warehouse_fn] of Object.entries(po_to_dps_warehouse_fn_map)) {
+				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
+				if (!this.frm.doc[po_warehouse_fn] && warehouse) {
+					this.frm.set_value(po_warehouse_fn, warehouse);
+				}
+
+			}
+		}
+	}
+
+	get_fabric_stock_qty() {
+		if (this.frm.doc.fabric_item && this.frm.doc.source_warehouse) {
+			return this.frm.call({
+				method: "erpnext.stock.get_item_details.get_bin_details",
+				args: {
+					item_code: this.frm.doc.fabric_item,
+					warehouse: this.frm.doc.source_warehouse
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value("fabric_stock_qty", flt(r.message.actual_qty));
+					}
+				}
+			});
+		} else {
+			this.frm.set_value('fabric_stock_qty', 0);
 		}
 	}
 
 	customer() {
 		this.get_order_defaults_from_customer();
+	}
+
+	fabric_item() {
+		this.get_fabric_stock_qty();
+	}
+
+	source_warehouse() {
+		this.get_fabric_stock_qty();
 	}
 
 	default_gap() {

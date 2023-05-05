@@ -28,7 +28,7 @@
   "fabric_width",
   "column_break_ymmyn",
   "fabric_gsm",
-  "net_weight_per_unit",
+  "fabric_stock_qty",
   "process_details_section",
   "process_item",
   "column_break_o7rkb",
@@ -46,7 +46,12 @@
   "column_break_fozde",
   "default_qty",
   "items_section",
-  "set_warehouse",
+  "source_warehouse",
+  "column_break_6wauy",
+  "wip_warehouse",
+  "column_break_2iwkk",
+  "fg_warehouse",
+  "section_break_2vfzf",
   "items",
   "totals_section",
   "total_print_length",
@@ -116,6 +121,8 @@
    "read_only": 1
   },
   {
+   "fetch_from": "fabric_material.default_process_item",
+   "fetch_if_empty": 1,
    "fieldname": "process_item",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -240,14 +247,6 @@
    "label": "Is Fabric Provided By Customer"
   },
   {
-   "fetch_from": "fabric_item.net_weight_per_unit",
-   "fieldname": "net_weight_per_unit",
-   "fieldtype": "Float",
-   "label": "Fabric Weight Per Unit",
-   "precision": "1",
-   "read_only": 1
-  },
-  {
    "fieldname": "items_section",
    "fieldtype": "Section Break"
   },
@@ -344,7 +343,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Receive Fabric\nTo Order Production\nTo Finish Production\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
@@ -427,12 +426,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "set_warehouse",
-   "fieldtype": "Link",
-   "label": "Target Warehouse",
-   "options": "Warehouse"
-  },
-  {
    "fieldname": "per_packed",
    "fieldtype": "Percent",
    "label": "% Packed",
@@ -445,12 +438,50 @@
    "fieldname": "packing_slip_required",
    "fieldtype": "Check",
    "label": "Packing Slip Required for Delivery"
+  },
+  {
+   "fieldname": "column_break_6wauy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "wip_warehouse",
+   "fieldtype": "Link",
+   "label": "Work In Progress Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_2iwkk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_2vfzf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Raw Material Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "depends_on": "eval:doc.fabric_item && doc.source_warehouse",
+   "fieldname": "fabric_stock_qty",
+   "fieldtype": "Float",
+   "label": "Fabric Stock Qty",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-04-14 14:21:26.138953",
+ "modified": "2023-05-02 16:50:10.101287",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

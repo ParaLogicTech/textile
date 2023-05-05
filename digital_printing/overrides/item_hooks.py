@@ -5,8 +5,11 @@ from frappe.utils import flt
 
 
 class ItemDP(Item):
-	def validate(self):
+	def before_validate(self):
 		self.calculate_net_weight_per_unit()
+		self.validate_fabric_uoms()
+
+	def validate(self):
 		super().validate()
 		self.validate_print_item_type()
 		self.validate_fabric_properties()
@@ -74,6 +77,26 @@ class ItemDP(Item):
 			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
+
+	def validate_fabric_uoms(self):
+		if self.print_item_type not in ["Fabric", "Printed Design"]:
+			return
+
+		if self.stock_uom != "Meter":
+			frappe.throw(_("Default Unit of Measure must be Meter"))
+
+		uoms = []
+
+		for d in self.uom_conversion_graph:
+			uoms += [d.from_uom, d.to_uom]
+
+		if 'Yard' not in uoms:
+			self.append("uom_conversion_graph", {
+				"from_uom": "Yard",
+				"from_qty": 1,
+				"to_uom": "Meter",
+				"to_qty": 0.9144
+			})
 
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:

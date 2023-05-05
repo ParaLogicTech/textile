@@ -6,6 +6,7 @@ from frappe import _
 from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.party import validate_party_frozen_disabled
+from erpnext.stock.get_item_details import get_bin_details
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -24,6 +25,8 @@ class PrintOrder(StatusUpdater):
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
+
+		self.set_fabric_stock_qty()
 
 	@frappe.whitelist()
 	def on_upload_complete(self):
@@ -47,6 +50,13 @@ class PrintOrder(StatusUpdater):
 
 	def on_submit(self):
 		self.set_order_defaults_for_customer()
+
+	def set_fabric_stock_qty(self):
+		if not (self.fabric_item and self.source_warehouse):
+			return
+
+		bin_details = get_bin_details(self.fabric_item, self.source_warehouse)
+		self.fabric_stock_qty = flt(bin_details.get("actual_qty"))
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
@@ -77,10 +87,8 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
-			elif self.per_work_ordered < 100:
-				self.status = "To Order Production"
 			elif self.per_produced < 100:
-				self.status = "To Finish Production"
+				self.status = "To Produce"
 			elif self.per_delivered < 100:
 				self.status = "To Deliver"
 			elif self.per_billed < 100:
@@ -110,15 +118,15 @@ class PrintOrder(StatusUpdater):
 		if self.get("fabric_item"):
 			validate_print_item(self.fabric_item, "Fabric")
 
+			if not self.is_fabric_provided_by_customer:
+				return
+
 			item_details = frappe.get_cached_value("Item", self.fabric_item, ["is_customer_provided_item", "customer"], as_dict=1)
 
-			if self.is_fabric_provided_by_customer != item_details.is_customer_provided_item:
-				if not item_details.is_customer_provided_item:
-					frappe.throw(_("Fabric Item {0} is not a Customer Provided Item").format(frappe.bold(self.fabric_item)))
-				else:
-					frappe.throw(_("Fabric Item {0} is a Customer Provided Item").format(frappe.bold(self.fabric_item)))
+			if not item_details.is_customer_provided_item:
+				frappe.throw(_("Fabric Item {0} is not a Customer Provided Item").format(frappe.bold(self.fabric_item)))
 
-			if self.is_fabric_provided_by_customer and self.customer and self.customer != item_details.customer:
+			if item_details.customer != self.customer:
 				frappe.throw(_("Customer Provided Fabric Item {0} does not belong to Customer {1}").format(
 					frappe.bold(self.fabric_item), frappe.bold(self.customer)))
 
@@ -289,7 +297,7 @@ class PrintOrder(StatusUpdater):
 					'ordered_qty': d.ordered_qty
 				}, update_modified=update_modified)
 
-		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'qty', self.items))
+		self.per_ordered = flt(self.calculate_status_percentage('ordered_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_ordered': self.per_ordered
@@ -303,7 +311,7 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				ordered_data = frappe.db.sql("""
-					SELECT i.print_order_item, i.qty
+					SELECT i.print_order_item, i.stock_qty
 					FROM `tabSales Order Item` i
 					INNER JOIN `tabSales Order` s ON s.name = i.parent
 					WHERE s.docstatus = 1 AND i.print_order_item IN %s
@@ -311,12 +319,12 @@ class PrintOrder(StatusUpdater):
 
 				for d in ordered_data:
 					out.ordered_qty_map.setdefault(d.print_order_item, 0)
-					out.ordered_qty_map[d.print_order_item] += flt(d.qty)
+					out.ordered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_ordered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('ordered_qty', 'qty', self.items,
+		self.validate_completed_qty('ordered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
 
 	def set_work_order_status(self, update=False, update_modified=True):
@@ -421,14 +429,14 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				packed_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabPacking Slip Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in packed_data:
 					out.packed_qty_map.setdefault(d.print_order_item, 0)
-					out.packed_qty_map[d.print_order_item] += flt(d.qty)
+					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
@@ -446,7 +454,7 @@ class PrintOrder(StatusUpdater):
 					'delivered_qty': d.delivered_qty
 				}, update_modified=update_modified)
 
-		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'qty', self.items))
+		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_delivered': self.per_delivered
@@ -460,19 +468,19 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				delivered_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabDelivery Note Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in delivered_data:
 					out.delivered_qty_map.setdefault(d.print_order_item, 0)
-					out.delivered_qty_map[d.print_order_item] += flt(d.qty)
+					out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_delivered_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('delivered_qty', 'qty', self.items,
+		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
 
 	def set_billed_status(self, update=False, update_modified=True):
@@ -485,7 +493,7 @@ class PrintOrder(StatusUpdater):
 					'billed_qty': d.billed_qty
 				}, update_modified=update_modified)
 
-		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'qty', self.items))
+		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
 		if update:
 			self.db_set({
 				'per_billed': self.per_billed
@@ -499,19 +507,19 @@ class PrintOrder(StatusUpdater):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				billed_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, stock_qty
 					FROM `tabSales Invoice Item`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
 
 				for d in billed_data:
 					out.billed_qty_map.setdefault(d.print_order_item, 0)
-					out.billed_qty_map[d.print_order_item] += flt(d.qty)
+					out.billed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 		return out
 
 	def validate_billed_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('billed_qty', 'qty', self.items,
+		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
 
 
@@ -593,6 +601,7 @@ def create_design_items_and_boms(print_order):
 			d.db_set("design_bom", bom_doc.name)
 
 	doc.set_status(update=True)
+	doc.notify_update()
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
 
@@ -692,14 +701,15 @@ def make_sales_order(source_name, target_doc=None):
 		return abs(source.ordered_qty) < abs(source.qty)
 
 	def update_item(source, target, source_parent, target_parent):
-		target.qty = flt(source.qty) - flt(source.ordered_qty)
+		qty = source.qty if source.qty_type == "Print Qty" else source.print_length
+		target.qty = flt(qty) - flt(source.ordered_qty)
 
 	doc = get_mapped_doc("Print Order", source_name,	{
 		"Print Order": {
 			"doctype": "Sales Order",
 			"field_map": {
 				"delivery_date": "delivery_date",
-				"set_warehouse": "set_warehouse",
+				"fg_warehouse": "set_warehouse",
 			},
 			"validation": {
 				"docstatus": ["=", 1],
@@ -738,7 +748,11 @@ def create_work_orders(print_order):
 	if doc.per_work_ordered >= 100:
 		frappe.throw(_("Work Orders already created."))
 
-	sales_orders = frappe.get_all("Sales Order Item", 'parent', {'print_order': doc.name})
+	sales_orders = frappe.get_all("Sales Order Item", 'parent', {
+		'print_order': doc.name,
+		'docstatus': 1
+	})
+
 	sales_orders = {d.parent for d in sales_orders}
 
 	wo_list = []
@@ -865,7 +879,6 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 	target_doc.append("items", {
 		"item_code": po_doc.fabric_item,
 		"qty": po_doc.total_fabric_length,
-		"t_warehouse": po_doc.fabric_warehouse,
 		"uom": "Meter",
 	})
 
