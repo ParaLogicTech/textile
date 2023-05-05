@@ -3,8 +3,6 @@ frappe.listview_settings['Print Order'] = {
 	get_indicator: function(doc) {
 		if(doc.status === "To Create Items") {
 			return [__(doc.status), "yellow", "status,=," + doc.status];
-		} else if(doc.status === "To Receive Fabric") {
-			return [__(doc.status), "purple", "status,=," + doc.status];
 		} else if(doc.status === "To Confirm Order") {
 			return [__(doc.status), "orange", "status,=," + doc.status];
 		} else if(doc.status === "To Produce") {

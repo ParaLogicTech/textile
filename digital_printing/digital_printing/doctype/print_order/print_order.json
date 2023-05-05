@@ -343,7 +343,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Receive Fabric\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1

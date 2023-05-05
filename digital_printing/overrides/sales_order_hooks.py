@@ -49,7 +49,7 @@ def set_print_order_warehouses_in_work_order(work_order):
 	}
 
 	for po_warehouse_fn, wo_warehouse_fn in po_to_wo_warehouse_fn_map.items():
-		warehouse = frappe.get_cached_value("Print Order", work_order.print_order, po_warehouse_fn)
+		warehouse = frappe.db.get_value("Print Order", work_order.print_order, po_warehouse_fn, cache=True)
 
 		if warehouse:
 			work_order.set(wo_warehouse_fn, warehouse)
