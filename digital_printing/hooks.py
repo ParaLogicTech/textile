@@ -84,7 +84,6 @@ fixtures = [
 				'Customer-default_printing_qty_type',
 				'Customer-default_printing_length_uom',
 				'Item-print_item_type',
-				'Item-printing_tab',
 				'Item-sec_design_properties',
 				'Item-design_name',
 				'Item-design_width',
