@@ -20,6 +20,10 @@
   "transaction_date",
   "delivery_date",
   "amended_from",
+  "section_break_tkryl",
+  "po_no",
+  "column_break_ajrow",
+  "po_date",
   "section_break_rdsdl",
   "fabric_item",
   "fabric_item_name",
@@ -45,13 +49,13 @@
   "default_length_uom",
   "column_break_fozde",
   "default_qty",
-  "items_section",
+  "warehouse_section",
   "source_warehouse",
   "column_break_6wauy",
   "wip_warehouse",
   "column_break_2iwkk",
   "fg_warehouse",
-  "section_break_2vfzf",
+  "items_section",
   "items",
   "totals_section",
   "total_print_length",
@@ -90,7 +94,8 @@
   {
    "fieldname": "delivery_date",
    "fieldtype": "Date",
-   "label": "Delivery Date",
+   "in_standard_filter": 1,
+   "label": "Expected Delivery Date",
    "no_copy": 1
   },
   {
@@ -453,10 +458,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "section_break_2vfzf",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "source_warehouse",
    "fieldtype": "Link",
    "label": "Raw Material Warehouse",
@@ -475,12 +476,37 @@
    "fieldtype": "Link",
    "label": "Target Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "po_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Customer's Purchase Order No"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "po_date",
+   "fieldtype": "Date",
+   "label": "Customer's Purchase Order Date"
+  },
+  {
+   "fieldname": "section_break_tkryl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ajrow",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-06 14:38:43.253689",
+ "modified": "2023-05-06 15:06:15.054133",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
