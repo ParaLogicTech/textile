@@ -3,8 +3,9 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from frappe.model.mapper import get_mapped_doc
+from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details
 from erpnext.controllers.status_updater import StatusUpdater
@@ -51,6 +52,12 @@ class PrintOrder(StatusUpdater):
 	def on_submit(self):
 		self.set_order_defaults_for_customer()
 
+	def on_cancel(self):
+		if self.status == "Closed":
+			frappe.throw(_("Closed Order cannot be cancelled. Re-open to cancel."))
+
+		self.db_set("status", "Cancelled")
+
 	def set_fabric_stock_qty(self):
 		if not (self.fabric_item and self.source_warehouse):
 			return
@@ -79,11 +86,16 @@ class PrintOrder(StatusUpdater):
 	def set_status(self, status=None, update=False, update_modified=True):
 		previous_status = self.status
 
+		if status:
+			self.status = status
+
 		if self.docstatus == 0:
 			self.status = "Draft"
 
 		elif self.docstatus == 1:
-			if not all(d.item_code and d.design_bom for d in self.items):
+			if self.status == "Closed":
+				self.status = "Closed"
+			elif not all(d.item_code and d.design_bom for d in self.items):
 				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
@@ -570,6 +582,44 @@ def get_order_defaults_from_customer(customer):
 			customer_order_defaults[print_order_fn] = customer_defaults[customer_fn]
 
 	return customer_order_defaults
+
+
+@frappe.whitelist()
+def update_status(print_order, status):
+	if not frappe.has_permission("Print Order", "submit"):
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	doc = frappe.get_doc("Print Order", print_order)
+
+	if doc.docstatus != 1:
+		return
+	if status == "Closed" and doc.per_ordered == 100:
+		return
+
+	doc.set_status(update=True, status=status)
+	doc.notify_update()
+	clear_doctype_notifications(doc)
+
+
+@frappe.whitelist()
+def close_or_unclose_print_orders(names, status):
+	if isinstance(names, str):
+		names = json.loads(names)
+
+	for name in names:
+		update_status(name, status)
+
+
+def check_print_order_is_closed(doc):
+	if cint(doc.get("is_return")):
+		return
+
+	for d in doc.get("items"):
+		if d.get("print_order"):
+			status = frappe.db.get_value("Print Order", d.print_order, "status", cache=True)
+			if status == "Closed":
+				frappe.throw(_("Row #{0}: {1} is {2}").format(
+					d.idx, frappe.get_desk_link("Print Order", d.print_order), status))
 
 
 @frappe.whitelist()

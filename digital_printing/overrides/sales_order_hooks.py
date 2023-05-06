@@ -1,9 +1,14 @@
 import frappe
 from frappe import _
 from erpnext.selling.doctype.sales_order.sales_order import SalesOrder
+from digital_printing.digital_printing.doctype.print_order.print_order import check_print_order_is_closed
 
 
 class SalesOrderDP(SalesOrder):
+	def validate(self):
+		super().validate()
+		check_print_order_is_closed(self)
+
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
 

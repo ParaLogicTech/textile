@@ -60,34 +60,47 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		let doc = this.frm.doc;
 
 		if (doc.docstatus == 1) {
-			if (doc.items.filter(d => !d.item_code && !d.design_bom).length) {
+			if (this.frm.has_perm("submit")) {
+				if (doc.status == "Closed") {
+					this.frm.add_custom_button(__('Re-Open'), () => this.update_status("Draft"), __("Status"));
+				} else if(flt(doc.per_ordered, 6) < 100) {
+					this.frm.add_custom_button(__('Close'), () => this.update_status("Closed"), __("Status"));
+				}
+			}
+
+			let has_missing_item = doc.items.filter(d => !d.item_code || !d.design_bom).length;
+			if (has_missing_item) {
 				this.frm.add_custom_button(__('Items and BOMs'), () => this.create_design_items_and_boms(),
 					__("Create"));
-			} else if(flt(doc.per_ordered) < 100) {
-				this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
-					__("Create"));
 			}
 
-			if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
-				this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
-					__("Create"));
-			}
+			if (!has_missing_item && doc.status != "Closed") {
+				if (flt(doc.per_ordered) < 100) {
+					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
+						__("Create"));
+				}
 
-			if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
-				this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip(),
-					__("Create"));
-			}
+				if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
+					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
+						__("Create"));
+				}
 
-			if (doc.per_produced && doc.per_delivered < doc.per_produced
-					&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
-			) {
-				this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
-					__("Create"));
-			}
+				if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
+					this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip(),
+						__("Create"));
+				}
 
-			if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
-				this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
-					__("Create"));
+				if (doc.per_produced && doc.per_delivered < doc.per_produced
+						&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
+				) {
+					this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
+						__("Create"));
+				}
+
+				if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
+					this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
+						__("Create"));
+				}
 			}
 		}
 	}
@@ -335,6 +348,25 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			}
 		});
 	}, 1000);
+
+	update_status(status) {
+		this.frm.check_if_unsaved();
+
+		frappe.ui.form.is_saving = true;
+		return frappe.call({
+			method: "digital_printing.digital_printing.doctype.print_order.print_order.update_status",
+			args: {
+				print_order: this.frm.doc.name,
+				status: status
+			},
+			callback: (r) => {
+				this.frm.reload_doc();
+			},
+			always: () => {
+				frappe.ui.form.is_saving = false;
+			}
+		});
+	}
 
 	create_design_items_and_boms() {
 		return frappe.call({

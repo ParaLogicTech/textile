@@ -108,7 +108,7 @@ class ItemDP(Item):
 
 
 def update_item_override_fields(item_fields, args, validate=False):
-    item_fields['print_item_type'] = 'Data'
+	item_fields['print_item_type'] = 'Data'
 
 
 def override_item_dashboard(data):

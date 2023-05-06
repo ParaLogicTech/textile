@@ -9,6 +9,7 @@ app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext"]
 
 after_install = "digital_printing.install.after_install"
+notification_config = "digital_printing.notifications.get_notification_config"
 
 doc_events = {
 	"Customer": {
@@ -45,7 +46,7 @@ doctype_js = {
 }
 
 update_item_override_fields = [
-    "digital_printing.overrides.item_hooks.update_item_override_fields",
+	"digital_printing.overrides.item_hooks.update_item_override_fields",
 ]
 
 update_work_order_from_sales_order = [
