@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Digital Printing Documents</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+ "content": "[{\"id\":\"SDqkHndkYS\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"id\":\"o74uuOtKRT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"id\":\"zqUNJjBFdH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Work Order\",\"col\":3}},{\"id\":\"O6vyMD7pEJ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"4O29Q-CIXU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"2s8u4gxb4O\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"BxEHzbPcrr\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"7Z6i10Ohdv\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Digital Printing Documents</b></span>\",\"col\":12}},{\"id\":\"rZ6puD_WBV\",\"type\":\"card\",\"data\":{\"card_name\":\"Order\",\"col\":4}},{\"id\":\"lgIh2JSFqa\",\"type\":\"card\",\"data\":{\"card_name\":\"Production\",\"col\":4}},{\"id\":\"93NoRhdz5u\",\"type\":\"card\",\"data\":{\"card_name\":\"Fulfilment\",\"col\":4}},{\"id\":\"Du3uJ2Yz7z\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
  "creation": "2023-03-08 13:30:34.124082",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -14,26 +14,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 1,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Digital Printing Settings",
-   "link_count": 0,
-   "link_to": "Digital Printing Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Transactions",
-   "link_count": 7,
+   "label": "Order",
+   "link_count": 4,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -60,29 +42,37 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Production",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Work Order",
    "link_count": 0,
    "link_to": "Work Order",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Delivery Note",
-   "link_count": 0,
-   "link_to": "Delivery Note",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sales Invoice",
-   "link_count": 0,
-   "link_to": "Sales Invoice",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -100,34 +90,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Packing Slip",
-   "link_count": 0,
-   "link_to": "Packing Slip",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Masters",
-   "link_count": 5,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Item",
-   "link_count": 0,
-   "link_to": "Item",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "BOM",
    "link_count": 0,
    "link_to": "BOM",
@@ -138,9 +100,55 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Customer",
+   "label": "Fulfilment",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
    "link_count": 0,
-   "link_to": "Customer",
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Packing Slip",
+   "link_count": 0,
+   "link_to": "Packing Slip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Digital Printing Settings",
+   "link_count": 0,
+   "link_to": "Digital Printing Settings",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -166,10 +174,11 @@
    "type": "Link"
   }
  ],
- "modified": "2023-03-21 15:23:18.644403",
+ "modified": "2023-05-06 14:35:22.830699",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",
+ "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,
@@ -184,6 +193,15 @@
    "label": "Item",
    "link_to": "Item",
    "stats_filter": "{\"print_item_type\":[\"is\",\"set\"],\"disabled\":[\"=\",0]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "{} Pending",
+   "label": "Work Order",
+   "link_to": "Work Order",
+   "stats_filter": "{\"status\":[\"not in\",[\"Completed\",\"Stopped\",\"\"]],\"docstatus\":[\"=\",\"1\"]}",
    "type": "DocType"
   },
   {
