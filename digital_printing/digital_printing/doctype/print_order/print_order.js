@@ -26,6 +26,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	refresh() {
 		erpnext.hide_company();
 		this.setup_buttons();
+		this.setup_route_options();
 		this.set_default_warehouse();
 	}
 
@@ -53,6 +54,21 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 			this.frm.set_query(warehouse_field, () => {
 				return erpnext.queries.warehouse(this.frm.doc);
 			});
+		}
+	}
+
+	setup_route_options() {
+		let fabric_item_field = this.frm.get_docfield("fabric_item");
+		if (fabric_item_field) {
+			fabric_item_field.get_route_options_for_new_doc = () => {
+				let route_options = {
+					is_customer_provided_item: this.frm.doc.is_fabric_provided_by_customer,
+				}
+				if (this.frm.doc.is_fabric_provided_by_customer && this.frm.doc.customer) {
+					route_options["customer"] = this.frm.doc.customer;
+				}
+				return route_options;
+			}
 		}
 	}
 
