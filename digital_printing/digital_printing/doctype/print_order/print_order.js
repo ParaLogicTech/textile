@@ -155,7 +155,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	default_gap() {
-		this.override_default_value_in_items('design_gap');
+		this.override_default_value_in_items('design_gap', true);
 	}
 
 	default_qty() {
@@ -176,7 +176,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 
 	default_wastage() {
-		this.override_default_value_in_items('per_wastage');
+		this.override_default_value_in_items('per_wastage', true);
 	}
 
 	default_length_uom() {
@@ -263,13 +263,13 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}
 
-	override_default_value_in_items(cdf) {
+	override_default_value_in_items(cdf, allow_zero=false) {
 		(this.frm.doc.items || []).forEach(d => {
-			this.set_default_values_in_item(d.doctype, d.name, cdf);
+			this.set_default_values_in_item(d.doctype, d.name, cdf, allow_zero);
 		});
 	}
 
-	set_default_values_in_item(cdt, cdn, cdf=null) {
+	set_default_values_in_item(cdt, cdn, cdf=null, allow_zero=false) {
 		let defaults = {
 			'design_gap': this.frm.doc.default_gap,
 			'qty': this.frm.doc.default_qty,
@@ -280,12 +280,12 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		}
 
 		if (cdf) {
-			if (defaults[cdf]) {
+			if (defaults[cdf] || allow_zero) {
 				frappe.model.set_value(cdt, cdn, cdf, defaults[cdf]);
 			}
 		} else {
 			for (const [key, value] of Object.entries(defaults)) {
-				if (value) {
+				if (value || allow_zero) {
 					frappe.model.set_value(cdt, cdn, key, value);
 				}
 			}
