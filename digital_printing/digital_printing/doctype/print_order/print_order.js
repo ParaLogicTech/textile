@@ -4,13 +4,6 @@
 frappe.provide("erpnext.digital_printing");
 
 erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
-
-	conversion_factors = {
-		inch_to_meter: 0.0254,
-		yard_to_meter: 0.9144,
-		meter_to_meter: 1
-	}
-
 	setup() {
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
@@ -313,16 +306,18 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.doc.total_fabric_length = 0;
 		this.frm.doc.total_panel_qty = 0;
 
+		let conversion_factors = erpnext.digital_printing.get_dp_conversion_factors();
+
 		this.frm.doc.items.forEach(d => {
 			frappe.model.round_floats_in(d);
 
 			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap);
-			d.panel_length_meter = d.panel_length_inch * this.conversion_factors.inch_to_meter;
-			d.panel_length_yard = d.panel_length_meter / this.conversion_factors.yard_to_meter;
+			d.panel_length_meter = d.panel_length_inch * conversion_factors.inch_to_meter;
+			d.panel_length_yard = d.panel_length_meter / conversion_factors.yard_to_meter;
 
 			let waste = d.per_wastage / 100;
 			let uom_to_convert = d.length_uom + '_to_' + d.stock_uom;
-			let conversion_factor = this.conversion_factors[uom_to_convert.toLowerCase()] || 1;
+			let conversion_factor = conversion_factors[uom_to_convert.toLowerCase()] || 1;
 
 			if (d.uom != "Panel") {
 				d.print_length = d.qty_type == "Print Qty" ? d.qty : waste < 1 ? d.qty * (1 - waste) : 0;
@@ -466,5 +461,13 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		});
 	}
 };
+
+erpnext.digital_printing.get_dp_conversion_factors = function () {
+	return {
+		inch_to_meter: flt(frappe.defaults.get_global_default("inch_to_meter")) || 0.0254,
+		yard_to_meter: flt(frappe.defaults.get_global_default("yard_to_meter")) || 0.9144,
+		meter_to_meter: 1
+	}
+}
 
 extend_cscript(cur_frm.cscript, new erpnext.digital_printing.PrintOrder({frm: cur_frm}));

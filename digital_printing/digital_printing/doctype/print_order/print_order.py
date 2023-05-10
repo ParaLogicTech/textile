@@ -215,11 +215,7 @@ class PrintOrder(StatusUpdater):
 		self.total_fabric_length = 0
 		self.total_panel_qty = 0
 
-		conversion_factors = {
-			'inch_to_meter': 0.0254,
-			'yard_to_meter': 0.9144, 
-			'meter_to_meter': 1
-		}
+		conversion_factors = get_dp_conversion_factors()
 
 		for d in self.items:
 			validate_uom_and_qty_type(d)
@@ -535,6 +531,18 @@ class PrintOrder(StatusUpdater):
 			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
 
 
+def get_yard_to_meter():
+	return get_dp_conversion_factors()["yard_to_meter"]
+
+
+def get_dp_conversion_factors():
+	return {
+		"inch_to_meter": flt(frappe.db.get_default("inch_to_meter")) or 0.0254,
+		"yard_to_meter": flt(frappe.db.get_default("yard_to_meter")) or 0.9144,
+		"meter_to_meter": 1
+	}
+
+
 def validate_print_item(item_code, print_item_type):
 	item = frappe.get_cached_doc("Item", item_code)
 
@@ -696,14 +704,6 @@ def make_design_item(design_item_row, fabric_item, process_item):
 		"to_uom": "Meter",
 		"to_qty": design_item_row.panel_length_meter
 	})
-
-	if "Yard" in [design_item_row.length_uom, design_item_row.uom]:
-		item_doc.append("uom_conversion_graph", {
-			"from_uom": "Yard",
-			"from_qty": 1,
-			"to_uom": "Meter",
-			"to_qty": 0.9144
-		})
 
 	return item_doc
 

@@ -79,6 +79,8 @@ class ItemDP(Item):
 			self.fabric_item = None
 
 	def validate_fabric_uoms(self):
+		from digital_printing.digital_printing.doctype.print_order.print_order import get_yard_to_meter
+
 		if self.print_item_type not in ["Fabric", "Printed Design"]:
 			return
 
@@ -93,9 +95,9 @@ class ItemDP(Item):
 		if 'Yard' not in uoms:
 			self.append("uom_conversion_graph", {
 				"from_uom": "Yard",
-				"from_qty": 1,
+				"from_qty": flt(1/get_yard_to_meter(), self.precision("conversion_factor", "uoms")),
 				"to_uom": "Meter",
-				"to_qty": 0.9144
+				"to_qty": 1
 			})
 
 	def calculate_net_weight_per_unit(self):

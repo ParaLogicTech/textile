@@ -20,6 +20,12 @@ doc_events = {
 		"on_cancel": "digital_printing.overrides.work_order_hooks.update_print_order_status",
 		"update_work_order_qty": "digital_printing.overrides.work_order_hooks.update_print_order_status",
 	},
+	"UOM": {
+		"before_rename": "digital_printing.overrides.uom_hooks.before_uom_rename",
+	},
+	"UOM Conversion Factor": {
+		"on_update": "digital_printing.overrides.uom_hooks.on_uom_conversion_factor_update",
+	}
 }
 
 override_doctype_class = {
