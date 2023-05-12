@@ -7,7 +7,7 @@ frappe.listview_settings['Print Order'] = {
 		} else if(doc.status === "To Confirm Order") {
 			return [__(doc.status), "orange", "status,=," + doc.status];
 		} else if(doc.status === "To Produce") {
-			return [__(doc.status), "blue", "status,=," + doc.status];
+			return [__(doc.status), "purple", "status,=," + doc.status];
 		} else if(doc.status === "To Deliver") {
 			return [__(doc.status), "orange", "status,=," + doc.status];
 		} else if(doc.status === "To Bill") {
