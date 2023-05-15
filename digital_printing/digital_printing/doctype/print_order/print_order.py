@@ -779,7 +779,10 @@ def make_sales_order(source_name, target_doc=None):
 				"name": "print_order_item",
 				"parent": "print_order",
 				"bom": "bom",
-				"item_code": "item_code"
+				"item_code": "item_code",
+				"print_length": "qty",
+				"length_uom": "uom",
+				"panel_length_meter": "panel_length_meter",
 			},
 			"postprocess": update_item,
 			"condition": item_condition,

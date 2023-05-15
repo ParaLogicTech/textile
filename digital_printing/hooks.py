@@ -55,6 +55,10 @@ update_item_override_fields = [
 	"digital_printing.overrides.item_hooks.update_item_override_fields",
 ]
 
+calculate_taxes_and_totals = [
+    "digital_printing.overrides.calculate_taxes_and_totals_hooks.calculate_panel_qty"
+]
+
 update_work_order_from_sales_order = [
 	"digital_printing.overrides.sales_order_hooks.set_print_order_reference_in_work_order",
 	"digital_printing.overrides.sales_order_hooks.set_print_order_warehouses_in_work_order",
@@ -116,14 +120,22 @@ fixtures = [
 				'Brand-print_item_type',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
+				'Sales Order Item-panel_length_meter',
+				'Sales Order Item-panel_qty',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
+				'Delivery Note Item-panel_length_meter',
+				'Delivery Note Item-panel_qty',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
+				'Sales Invoice Item-panel_length_meter',
+				'Sales Invoice Item-panel_qty',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
+				'Packing Slip Item-panel_length_meter',
+				'Packing Slip Item-panel_qty',
 			]]
 		}
 	},
