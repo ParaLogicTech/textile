@@ -136,8 +136,6 @@ fixtures = [
 				'Sales Invoice Item-panel_qty',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
-				'Packing Slip Item-panel_length_meter',
-				'Packing Slip Item-panel_qty',
 			]]
 		}
 	},
