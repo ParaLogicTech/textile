@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_rename": 1,
  "autoname": "field:fabric_material",
  "creation": "2023-02-08 17:03:01.630993",
  "default_view": "List",
@@ -52,7 +53,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2023-05-15 16:36:54.433544",
+ "modified": "2023-05-15 17:41:43.721099",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Material",
