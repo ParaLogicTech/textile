@@ -8,6 +8,8 @@ app_email = "info@paralogic.io"
 app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext"]
 
+app_include_js = "digital_printing.bundle.js"
+
 after_install = "digital_printing.install.after_install"
 notification_config = "digital_printing.notifications.get_notification_config"
 
@@ -56,7 +58,7 @@ update_item_override_fields = [
 ]
 
 calculate_taxes_and_totals = [
-    "digital_printing.overrides.calculate_taxes_and_totals_hooks.calculate_panel_qty"
+    "digital_printing.overrides.taxes_and_totals_hooks.calculate_panel_qty"
 ]
 
 update_work_order_from_sales_order = [
