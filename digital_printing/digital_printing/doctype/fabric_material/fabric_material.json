@@ -16,7 +16,6 @@
   {
    "fieldname": "fabric_material",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Fabric Material",
    "reqd": 1,
    "unique": 1
@@ -25,12 +24,14 @@
    "allow_in_quick_entry": 1,
    "fieldname": "abbreviation",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Abbreviation"
   },
   {
    "allow_in_quick_entry": 1,
    "fieldname": "default_process_item",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Default Process Item",
    "options": "Item"
   },
@@ -44,8 +45,14 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2023-04-20 14:31:29.788991",
+ "links": [
+  {
+   "group": "Items",
+   "link_doctype": "Item",
+   "link_fieldname": "fabric_material"
+  }
+ ],
+ "modified": "2023-05-15 16:36:54.433544",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Material",

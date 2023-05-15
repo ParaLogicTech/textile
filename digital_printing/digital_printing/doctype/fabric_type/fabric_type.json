@@ -7,21 +7,35 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "fabric_type"
+  "fabric_type",
+  "abbreviation"
  ],
  "fields": [
   {
+   "allow_in_quick_entry": 1,
    "fieldname": "fabric_type",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Fabric Type",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "abbreviation",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Abbreviation"
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2023-03-21 15:16:34.303758",
+ "links": [
+  {
+   "group": "Items",
+   "link_doctype": "Item",
+   "link_fieldname": "fabric_type"
+  }
+ ],
+ "modified": "2023-05-15 16:46:37.712607",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Type",
@@ -86,6 +100,7 @@
   }
  ],
  "quick_entry": 1,
+ "search_fields": "abbreviation",
  "sort_field": "idx",
  "sort_order": "DESC",
  "states": []
