@@ -757,11 +757,10 @@ def make_sales_order(source_name, target_doc=None):
 		if source.name in [d.print_order_item for d in target_parent.get('items') if d.print_order_item]:
 			return False
 
-		return abs(source.ordered_qty) < abs(source.qty)
+		return abs(source.ordered_qty) < abs(source.print_length)
 
 	def update_item(source, target, source_parent, target_parent):
-		qty = source.qty if source.qty_type == "Print Qty" else source.print_length
-		target.qty = flt(qty) - flt(source.ordered_qty)
+		target.qty = flt(source.print_length) - flt(source.ordered_qty)
 
 	doc = get_mapped_doc("Print Order", source_name,	{
 		"Print Order": {
