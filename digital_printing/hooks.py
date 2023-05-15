@@ -8,6 +8,8 @@ app_email = "info@paralogic.io"
 app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext"]
 
+app_include_js = "digital_printing.bundle.js"
+
 after_install = "digital_printing.install.after_install"
 notification_config = "digital_printing.notifications.get_notification_config"
 
@@ -53,6 +55,10 @@ doctype_js = {
 
 update_item_override_fields = [
 	"digital_printing.overrides.item_hooks.update_item_override_fields",
+]
+
+calculate_taxes_and_totals = [
+    "digital_printing.overrides.taxes_and_totals_hooks.calculate_panel_qty"
 ]
 
 update_work_order_from_sales_order = [
@@ -116,12 +122,18 @@ fixtures = [
 				'Brand-print_item_type',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
+				'Sales Order Item-panel_length_meter',
+				'Sales Order Item-panel_qty',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
+				'Delivery Note Item-panel_length_meter',
+				'Delivery Note Item-panel_qty',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
+				'Sales Invoice Item-panel_length_meter',
+				'Sales Invoice Item-panel_qty',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
 			]]
