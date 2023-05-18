@@ -2,10 +2,13 @@ import frappe
 
 
 fabric_materials = [
-	('Viscose', 'VI'),
-	('Silk', 'SI'),
-	('Polyester', 'PL'),
-	('Cotton', 'CO'),
+	('Cotton', 'Co'),
+	('Polyester', 'Po'),
+	('Silk', 'Se'),
+	('Viscose', 'Vi'),
+	('Cotton/Polyester', 'Cp'),
+	('Cotton/Silk', 'Cs'),
+	('Cotton/Viscose', 'Cv'),
 ]
 
 
