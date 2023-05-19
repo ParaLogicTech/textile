@@ -35,6 +35,7 @@ override_doctype_class = {
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
 	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.SalesInvoiceDP",
+	"Stock Entry": "digital_printing.overrides.stock_entry_hooks.StockEntryDP",
 	"Packing Slip": "digital_printing.overrides.packing_slip_hooks.PackingSlipDP",
 }
 
