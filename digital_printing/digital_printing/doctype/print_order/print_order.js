@@ -1,9 +1,16 @@
 // Copyright (c) 2023, ParaLogic and contributors
 // For license information, please see license.txt
 
-frappe.provide("erpnext.digital_printing");
+frappe.provide("digital_printing");
 
-erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
+digital_printing.print_process_components = {
+	"coating_item": "Coating",
+	"softener_item": "Softener",
+	"sublimation_paper": "Sublimation Paper",
+	"protection_paper": "Protection Paper",
+}
+
+digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	setup() {
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
@@ -42,6 +49,15 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.set_query("process_item", () => {
 			return erpnext.queries.item({ print_item_type: 'Print Process' });
 		});
+
+		for (let [component_item_field, component_type] of Object.entries(digital_printing.print_process_components)) {
+			this.frm.set_query(component_item_field, () => {
+				return erpnext.queries.item({
+					print_item_type: 'Process Component',
+					print_process_component: component_type
+				});
+			});
+		}
 
 		for (let warehouse_field of ["source_warehouse", "wip_warehouse", "fg_warehouse"]) {
 			this.frm.set_query(warehouse_field, () => {
@@ -306,7 +322,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 		this.frm.doc.total_fabric_length = 0;
 		this.frm.doc.total_panel_qty = 0;
 
-		let conversion_factors = erpnext.digital_printing.get_dp_conversion_factors();
+		let conversion_factors = digital_printing.get_dp_conversion_factors();
 
 		this.frm.doc.items.forEach(d => {
 			frappe.model.round_floats_in(d);
@@ -462,7 +478,7 @@ erpnext.digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Co
 	}
 };
 
-erpnext.digital_printing.get_dp_conversion_factors = function () {
+digital_printing.get_dp_conversion_factors = function () {
 	return {
 		inch_to_meter: flt(frappe.defaults.get_global_default("inch_to_meter")) || 0.0254,
 		yard_to_meter: flt(frappe.defaults.get_global_default("yard_to_meter")) || 0.9144,
@@ -470,4 +486,4 @@ erpnext.digital_printing.get_dp_conversion_factors = function () {
 	}
 }
 
-extend_cscript(cur_frm.cscript, new erpnext.digital_printing.PrintOrder({frm: cur_frm}));
+extend_cscript(cur_frm.cscript, new digital_printing.PrintOrder({frm: cur_frm}));

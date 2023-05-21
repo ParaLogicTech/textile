@@ -14,6 +14,7 @@ class ItemDP(Item):
 		self.validate_print_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
+		self.validate_process_properties()
 
 	def validate_print_item_type(self):
 		match self.print_item_type:
@@ -30,6 +31,8 @@ class ItemDP(Item):
 			case "Printed Design":
 				if not self.is_stock_item:
 					frappe.throw(_("Printed Design Item must be a Stock Item"))
+				if not self.is_sales_item:
+					frappe.throw(_("Printed Design Item must be a Sales Item"))
 
 				if not self.design_name:
 					frappe.throw(_("Design Name is mandatory for Printed Design Item"))
@@ -38,6 +41,10 @@ class ItemDP(Item):
 
 				if frappe.get_cached_value("Item", self.fabric_item, "print_item_type") != "Fabric":
 					frappe.throw(_("Item {0} is not a Fabric Item").format(self.fabric_item))
+
+			case "Process Component":
+				if not self.print_process_component:
+					frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
 
 	def validate_fabric_properties(self):
 		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
@@ -71,6 +78,15 @@ class ItemDP(Item):
 			self.per_wastage = None
 			self.design_notes = None
 			self.fabric_item = None
+
+	def validate_process_properties(self):
+		from digital_printing.digital_printing.doctype.print_order.print_order import print_process_components
+		if self.print_item_type != "Print Process":
+			for component_item_field in print_process_components:
+				self.set(f"{component_item_field}_required", 0)
+
+		if self.print_item_type != "Process Component":
+			self.print_process_component = None
 
 	def validate_fabric_uoms(self):
 		from digital_printing.digital_printing.doctype.print_order.print_order import get_yard_to_meter
