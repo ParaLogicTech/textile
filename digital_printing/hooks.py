@@ -105,7 +105,6 @@ fixtures = [
 				'Item-design_gap',
 				'Item-per_wastage',
 				'Item-column_break_mjbrg',
-				'Item-process_item',
 				'Item-design_notes',
 				'Item-sec_fabric_properties',
 				'Item-fabric_material',

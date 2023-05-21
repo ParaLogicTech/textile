@@ -35,14 +35,9 @@ class ItemDP(Item):
 					frappe.throw(_("Design Name is mandatory for Printed Design Item"))
 				if not self.fabric_item:
 					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
-				if not self.process_item:
-					frappe.throw(_("Print Process Item is mandatory for Printed Design Item"))
 
 				if frappe.get_cached_value("Item", self.fabric_item, "print_item_type") != "Fabric":
 					frappe.throw(_("Item {0} is not a Fabric Item").format(self.fabric_item))
-
-				if frappe.get_cached_value("Item", self.process_item, "print_item_type") != "Print Process":
-					frappe.throw(_("Item {0} is not a Print Process Item").format(self.process_item))
 
 	def validate_fabric_properties(self):
 		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
@@ -74,7 +69,6 @@ class ItemDP(Item):
 			self.design_uom = None
 			self.design_gap = None
 			self.per_wastage = None
-			self.process_item = None
 			self.design_notes = None
 			self.fabric_item = None
 

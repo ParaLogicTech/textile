@@ -651,7 +651,7 @@ def create_design_items_and_boms(print_order):
 
 	for d in doc.items:
 		if not d.item_code:
-			item_doc = make_design_item(d, doc.fabric_item, doc.process_item)
+			item_doc = make_design_item(d, doc.fabric_item)
 			item_doc.save()
 
 			d.db_set({
@@ -672,13 +672,11 @@ def create_design_items_and_boms(print_order):
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
 
-def make_design_item(design_item_row, fabric_item, process_item):
+def make_design_item(design_item_row, fabric_item):
 	if not design_item_row:
 		frappe.throw(_('Print Order Row is mandatory.'))
 	if not fabric_item:
 		frappe.throw(_('Fabric Item is mandatory.'))
-	if not process_item:
-		frappe.throw(_('Process Item is mandatory.'))
 
 	default_item_group = frappe.db.get_single_value("Digital Printing Settings", "default_item_group_for_printed_design_item")
 	fabric_item_name = frappe.get_cached_value('Item', fabric_item, 'item_name')
@@ -697,7 +695,6 @@ def make_design_item(design_item_row, fabric_item, process_item):
 		"stock_uom": design_item_row.stock_uom,
 		"sales_uom": design_item_row.uom,
 		"fabric_item": fabric_item,
-		"process_item": process_item,
 		"image": design_item_row.design_image,
 		"design_name": design_item_row.design_name,
 		"design_width": design_item_row.design_width,
