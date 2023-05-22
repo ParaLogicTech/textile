@@ -39,14 +39,14 @@
   {
    "fieldname": "default_printing_fg_warehouse",
    "fieldtype": "Link",
-   "label": "Default Target Warehouse",
+   "label": "Default Finished Goods Warehouse",
    "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-05-02 16:43:45.154332",
+ "modified": "2023-05-22 13:06:46.040401",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing Settings",

@@ -865,6 +865,7 @@ def make_sales_order(source_name, target_doc=None):
 @frappe.whitelist()
 def create_work_orders(print_order):
 	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
+
 	doc = frappe.get_doc('Print Order', print_order)
 
 	if doc.docstatus != 1:
