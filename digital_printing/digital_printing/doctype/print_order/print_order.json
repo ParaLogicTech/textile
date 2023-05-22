@@ -79,7 +79,8 @@
    "in_standard_filter": 1,
    "label": "Customer",
    "options": "Customer",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "depends_on": "eval:doc.customer && doc.customer_name != doc.customer",
@@ -93,7 +94,7 @@
    "fieldname": "delivery_date",
    "fieldtype": "Date",
    "in_standard_filter": 1,
-   "label": "Expected Delivery Date",
+   "label": "Planned Delivery Date",
    "no_copy": 1
   },
   {
@@ -112,7 +113,8 @@
    "in_standard_filter": 1,
    "label": "Fabric Item",
    "options": "Item",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "depends_on": "eval:!doc.fabric_item || doc.fabric_item_name != doc.fabric_item",
@@ -131,7 +133,8 @@
    "in_standard_filter": 1,
    "label": "Process Item",
    "options": "Item",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "depends_on": "eval:!doc.process_item || doc.process_item_name != doc.process_item",
@@ -449,7 +452,8 @@
    "fieldname": "wip_warehouse",
    "fieldtype": "Link",
    "label": "Work In Progress Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_2iwkk",
@@ -459,7 +463,8 @@
    "fieldname": "source_warehouse",
    "fieldtype": "Link",
    "label": "Raw Material Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "reqd": 1
   },
   {
    "depends_on": "eval:doc.fabric_item && doc.source_warehouse",
@@ -472,8 +477,9 @@
   {
    "fieldname": "fg_warehouse",
    "fieldtype": "Link",
-   "label": "Target Warehouse",
-   "options": "Warehouse"
+   "label": "Finished Goods Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
   },
   {
    "fieldname": "warehouse_section",
@@ -497,7 +503,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-21 16:16:25.108599",
+ "modified": "2023-05-22 13:08:42.696192",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
