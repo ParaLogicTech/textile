@@ -29,6 +29,10 @@ print_process_components = {
 
 
 class PrintOrder(StatusUpdater):
+	def get_feed(self):
+		if self.get("title"):
+			return self.title
+
 	def onload(self):
 		if self.docstatus == 0:
 			self.set_missing_values()
