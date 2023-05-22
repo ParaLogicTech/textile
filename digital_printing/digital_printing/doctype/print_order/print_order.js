@@ -6,8 +6,8 @@ frappe.provide("digital_printing");
 digital_printing.print_process_components = {
 	"coating_item": "Coating",
 	"softener_item": "Softener",
-	"sublimation_paper": "Sublimation Paper",
-	"protection_paper": "Protection Paper",
+	"sublimation_paper_item": "Sublimation Paper",
+	"protection_paper_item": "Protection Paper",
 }
 
 digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
