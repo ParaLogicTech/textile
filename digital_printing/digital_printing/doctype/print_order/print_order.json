@@ -33,8 +33,21 @@
   "fabric_stock_qty",
   "process_details_section",
   "process_item",
-  "column_break_o7rkb",
   "process_item_name",
+  "coating_item_required",
+  "softener_item_required",
+  "sublimation_paper_item_required",
+  "protection_paper_item_required",
+  "column_break_o7rkb",
+  "coating_item",
+  "coating_item_name",
+  "sublimation_paper_item",
+  "sublimation_paper_item_name",
+  "column_break_nzetq",
+  "softener_item",
+  "softener_item_name",
+  "protection_paper_item",
+  "protection_paper_item_name",
   "warehouse_section",
   "source_warehouse",
   "column_break_6wauy",
@@ -133,11 +146,10 @@
    "in_standard_filter": 1,
    "label": "Process Item",
    "options": "Item",
-   "reqd": 1,
    "search_index": 1
   },
   {
-   "depends_on": "eval:!doc.process_item || doc.process_item_name != doc.process_item",
+   "depends_on": "eval:doc.process_item && doc.process_item_name != doc.process_item",
    "fetch_from": "process_item.item_name",
    "fieldname": "process_item_name",
    "fieldtype": "Data",
@@ -490,7 +502,7 @@
    "fieldname": "po_no",
    "fieldtype": "Data",
    "in_standard_filter": 1,
-   "label": "Customer's Purchase Order Ref"
+   "label": "Customer's Purchase Order Reference"
   },
   {
    "allow_on_submit": 1,
@@ -498,12 +510,112 @@
    "fieldname": "po_date",
    "fieldtype": "Date",
    "label": "Customer's Purchase Order Date"
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.coating_item_required",
+   "fieldname": "coating_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Coating Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.softener_item_required",
+   "fieldname": "softener_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Softener Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.sublimation_paper_item_required",
+   "fieldname": "sublimation_paper_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Sublimation Paper Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.protection_paper_item_required",
+   "fieldname": "protection_paper_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Protection Paper Selection",
+   "read_only": 1
+  },
+  {
+   "depends_on": "coating_item_required",
+   "fieldname": "coating_item",
+   "fieldtype": "Link",
+   "label": "Coating Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "softener_item_required",
+   "fieldname": "softener_item",
+   "fieldtype": "Link",
+   "label": "Softener Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_nzetq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "sublimation_paper_item_required",
+   "fieldname": "sublimation_paper_item",
+   "fieldtype": "Link",
+   "label": "Sublimation Paper Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "protection_paper_item_required",
+   "fieldname": "protection_paper_item",
+   "fieldtype": "Link",
+   "label": "Protection Paper Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "eval:doc.coating_item_required && doc.coating_item && doc.coating_item_name != doc.coating_item",
+   "fetch_from": "coating_item.item_name",
+   "fieldname": "coating_item_name",
+   "fieldtype": "Data",
+   "label": "Coating Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.sublimation_paper_item_required && doc.sublimation_paper_item && doc.sublimation_paper_item_name != doc.sublimation_paper_item",
+   "fetch_from": "sublimation_paper_item.item_name",
+   "fieldname": "sublimation_paper_item_name",
+   "fieldtype": "Data",
+   "label": "Sublimation Paper Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.softener_item_required && doc.softener_item && doc.softener_item_name != doc.softener_item",
+   "fetch_from": "softener_item.item_name",
+   "fieldname": "softener_item_name",
+   "fieldtype": "Data",
+   "label": "Softener Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.protection_paper_item_required && doc.protection_paper_item && doc.protection_paper_item_name != doc.protection_paper_item",
+   "fetch_from": "protection_paper_item.item_name",
+   "fieldname": "protection_paper_item_name",
+   "fieldtype": "Data",
+   "label": "Protection Paper Item Name",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-22 13:08:42.696192",
+ "modified": "2023-05-22 13:53:46.197624",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
