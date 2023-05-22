@@ -100,7 +100,8 @@
    "label": "Design Item Code",
    "no_copy": 1,
    "options": "Item",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "depends_on": "eval:doc.item_code && doc.item_name != doc.item_code",
@@ -395,7 +396,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-05-21 16:17:46.541649",
+ "modified": "2023-05-22 13:09:51.652390",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order Item",

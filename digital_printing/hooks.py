@@ -35,11 +35,13 @@ override_doctype_class = {
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.SalesOrderDP",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.DeliveryNoteDP",
 	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.SalesInvoiceDP",
+	"Stock Entry": "digital_printing.overrides.stock_entry_hooks.StockEntryDP",
 	"Packing Slip": "digital_printing.overrides.packing_slip_hooks.PackingSlipDP",
 }
 
 override_doctype_dashboards = {
 	"Item": "digital_printing.overrides.item_hooks.override_item_dashboard",
+	"Customer": "digital_printing.overrides.customer_hooks.override_customer_dashboard",
 	"Sales Order": "digital_printing.overrides.sales_order_hooks.override_sales_order_dashboard",
 	"Delivery Note": "digital_printing.overrides.delivery_note_hooks.override_delivery_note_dashboard",
 	"Sales Invoice": "digital_printing.overrides.sales_invoice_hooks.override_sales_invoice_dashboard",

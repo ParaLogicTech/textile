@@ -9,6 +9,22 @@ class SalesOrderDP(SalesOrder):
 		super().validate()
 		check_print_order_is_closed(self)
 
+	def validate_with_previous_doc(self):
+		super(SalesOrderDP, self).validate_with_previous_doc()
+
+		super(SalesOrder, self).validate_with_previous_doc({
+			"Print Order": {
+				"ref_dn_field": "print_order",
+				"compare_fields": [["customer", "="], ["company", "="]]
+			},
+			"Print Order Item": {
+				"ref_dn_field": "print_order_item",
+				"compare_fields": [["item_code", "="]],
+				"is_child_table": True,
+				"allow_duplicate_prev_row_id": True
+			},
+		})
+
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
 
