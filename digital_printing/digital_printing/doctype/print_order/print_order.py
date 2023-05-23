@@ -323,6 +323,7 @@ class PrintOrder(StatusUpdater):
 			return None
 
 		filters = frappe._dict({
+			"name": self.name,
 			"item_code": item_code,
 			"process_item": self.process_item,
 		})
@@ -896,7 +897,6 @@ def create_work_orders(print_order):
 	for so in sales_orders:
 		so_doc = frappe.get_doc('Sales Order', so)
 		wo_items = so_doc.get_work_order_items()
-		# TODO make sure BOMs from Print Order Item is used instead of default BOM for that item
 		wo = make_work_orders(wo_items, so, so_doc.company)
 		wo_list += wo
 
@@ -937,6 +937,7 @@ def make_packing_slip(print_order):
 		"qty": 0,
 		"source_warehouse": doc.wip_warehouse
 	})
+
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_totals")
