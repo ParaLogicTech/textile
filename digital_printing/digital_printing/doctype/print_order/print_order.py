@@ -930,6 +930,12 @@ def make_packing_slip(print_order):
 	for d in sales_orders:
 		target_doc = make_packing_slip(d.name, target_doc=target_doc)
 
+	target_doc.append('items', {
+		"item_code": doc.fabric_item,
+		"item_name": "{0} ({1})".format(doc.fabric_item_name, _("Return Fabric")),
+		"qty": 0,
+		"source_warehouse": doc.wip_warehouse
+	})
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_totals")
