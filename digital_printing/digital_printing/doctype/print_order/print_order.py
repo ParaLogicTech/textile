@@ -228,9 +228,10 @@ class PrintOrder(StatusUpdater):
 			frappe.throw(_("File {0} not found").format(image_url))
 
 		file_doc = frappe.get_doc("File", doc_name)
+		file_name = file_doc.get("original_file_name") or file_doc.file_name
 
 		out = frappe._dict()
-		out.design_name = ".".join(file_doc.file_name.split('.')[:-1]) or file_doc.file_name
+		out.design_name = ".".join(file_name.split('.')[:-1]) or file_name
 
 		im = Image.open(file_doc.get_full_path())
 		out.design_width = flt(im.size[0] / 10, 1)
@@ -322,6 +323,7 @@ class PrintOrder(StatusUpdater):
 			return None
 
 		filters = frappe._dict({
+			"name": self.name,
 			"item_code": item_code,
 			"process_item": self.process_item,
 		})
@@ -910,7 +912,6 @@ def create_work_orders(print_order):
 	for so in sales_orders:
 		so_doc = frappe.get_doc('Sales Order', so)
 		wo_items = so_doc.get_work_order_items()
-		# TODO make sure BOMs from Print Order Item is used instead of default BOM for that item
 		wo = make_work_orders(wo_items, so, so_doc.company)
 		wo_list += wo
 
@@ -944,6 +945,14 @@ def make_packing_slip(print_order):
 
 	for d in sales_orders:
 		target_doc = make_packing_slip(d.name, target_doc=target_doc)
+
+	target_doc.append('items', {
+		"item_code": doc.fabric_item,
+		"item_name": "{0} ({1})".format(doc.fabric_item_name, _("Return Fabric")),
+		"qty": 0,
+		"source_warehouse": doc.wip_warehouse,
+		"print_order": doc.name,
+	})
 
 	# Missing Values and Forced Values
 	target_doc.run_method("set_missing_values")
