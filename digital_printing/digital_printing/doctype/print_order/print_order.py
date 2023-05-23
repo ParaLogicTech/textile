@@ -228,9 +228,10 @@ class PrintOrder(StatusUpdater):
 			frappe.throw(_("File {0} not found").format(image_url))
 
 		file_doc = frappe.get_doc("File", doc_name)
+		file_name = file_doc.get("original_file_name") or file_doc.file_name
 
 		out = frappe._dict()
-		out.design_name = ".".join(file_doc.file_name.split('.')[:-1]) or file_doc.file_name
+		out.design_name = ".".join(file_name.split('.')[:-1]) or file_name
 
 		im = Image.open(file_doc.get_full_path())
 		out.design_width = flt(im.size[0] / 10, 1)
