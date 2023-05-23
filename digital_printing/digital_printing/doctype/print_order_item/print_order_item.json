@@ -69,6 +69,7 @@
    "fieldname": "design_name",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Design Name",
    "reqd": 1
   },
@@ -166,6 +167,7 @@
    "default": "Print Qty",
    "fieldname": "qty_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Qty Type",
    "options": "Print Qty\nFabric Qty",
    "read_only_depends_on": "eval:doc.uom == \"Panel\""
@@ -396,7 +398,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-05-22 13:09:51.652390",
+ "modified": "2023-05-23 12:32:17.378573",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order Item",
