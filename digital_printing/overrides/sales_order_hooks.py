@@ -40,6 +40,10 @@ class SalesOrderDP(SalesOrder):
 			doc.set_status(update=True)
 			doc.notify_update()
 
+	def get_sales_order_item_bom(self, row):
+		if row.get('print_order_item'):
+			return frappe.db.get_value("Print Order Item", row.print_order_item, "design_bom", cache=1)
+
 
 def override_sales_order_dashboard(data):
 	data["internal_links"]["Print Order"] = ["items", "print_order"]
