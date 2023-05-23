@@ -192,15 +192,10 @@ class PrintOrder(StatusUpdater):
 		}
 		files_urls = frappe.db.get_all('File', filters, ['file_url'], order_by="creation", pluck="file_url")
 
-		attached_images = set(files_urls)
 		linked_images = {d.design_image for d in self.items}
-		unlinked_images = attached_images - linked_images
-
-		if not unlinked_images:
-			return
 
 		for file_url in files_urls:
-			if file_url not in unlinked_images:
+			if file_url in linked_images:
 				continue
 
 			row = frappe.new_doc("Print Order Item")
