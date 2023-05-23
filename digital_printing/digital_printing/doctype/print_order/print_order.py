@@ -7,7 +7,7 @@ from frappe.utils import flt, cint
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
-from erpnext.stock.get_item_details import get_bin_details
+from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -782,6 +782,13 @@ def make_design_item(design_item_row, fabric_item, customer):
 
 
 def make_design_bom(design_item, fabric_item, process_item, components=None):
+	def validate_convertible_to_meter(item_code):
+		conversion = get_conversion_factor(item_code, "Meter")
+		if conversion.get("not_convertible"):
+			frappe.throw(_("Could not create BOM for Design Item {0} because {1} is not convertible to Meter").format(
+				frappe.bold(design_item), frappe.get_desk_link("Item", item_code)
+			))
+
 	if not design_item:
 		frappe.throw(_('Design Item is mandatory.'))
 	if not fabric_item:
@@ -798,19 +805,27 @@ def make_design_bom(design_item, fabric_item, process_item, components=None):
 		"quantity": 1
 	})
 
+	validate_convertible_to_meter(fabric_item)
+	validate_convertible_to_meter(process_item)
+
 	bom_doc.append("items", {
 		"item_code": fabric_item,
-		"qty": 1
+		"qty": 1,
+		"uom": "Meter",
 	})
 	bom_doc.append("items", {
 		"item_code": process_item,
-		"qty": 1
+		"qty": 1,
+		"uom": "Meter",
 	})
 
 	for component_item in components:
+		validate_convertible_to_meter(component_item)
+
 		bom_doc.append("items", {
 			"item_code": component_item,
-			"qty": 1
+			"qty": 1,
+			"uom": "Meter",
 		})
 
 	return bom_doc
