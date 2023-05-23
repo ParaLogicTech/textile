@@ -11,5 +11,5 @@ def on_uom_conversion_factor_update(doc, method):
 
 
 def before_uom_rename(doc, method, old, new, merge):
-	if doc.name in ("Meter", "Yard", "Inch"):
+	if doc.name in ("Meter", "Yard", "Inch", "Square Meter"):
 		frappe.throw(_("Not allowed to rename UOM {0}").format(doc.name))

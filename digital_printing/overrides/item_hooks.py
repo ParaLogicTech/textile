@@ -110,6 +110,17 @@ class ItemDP(Item):
 				"to_qty": 1
 			})
 
+		sq_meter_row = [d for d in self.uom_conversion_graph if
+			(d.from_uom == "Square Meter" and d.to_uom == "Meter") or (d.from_uom == "Meter" and d.to_uom == "Square Meter")]
+		sq_meter_row = sq_meter_row[0] if sq_meter_row else self.append("uom_conversion_graph")
+
+		sq_meter_row.update({
+			"from_qty": 1,
+			"from_uom": "Meter",
+			"to_qty": self.fabric_width * 0.0254,
+			"to_uom": "Square Meter",
+		})
+
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:
 			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
