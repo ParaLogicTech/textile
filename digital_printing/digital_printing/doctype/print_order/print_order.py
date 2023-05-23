@@ -935,7 +935,8 @@ def make_packing_slip(print_order):
 		"item_code": doc.fabric_item,
 		"item_name": "{0} ({1})".format(doc.fabric_item_name, _("Return Fabric")),
 		"qty": 0,
-		"source_warehouse": doc.wip_warehouse
+		"source_warehouse": doc.wip_warehouse,
+		"print_order": doc.name,
 	})
 
 	# Missing Values and Forced Values
