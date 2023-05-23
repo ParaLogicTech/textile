@@ -190,16 +190,14 @@ class PrintOrder(StatusUpdater):
 			'attached_to_doctype': self.doctype,
 			'attached_to_name': self.name
 		}
-		files = frappe.db.get_all('File', filters, ['file_url'])
+		files_urls = frappe.db.get_all('File', filters, ['file_url'], order_by="creation", pluck="file_url")
 
-		attached_images = {d.file_url for d in files}
 		linked_images = {d.design_image for d in self.items}
-		unlinked_images = attached_images - linked_images
 
-		if not unlinked_images:
-			return
+		for file_url in files_urls:
+			if file_url in linked_images:
+				continue
 
-		for file_url in unlinked_images:
 			row = frappe.new_doc("Print Order Item")
 			row.design_image = file_url
 			row.design_gap = self.default_gap
