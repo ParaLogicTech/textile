@@ -893,7 +893,7 @@ def create_work_orders(print_order):
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Create Items and BOMs first"))
 
-	if all(d.qty and d.ordered_qty < d.qty for d in doc.items):
+	if doc.per_ordered <= 0:
 		frappe.throw(_("Create Sales Order first"))
 
 	if doc.per_work_ordered >= 100:
