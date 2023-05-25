@@ -9,5 +9,9 @@ frappe.ui.form.on("Packing Slip", {
 frappe.ui.form.on("Packing Slip Item", {
 	panel_qty: function(frm, cdt, cdn) {
 		digital_printing.calculate_panel_length_meter(frm, cdt, cdn);
-	}
+	},
+
+	panel_based_qty: function(frm, cdt, cdn) {
+		frm.cscript.calculate_totals();
+	},
 });

@@ -19,13 +19,18 @@ digital_printing.calculate_panel_qty = function() {
 
 digital_printing.calculate_panel_length_meter = function(frm, cdt, cdn) {
 	let row = frappe.get_doc(cdt, cdn);
-	let panel_length_meter = 0;
 
 	if (row.panel_qty && row.panel_based_qty) {
-		panel_length_meter = row.stock_qty / row.panel_qty;
+		row.panel_length_meter = row.stock_qty / row.panel_qty;
+	} else {
+		row.panel_length_meter = 0;
 	}
 
-	frappe.model.set_value(cdt, cdn, 'panel_length_meter', panel_length_meter);
+	if (frm.doc.doctype == "Packing Slip") {
+		frm.cscript.calculate_totals();
+	} else {
+		frm.cscript.calculate_taxes_and_totals();
+	}
 }
 
 erpnext.taxes_and_totals_hooks.push(digital_printing.calculate_panel_qty);

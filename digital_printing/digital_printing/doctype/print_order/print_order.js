@@ -327,6 +327,8 @@ digital_printing.PrintOrder = class PrintOrder extends frappe.ui.form.Controller
 		this.frm.doc.items.forEach(d => {
 			frappe.model.round_floats_in(d);
 
+			d.panel_based_qty = cint(Boolean(d.design_gap));
+
 			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap);
 			d.panel_length_meter = d.panel_length_inch * conversion_factors.inch_to_meter;
 			d.panel_length_yard = d.panel_length_meter / conversion_factors.yard_to_meter;
