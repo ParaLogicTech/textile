@@ -17,7 +17,7 @@ def calculate_panel_qty(self):
 		return
 
 	for row in self.items:
-		if not cint(row.panel_based_qty):
+		if cint(row.panel_based_qty) and flt(row.panel_length_meter):
+			row.panel_qty = flt(flt(row.stock_qty) / flt(row.panel_length_meter), row.precision("panel_qty"))
+		else:
 			row.panel_qty = 0
-		if row.panel_qty and cint(row.panel_based_qty):
-			row.panel_length_meter = flt(row.stock_qty) / flt(row.panel_qty)

@@ -9,8 +9,8 @@ digital_printing.calculate_panel_qty = function() {
 	}
 
 	for (let row of this.frm.doc.items || []) {
-		if (row.panel_length_meter && row.panel_based_qty) {
-			row.panel_qty = flt(row.stock_qty / row.panel_length_meter, precision("panel_qty", row));
+		if (cint(row.panel_based_qty) && flt(row.panel_length_meter)) {
+			row.panel_qty = flt(flt(row.stock_qty) / flt(row.panel_length_meter), precision("panel_qty", row));
 		} else {
 			row.panel_qty = 0;
 		}
