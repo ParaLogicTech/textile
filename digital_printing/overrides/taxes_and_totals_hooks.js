@@ -21,7 +21,7 @@ digital_printing.calculate_panel_length_meter = function(frm, cdt, cdn) {
 	let row = frappe.get_doc(cdt, cdn);
 
 	if (row.panel_qty && row.panel_based_qty) {
-		row.panel_length_meter = row.stock_qty / row.panel_qty;
+		row.panel_length_meter = flt(row.stock_qty) / flt(row.panel_qty);
 	} else {
 		row.panel_length_meter = 0;
 	}
