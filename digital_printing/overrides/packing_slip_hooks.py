@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.stock.doctype.packing_slip.packing_slip import PackingSlip
+from digital_printing.overrides.taxes_and_totals_hooks import calculate_panel_qty
 
 
 class PackingSlipDP(PackingSlip):
@@ -18,6 +19,10 @@ class PackingSlipDP(PackingSlip):
 
 			doc.set_status(update=True)
 			doc.notify_update()
+
+	def calculate_totals(self):
+		super().calculate_totals()
+		calculate_panel_qty(self)
 
 
 def map_print_order_reference_in_delivery_note_item(item_mapper, source_doctype):

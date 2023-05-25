@@ -53,6 +53,9 @@ doctype_js = {
 	"Customer": "overrides/customer_hooks.js",
 	"Sales Order": "overrides/sales_order_hooks.js",
 	"Stock Entry": "overrides/stock_entry_hooks.js",
+	"Packing Slip": "overrides/packing_slip_hooks.js",
+	"Delivery Note": "overrides/delivery_note_hooks.js",
+	"Sales Invoice": "overrides/sales_invoice_hooks.js",
 }
 
 update_item_override_fields = [
@@ -60,7 +63,7 @@ update_item_override_fields = [
 ]
 
 calculate_taxes_and_totals = [
-    "digital_printing.overrides.taxes_and_totals_hooks.calculate_panel_qty"
+    "digital_printing.overrides.taxes_and_totals_hooks.calculate_panel_qty_for_taxes_and_totals"
 ]
 
 update_work_order_from_sales_order = [
@@ -134,21 +137,25 @@ fixtures = [
 				'Sales Order Item-print_order_item',
 				'Sales Order Item-panel_length_meter',
 				'Sales Order Item-panel_qty',
-				'Sales Order Item-show_panel_in_print',
+				'Sales Order Item-panel_based_qty',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
 				'Delivery Note Item-panel_length_meter',
 				'Delivery Note Item-panel_qty',
-				'Delivery Note Item-show_panel_in_print',
+				'Delivery Note Item-panel_based_qty',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
 				'Sales Invoice Item-panel_length_meter',
 				'Sales Invoice Item-panel_qty',
-				'Sales Invoice Item-show_panel_in_print',
+				'Sales Invoice Item-panel_based_qty',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
+				'Packing Slip Item-column_break_zytx5',
+				'Packing Slip Item-panel_length_meter',
+				'Packing Slip Item-panel_qty',
+				'Packing Slip Item-panel_based_qty',
 			]]
 		}
 	},

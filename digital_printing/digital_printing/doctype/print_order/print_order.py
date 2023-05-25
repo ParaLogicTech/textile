@@ -248,6 +248,8 @@ class PrintOrder(StatusUpdater):
 			validate_uom_and_qty_type(d)
 			self.round_floats_in(d)
 
+			d.panel_based_qty = cint(bool(d.design_gap))
+
 			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap)
 			d.panel_length_meter = d.panel_length_inch * conversion_factors['inch_to_meter']
 			d.panel_length_yard = d.panel_length_meter / conversion_factors['yard_to_meter']
@@ -848,10 +850,9 @@ def make_sales_order(source_name, target_doc=None):
 		return abs(source.ordered_qty) < abs(source.print_length)
 
 	def update_item(source, target, source_parent, target_parent):
-		target.show_panel_in_print = cint(source.uom == "Panel")
 		target.qty = flt(source.print_length) - flt(source.ordered_qty)
 
-	doc = get_mapped_doc("Print Order", source_name,	{
+	doc = get_mapped_doc("Print Order", source_name, {
 		"Print Order": {
 			"doctype": "Sales Order",
 			"field_map": {
@@ -872,6 +873,7 @@ def make_sales_order(source_name, target_doc=None):
 				"print_length": "qty",
 				"length_uom": "uom",
 				"panel_length_meter": "panel_length_meter",
+				"panel_based_qty": "panel_based_qty",
 			},
 			"postprocess": update_item,
 			"condition": item_condition,
@@ -948,6 +950,7 @@ def make_packing_slip(print_order):
 		"item_code": doc.fabric_item,
 		"item_name": "{0} ({1})".format(doc.fabric_item_name, _("Return Fabric")),
 		"qty": 0,
+		"uom": doc.default_length_uom,
 		"source_warehouse": doc.wip_warehouse,
 		"print_order": doc.name,
 	})

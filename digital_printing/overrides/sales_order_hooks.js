@@ -1,4 +1,6 @@
-frappe.ui.form.on('Sales Order', {
+frappe.provide("digital_printing");
+
+frappe.ui.form.on("Sales Order", {
 	refresh: function(frm) {
 		if (frm.doc.docstatus === 0) {
 			frm.add_custom_button(__('Print Order'), function() {
@@ -48,5 +50,15 @@ frappe.ui.form.on('Sales Order', {
 				customer: frm.doc.customer || undefined,
 			}
 		});
-	}
+	},
+});
+
+frappe.ui.form.on("Sales Order Item", {
+	panel_qty: function(frm, cdt, cdn) {
+		digital_printing.calculate_panel_length_meter(frm, cdt, cdn);
+	},
+
+	panel_based_qty: function(frm, cdt, cdn) {
+		frm.cscript.calculate_taxes_and_totals();
+	},
 });
