@@ -848,10 +848,10 @@ def make_sales_order(source_name, target_doc=None):
 		return abs(source.ordered_qty) < abs(source.print_length)
 
 	def update_item(source, target, source_parent, target_parent):
-		target.show_panel_in_print = cint(source.uom == "Panel")
+		target.panel_based_qty = cint(bool(source.design_gap))
 		target.qty = flt(source.print_length) - flt(source.ordered_qty)
 
-	doc = get_mapped_doc("Print Order", source_name,	{
+	doc = get_mapped_doc("Print Order", source_name, {
 		"Print Order": {
 			"doctype": "Sales Order",
 			"field_map": {

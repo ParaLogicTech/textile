@@ -9,13 +9,23 @@ digital_printing.calculate_panel_qty = function() {
 	}
 
 	for (let row of this.frm.doc.items || []) {
-		if (row.panel_length_meter) {
+		if (row.panel_length_meter && row.panel_based_qty) {
 			row.panel_qty = flt(row.stock_qty / row.panel_length_meter, precision("panel_qty", row));
 		} else {
 			row.panel_qty = 0;
 		}
 	}
+}
 
+digital_printing.calculate_panel_length_meter = function(frm, cdt, cdn) {
+	let row = frappe.get_doc(cdt, cdn);
+	let panel_length_meter = 0;
+
+	if (row.panel_qty && row.panel_based_qty) {
+		panel_length_meter = row.stock_qty / row.panel_qty;
+	}
+
+	frappe.model.set_value(cdt, cdn, 'panel_length_meter', panel_length_meter);
 }
 
 erpnext.taxes_and_totals_hooks.push(digital_printing.calculate_panel_qty);
