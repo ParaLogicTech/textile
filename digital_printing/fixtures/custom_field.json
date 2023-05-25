@@ -39,7 +39,7 @@
   "non_negative": 1,
   "options": null,
   "permlevel": 0,
-  "precision": "",
+  "precision": "6",
   "print_hide": 0,
   "print_hide_if_no_value": 0,
   "print_width": null,
