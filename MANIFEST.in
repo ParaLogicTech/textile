@@ -4,15 +4,15 @@ include *.json
 include *.md
 include *.py
 include *.txt
-recursive-include digital_printing *.css
-recursive-include digital_printing *.csv
-recursive-include digital_printing *.html
-recursive-include digital_printing *.ico
-recursive-include digital_printing *.js
-recursive-include digital_printing *.json
-recursive-include digital_printing *.md
-recursive-include digital_printing *.png
-recursive-include digital_printing *.py
-recursive-include digital_printing *.svg
-recursive-include digital_printing *.txt
-recursive-exclude digital_printing *.pyc
+recursive-include textile *.css
+recursive-include textile *.csv
+recursive-include textile *.html
+recursive-include textile *.ico
+recursive-include textile *.js
+recursive-include textile *.json
+recursive-include textile *.md
+recursive-include textile *.png
+recursive-include textile *.py
+recursive-include textile *.svg
+recursive-include textile *.txt
+recursive-exclude textile *.pyc

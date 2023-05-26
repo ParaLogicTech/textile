@@ -1,6 +1,6 @@
-## Digital Printing
+## Textile
 
-Digital Printing ERP Application
+Textile ERP Application
 
 #### License
 
