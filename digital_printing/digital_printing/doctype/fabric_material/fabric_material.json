@@ -53,7 +53,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2023-05-15 17:41:43.721099",
+ "modified": "2023-05-26 11:56:11.450806",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Material",
@@ -68,10 +68,19 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Item Manager",
+   "role": "System Manager",
    "set_user_permissions": 1,
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Item Manager",
+   "share": 1
   },
   {
    "email": 1,
