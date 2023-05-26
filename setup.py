@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 with open("requirements.txt") as f:
 	install_requires = f.read().strip().split("\n")
 
-# get version from __version__ variable in digital_printing/__init__.py
-from digital_printing import __version__ as version
+# get version from __version__ variable in textile/__init__.py
+from textile import __version__ as version
 
 setup(
-	name="digital_printing",
+	name="textile",
 	version=version,
-	description="Digital Printing ERP Application",
+	description="Textile ERP Application",
 	author="ParaLogic",
 	author_email="info@paralogic.io",
 	packages=find_packages(),

@@ -3,7 +3,7 @@
 *.egg-info
 *.swp
 tags
-digital_printing/docs/current
+textile/docs/current
 node_modules/
 __pycache__
 .idea/
