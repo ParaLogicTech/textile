@@ -306,7 +306,7 @@ class PrintOrder(StatusUpdater):
 			SELECT i.item_code
 			FROM `tabPrint Order Item` i
 			INNER JOIN `tabPrint Order` p ON p.name = i.parent
-			WHERE p.docstatus = 1 AND p.name != %(name)s AND ifnull(i.item_code, '') != ''
+			WHERE p.name != %(name)s AND ifnull(i.item_code, '') != ''
 				AND p.customer = %(customer)s
 				AND p.fabric_item = %(fabric_item)s
 				AND i.design_image = %(design_image)s
@@ -344,7 +344,7 @@ class PrintOrder(StatusUpdater):
 			SELECT i.design_bom
 			FROM `tabPrint Order Item` i
 			INNER JOIN `tabPrint Order` p ON p.name = i.parent
-			WHERE p.name != %(name)s AND p.docstatus = 1
+			WHERE p.name != %(name)s
 				AND i.item_code = %(item_code)s
 				AND ifnull(i.design_bom, '') != ''
 				{0}
