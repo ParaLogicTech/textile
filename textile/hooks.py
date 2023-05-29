@@ -20,7 +20,7 @@ doc_events = {
 	"Work Order": {
 		"on_submit": "textile.overrides.work_order_hooks.update_print_order_status",
 		"on_cancel": "textile.overrides.work_order_hooks.update_print_order_status",
-		"update_work_order_qty": "textile.overrides.work_order_hooks.update_print_order_status",
+		"update_status": "textile.overrides.work_order_hooks.update_print_order_status",
 	},
 	"UOM": {
 		"before_rename": "textile.overrides.uom_hooks.before_uom_rename",
