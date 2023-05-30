@@ -17,7 +17,7 @@ class SalesInvoiceDP(SalesInvoice):
 
 		for name in print_orders:
 			doc = frappe.get_doc("Print Order", name)
-			doc.set_billed_status(update=True)
+			doc.set_billing_status(update=True)
 
 			doc.validate_billed_qty(from_doctype=self.doctype, row_names=print_order_row_names)
 

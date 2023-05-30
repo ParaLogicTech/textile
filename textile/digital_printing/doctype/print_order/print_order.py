@@ -57,7 +57,14 @@ class PrintOrder(StatusUpdater):
 		if self.docstatus == 1:
 			self.set_existing_items_and_boms()
 
+		self.set_sales_order_status()
+		self.set_work_order_status()
+		self.set_production_status()
+		self.set_packing_status()
+		self.set_delivery_status()
+		self.set_billing_status()
 		self.set_status()
+
 		self.set_title()
 
 	def on_submit(self):
@@ -110,11 +117,11 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
-			elif self.per_produced < 100:
+			elif self.production_status == "To Produce":
 				self.status = "To Produce"
-			elif self.per_delivered < 100:
+			elif self.delivery_status == "To Deliver":
 				self.status = "To Deliver"
-			elif self.per_billed < 100:
+			elif self.billing_status == "To Bill":
 				self.status = "To Bill"
 			else:
 				self.status = "Completed"
@@ -126,6 +133,16 @@ class PrintOrder(StatusUpdater):
 
 		if update:
 			self.db_set('status', self.status, update_modified=update_modified)
+
+	def update_status(self, status):
+		self.set_status(status=status)
+		self.set_production_status(update=True)
+		self.set_packing_status(update=True)
+		self.set_delivery_status(update=True)
+		self.set_billing_status(update=True)
+		self.set_status(update=True, status=status)
+		self.notify_update()
+		clear_doctype_notifications(self)
 
 	def set_title(self):
 		self.title = self.customer_name or self.customer
@@ -354,7 +371,7 @@ class PrintOrder(StatusUpdater):
 
 		return existing_bom[0] if existing_bom else None
 
-	def set_ordered_status(self, update=False, update_modified=True):
+	def set_sales_order_status(self, update=False, update_modified=True):
 		data = self.get_ordered_status_data()
 
 		for d in self.items:
@@ -433,7 +450,7 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
-	def set_produced_status(self, update=False, update_modified=True):
+	def set_production_status(self, update=False, update_modified=True):
 		data = self.get_produced_status_data()
 
 		for d in self.items:
@@ -444,20 +461,27 @@ class PrintOrder(StatusUpdater):
 				}, update_modified=update_modified)
 
 		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
+		within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_incomplete_work_order
+
+		self.production_status = self.get_completion_status('per_produced', 'Produce',
+			not_applicable=self.status == "Closed", within_allowance=within_allowance)
+
 		if update:
 			self.db_set({
-				'per_produced': self.per_produced
+				'per_produced': self.per_produced,
+				'production_status': self.production_status,
 			}, update_modified=update_modified)
 
 	def get_produced_status_data(self):
 		out = frappe._dict()
 		out.produced_qty_map = {}
+		out.has_incomplete_work_order = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
 			if row_names:
 				produced_data = frappe.db.sql("""
-					SELECT print_order_item, produced_qty
+					SELECT name, print_order_item, produced_qty, status
 					FROM `tabWork Order`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
@@ -466,13 +490,16 @@ class PrintOrder(StatusUpdater):
 					out.produced_qty_map.setdefault(d.print_order_item, 0)
 					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
 
+					if d.status not in ("Completed", "Stopped"):
+						out.has_incomplete_work_order = True
+
 		return out
 
 	def validate_produced_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
-	def set_packed_status(self, update=False, update_modified=True):
+	def set_packing_status(self, update=False, update_modified=True):
 		data = self.get_packed_status_data()
 
 		for d in self.items:
@@ -483,14 +510,22 @@ class PrintOrder(StatusUpdater):
 				}, update_modified=update_modified)
 
 		self.per_packed = flt(self.calculate_status_percentage('packed_qty', 'stock_print_length', self.items))
+		within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_incomplete_packing
+
+		self.packing_status = self.get_completion_status('per_packed', 'Pack',
+			not_applicable=self.status == "Closed" or not self.packing_slip_required,
+			within_allowance=within_allowance)
+
 		if update:
 			self.db_set({
-				'per_packed': self.per_packed
+				'per_packed': self.per_packed,
+				'packing_status': self.packing_status,
 			}, update_modified=update_modified)
 
 	def get_packed_status_data(self):
 		out = frappe._dict()
 		out.packed_qty_map = {}
+		out.has_incomplete_packing = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
@@ -505,13 +540,23 @@ class PrintOrder(StatusUpdater):
 					out.packed_qty_map.setdefault(d.print_order_item, 0)
 					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
+			sales_orders_to_pack = frappe.db.sql_list("""
+				select count(so.name)
+				from `tabSales Order Item` i
+				inner join `tabSales Order` so on so.name = i.parent
+				where so.docstatus = 1 and so.packing_status = 'To Pack' and i.print_order = %s
+			""", self.name)
+			sales_orders_to_pack = cint(sales_orders_to_pack[0]) if sales_orders_to_pack else 0
+			if sales_orders_to_pack:
+				out.has_incomplete_packing = True
+
 		return out
 
 	def validate_packed_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('packed_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
 
-	def set_delivered_status(self, update=False, update_modified=True):
+	def set_delivery_status(self, update=False, update_modified=True):
 		data = self.get_delivered_status_data()
 
 		for d in self.items:
@@ -522,14 +567,21 @@ class PrintOrder(StatusUpdater):
 				}, update_modified=update_modified)
 
 		self.per_delivered = flt(self.calculate_status_percentage('delivered_qty', 'stock_print_length', self.items))
+		within_allowance = self.per_ordered >= 100 and self.per_delivered > 0 and not data.has_incomplete_delivery
+
+		self.delivery_status = self.get_completion_status('per_delivered', 'Deliver',
+			not_applicable=self.status == "Closed", within_allowance=within_allowance)
+
 		if update:
 			self.db_set({
-				'per_delivered': self.per_delivered
+				'per_delivered': self.per_delivered,
+				'delivery_status': self.delivery_status,
 			}, update_modified=update_modified)
 
 	def get_delivered_status_data(self):
 		out = frappe._dict()
 		out.delivered_qty_map = {}
+		out.has_incomplete_delivery = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
@@ -544,13 +596,23 @@ class PrintOrder(StatusUpdater):
 					out.delivered_qty_map.setdefault(d.print_order_item, 0)
 					out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
+			sales_orders_to_deliver = frappe.db.sql_list("""
+				select count(so.name)
+				from `tabSales Order Item` i
+				inner join `tabSales Order` so on so.name = i.parent
+				where so.docstatus = 1 and so.delivery_status = 'To Deliver' and i.print_order = %s
+			""", self.name)
+			sales_orders_to_deliver = cint(sales_orders_to_deliver[0]) if sales_orders_to_deliver else 0
+			if sales_orders_to_deliver:
+				out.has_incomplete_delivery = True
+
 		return out
 
 	def validate_delivered_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
 
-	def set_billed_status(self, update=False, update_modified=True):
+	def set_billing_status(self, update=False, update_modified=True):
 		data = self.get_billed_status_data()
 
 		for d in self.items:
@@ -561,14 +623,21 @@ class PrintOrder(StatusUpdater):
 				}, update_modified=update_modified)
 
 		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
+		within_allowance = self.per_ordered >= 100 and self.per_billed > 0 and not data.has_incomplete_billing
+
+		self.billing_status = self.get_completion_status('per_billed', 'Bill',
+			not_applicable=self.status == "Closed", within_allowance=within_allowance)
+
 		if update:
 			self.db_set({
-				'per_billed': self.per_billed
+				'per_billed': self.per_billed,
+				'billing_status': self.billing_status,
 			}, update_modified=update_modified)
 
 	def get_billed_status_data(self):
 		out = frappe._dict()
 		out.billed_qty_map = {}
+		out.has_incomplete_billing = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
@@ -582,6 +651,16 @@ class PrintOrder(StatusUpdater):
 				for d in billed_data:
 					out.billed_qty_map.setdefault(d.print_order_item, 0)
 					out.billed_qty_map[d.print_order_item] += flt(d.stock_qty)
+
+			sales_orders_to_bill = frappe.db.sql_list("""
+				select count(so.name)
+				from `tabSales Order Item` i
+				inner join `tabSales Order` so on so.name = i.parent
+				where so.docstatus = 1 and so.billing_status = 'To Bill' and i.print_order = %s
+			""", self.name)
+			sales_orders_to_bill = cint(sales_orders_to_bill[0]) if sales_orders_to_bill else 0
+			if sales_orders_to_bill:
+				out.has_incomplete_billing = True
 
 		return out
 
@@ -676,9 +755,7 @@ def update_status(print_order, status):
 	if status == "Closed" and doc.per_ordered == 100:
 		return
 
-	doc.set_status(update=True, status=status)
-	doc.notify_update()
-	clear_doctype_notifications(doc)
+	doc.run_method("update_status", status)
 
 
 @frappe.whitelist()
@@ -936,8 +1013,7 @@ def make_packing_slip(print_order):
 		FROM `tabSales Order Item` i
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
-		AND s.per_packed < 99.99 AND s.company = %(company)s AND
-		i.print_order = %(print_order)s
+			AND s.per_packed < 100 AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
 	if not sales_orders:
@@ -975,8 +1051,8 @@ def make_delivery_note(print_order):
 		FROM `tabSales Order Item` i
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
-		AND s.per_delivered < 99.99 AND s.skip_delivery_note = 0
-		AND s.company = %(company)s AND i.print_order = %(print_order)s
+			AND s.per_delivered < 100 AND s.skip_delivery_note = 0
+			AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
 	if not sales_orders:

@@ -17,12 +17,20 @@ class DeliveryNoteDP(DeliveryNote):
 
 		for name in print_orders:
 			doc = frappe.get_doc("Print Order", name)
-			doc.set_delivered_status(update=True)
+			doc.set_delivery_status(update=True)
 
 			doc.validate_delivered_qty(from_doctype=self.doctype, row_names=print_order_row_names)
 
 			doc.set_status(update=True)
 			doc.notify_update()
+
+	def update_status(self, status):
+		super().update_status(status)
+
+		print_orders = [d.print_order for d in self.items if d.get('print_order')]
+		for name in print_orders:
+			doc = frappe.get_doc("Print Order", name)
+			doc.run_method("update_status", None)
 
 
 def map_print_order_reference_in_sales_invoice_item(mapper, target_doctype):

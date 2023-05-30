@@ -6,3 +6,4 @@ textile.patches.update_fabric_items_conversions
 
 [post_model_sync]
 textile.patches.set_panel_based_qty
+textile.patches.update_print_order_statuses

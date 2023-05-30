@@ -45,7 +45,7 @@ frappe.ui.form.on("Sales Order", {
 			get_query_filters: {
 				docstatus: 1,
 				status: ["not in", ["Closed", "To Create Items"]],
-				per_ordered: ["<", 99.99],
+				per_ordered: ["<", 100],
 				company: frm.doc.company,
 				customer: frm.doc.customer || undefined,
 			}

@@ -76,13 +76,22 @@
   "total_panel_qty",
   "tab_status",
   "status",
+  "column_break_zltke",
   "per_ordered",
-  "column_break_56ckq",
+  "column_break_3qzv3",
   "per_work_ordered",
+  "section_break_2pbh5",
+  "production_status",
   "per_produced",
   "column_break_rwkru",
+  "packing_status",
   "per_packed",
+  "column_break_r0yyq",
+  "delivery_status",
   "per_delivered",
+  "section_break_dtb5f",
+  "billing_status",
+  "column_break_paad7",
   "per_billed"
  ],
  "fields": [
@@ -435,10 +444,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_56ckq",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "column_break_rwkru",
    "fieldtype": "Column Break"
   },
@@ -610,12 +615,80 @@
    "fieldtype": "Data",
    "label": "Protection Paper Item Name",
    "read_only": 1
+  },
+  {
+   "default": "To Produce",
+   "fieldname": "production_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Production Status",
+   "no_copy": 1,
+   "options": "To Produce\nProduced\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Pack",
+   "fieldname": "packing_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Packing Status",
+   "no_copy": 1,
+   "options": "To Pack\nPacked\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Deliver",
+   "fieldname": "delivery_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Delivery Status",
+   "no_copy": 1,
+   "options": "To Deliver\nDelivered\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Bill",
+   "fieldname": "billing_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Billing Status",
+   "no_copy": 1,
+   "options": "To Bill\nBilled\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zltke",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_3qzv3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_2pbh5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_r0yyq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_paad7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_dtb5f",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-22 13:53:46.197624",
+ "modified": "2023-05-30 18:20:17.156816",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
