@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from erpnext.stock.doctype.packing_slip.packing_slip import PackingSlip
 from textile.overrides.taxes_and_totals_hooks import calculate_panel_qty
 
@@ -34,7 +35,7 @@ def map_print_order_reference_in_delivery_note_item(item_mapper, source_doctype)
 	field_map["print_order_item"] = "print_order_item"
 
 
-def update_sales_order_to_print_order_mapper(mapper, target_doctype):
+def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 	def postprocess(source, target):
 		if base_postprocess:
 			base_postprocess(source, target)
@@ -60,8 +61,10 @@ def update_sales_order_to_print_order_mapper(mapper, target_doctype):
 			base_update_item(source, target, source_parent, target_parent)
 
 		if source.get("print_order_item"):
-			produced_qty = frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1)
-			target.qty = min(target.qty, produced_qty)
+			produced_qty = flt(frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1))
+			undelivered_qty = produced_qty - flt(source.delivered_qty)
+			unpacked_qty = produced_qty - flt(source.packed_qty)
+			target.qty = min(undelivered_qty, unpacked_qty, 0.0)
 
 	base_postprocess = mapper.get("postprocess")
 	mapper["postprocess"] = postprocess
