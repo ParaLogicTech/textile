@@ -73,6 +73,7 @@ update_work_order_from_sales_order = [
 
 update_packing_slip_from_sales_order_mapper = [
 	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
+	"textile.overrides.packing_slip_hooks.update_sales_order_to_print_order_mapper",
 ]
 
 update_delivery_note_from_sales_order_mapper = [
