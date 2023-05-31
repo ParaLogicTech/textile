@@ -8,6 +8,7 @@
  "engine": "InnoDB",
  "field_order": [
   "default_item_group_for_printed_design_item",
+  "default_package_type_for_printed_fabrics",
   "column_break_ao9pt",
   "default_printing_source_warehouse",
   "default_printing_wip_warehouse",
@@ -41,12 +42,18 @@
    "fieldtype": "Link",
    "label": "Default Finished Goods Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_package_type_for_printed_fabrics",
+   "fieldtype": "Link",
+   "label": "Default Package Type for Printed Fabrics",
+   "options": "Package Type"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-05-22 13:06:46.040401",
+ "modified": "2023-06-01 02:52:07.763050",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing Settings",

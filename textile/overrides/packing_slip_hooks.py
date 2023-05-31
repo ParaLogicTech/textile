@@ -56,6 +56,9 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 				"print_order": name,
 			})
 
+		if print_orders and not target.package_type:
+			target.package_type = frappe.db.get_single_value("Digital Printing Settings", "default_package_type_for_printed_fabrics")
+
 	def update_item(source, target, source_parent, target_parent):
 		if base_update_item:
 			base_update_item(source, target, source_parent, target_parent)
@@ -64,7 +67,7 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 			produced_qty = flt(frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1))
 			undelivered_qty = produced_qty - flt(source.delivered_qty)
 			unpacked_qty = produced_qty - flt(source.packed_qty)
-			target.qty = min(undelivered_qty, unpacked_qty, 0.0)
+			target.qty = min(undelivered_qty, unpacked_qty)
 
 	base_postprocess = mapper.get("postprocess")
 	mapper["postprocess"] = postprocess
