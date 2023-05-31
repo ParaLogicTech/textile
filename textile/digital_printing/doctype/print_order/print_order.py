@@ -1001,12 +1001,10 @@ def create_work_orders(print_order):
 
 
 @frappe.whitelist()
-def make_packing_slip(print_order):
+def make_packing_slip(source_name, target_doc=None):
 	from erpnext.selling.doctype.sales_order.sales_order import make_packing_slip
 
-	doc = frappe.get_doc("Print Order", print_order)
-
-	target_doc = frappe.new_doc("Packing Slip")
+	doc = frappe.get_doc("Print Order", source_name)
 
 	sales_orders = frappe.db.sql("""
 		SELECT DISTINCT s.name
