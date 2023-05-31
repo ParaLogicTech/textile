@@ -37,6 +37,7 @@ override_doctype_class = {
 	"Sales Invoice": "textile.overrides.sales_invoice_hooks.SalesInvoiceDP",
 	"Stock Entry": "textile.overrides.stock_entry_hooks.StockEntryDP",
 	"Packing Slip": "textile.overrides.packing_slip_hooks.PackingSlipDP",
+	"Work Order": "textile.overrides.work_order_hooks.WorkOrderDP",
 }
 
 override_doctype_dashboards = {
@@ -73,7 +74,7 @@ update_work_order_from_sales_order = [
 
 update_packing_slip_from_sales_order_mapper = [
 	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
-	"textile.overrides.packing_slip_hooks.update_sales_order_to_print_order_mapper",
+	"textile.overrides.packing_slip_hooks.update_packing_slip_from_sales_order_mapper",
 ]
 
 update_delivery_note_from_sales_order_mapper = [
