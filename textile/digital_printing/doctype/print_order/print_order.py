@@ -1024,12 +1024,10 @@ def make_packing_slip(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def make_delivery_note(print_order):
+def make_delivery_note(source_name, target_doc=None):
 	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note_from_packing_slips
 
-	doc = frappe.get_doc("Print Order", print_order)
-
-	target_doc = frappe.new_doc("Delivery Note")
+	doc = frappe.get_doc("Print Order", source_name)
 
 	sales_orders = frappe.db.sql("""
 		SELECT DISTINCT s.name
@@ -1047,10 +1045,6 @@ def make_delivery_note(print_order):
 
 	for d in sales_orders:
 		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
-
-	# Missing Values and Forced Values
-	target_doc.run_method("set_missing_values")
-	target_doc.run_method("calculate_taxes_and_totals")
 
 	return target_doc
 
@@ -1078,10 +1072,6 @@ def make_sales_invoice(print_order):
 
 	for d in delivery_notes:
 		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
-
-	# Missing Values and Forced Values
-	target_doc.run_method("set_missing_values")
-	target_doc.run_method("calculate_taxes_and_totals")
 
 	return target_doc
 
