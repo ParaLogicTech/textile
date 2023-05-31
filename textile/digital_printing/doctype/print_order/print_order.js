@@ -453,7 +453,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		return frappe.call({
 			method: "textile.digital_printing.doctype.print_order.print_order.make_delivery_note",
 			args: {
-				"print_order": this.frm.doc.name,
+				"source_name": this.frm.doc.name,
 			},
 			callback: function (r) {
 				if (!r.exc) {
