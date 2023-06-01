@@ -99,32 +99,60 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 					__("Create"));
 			}
 
+			let can_create_sales_order = false;
+			let can_create_work_order = false;
+			let can_create_packing_slip = false;
+			let can_create_delivery_note = false;
+			let can_create_sales_invoice = false;
+
 			if (!has_missing_item && doc.status != "Closed") {
+				if (doc.per_work_ordered > 0) {
+					this.frm.add_custom_button(__("Work Order List"), () => this.show_work_orders());
+				}
+
 				if (flt(doc.per_ordered) < 100) {
+					can_create_sales_order = true;
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
 				}
 
 				if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
+					can_create_work_order = true;
 					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 						__("Create"));
 				}
 
 				if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
-					this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip(),
-						__("Create"));
+					can_create_packing_slip = true;
+					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
+					$(packing_slip_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 
 				if (doc.per_produced && doc.per_delivered < doc.per_produced
 						&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
 				) {
-					this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note(),
-						__("Create"));
+					can_create_delivery_note = true;
+					let delivery_note_btn = this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note());
+
+					if (!can_create_packing_slip) {
+						$(delivery_note_btn).removeClass("btn-default").addClass("btn-primary");
+					}
 				}
 
 				if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
-					this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice(),
-						__("Create"));
+					can_create_sales_invoice = true;
+					let sales_invoice_btn = this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice());
+
+					if (this.frm.doc.delivery_status == "Delivered") {
+						$(sales_invoice_btn).removeClass("btn-default").addClass("btn-primary");
+					}
+				}
+			}
+
+			if (doc.status != "Closed") {
+				if (has_missing_item || can_create_sales_order || can_create_work_order) {
+					let start_btn = this.frm.add_custom_button(__("Start"), () => this.start_print_order());
+					$(start_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 			}
 		}
@@ -397,6 +425,21 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		});
 	}
 
+	start_print_order() {
+		return frappe.call({
+			method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
+			args: {
+				print_order: this.frm.doc.name
+			},
+			freeze: true,
+			callback: (r) => {
+				if (!r.exc) {
+					this.frm.reload_doc();
+				}
+			}
+		});
+	}
+
 	create_design_items_and_boms() {
 		return frappe.call({
 			method: "textile.digital_printing.doctype.print_order.print_order.create_design_items_and_boms",
@@ -477,6 +520,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				}
 			}
 		});
+	}
+
+	show_work_orders() {
+		frappe.route_options = {
+			print_order: this.frm.doc.name
+		}
+		return frappe.set_route("List", "Work Order");
 	}
 };
 

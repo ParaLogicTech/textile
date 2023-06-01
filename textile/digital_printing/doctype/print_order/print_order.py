@@ -789,8 +789,31 @@ def check_print_order_is_closed(doc):
 
 
 @frappe.whitelist()
-def create_design_items_and_boms(print_order):
+def start_print_order(print_order):
 	doc = frappe.get_doc('Print Order', print_order)
+	if doc.status == "Closed":
+		frappe.throw(_("Print Order {0} is Closed").format(doc.name))
+
+	if not all(d.item_code and d.design_bom for d in doc.items):
+		create_design_items_and_boms(doc)
+
+	if doc.per_ordered < 100:
+		sales_order = make_sales_order(doc.name)
+		sales_order.save()
+		sales_order.submit()
+
+		frappe.msgprint(_("Sales Order created: {0}").format(frappe.utils.get_link_to_form("Sales Order", sales_order.name)))
+
+	if doc.per_work_ordered < 100:
+		create_work_orders(doc.name)
+
+
+@frappe.whitelist()
+def create_design_items_and_boms(print_order):
+	if isinstance(print_order, str):
+		doc = frappe.get_doc('Print Order', print_order)
+	else:
+		doc = print_order
 
 	if doc.docstatus != 1:
 		frappe.throw(_("Submit the Print Order first."))
@@ -973,7 +996,10 @@ def make_sales_order(source_name, target_doc=None):
 def create_work_orders(print_order):
 	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
 
-	doc = frappe.get_doc('Print Order', print_order)
+	if isinstance(print_order, str):
+		doc = frappe.get_doc('Print Order', print_order)
+	else:
+		doc = print_order
 
 	if doc.docstatus != 1:
 		frappe.throw(_("Submit the Print Order first."))
