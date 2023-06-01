@@ -19,6 +19,32 @@ class WorkOrderDP(WorkOrder):
 		super().validate_overproduction()
 
 
+def update_work_order_from_sales_order(work_order):
+	if work_order.get('sales_order_item'):
+		so_item = frappe.db.get_value("Sales Order Item", work_order.sales_order_item, ["print_order", "print_order_item"],
+			as_dict=1)
+
+		if so_item:
+			work_order.print_order = so_item.print_order
+			work_order.print_order_item = so_item.print_order_item
+
+	if work_order.get('print_order'):
+		po_to_wo_warehouse_fn_map = {
+			'source_warehouse': 'source_warehouse',
+			'wip_warehouse': 'wip_warehouse',
+			'fg_warehouse': 'fg_warehouse',
+		}
+
+		for po_warehouse_fn, wo_warehouse_fn in po_to_wo_warehouse_fn_map.items():
+			warehouse = frappe.db.get_value("Print Order", work_order.print_order, po_warehouse_fn, cache=True)
+
+			if warehouse:
+				work_order.set(wo_warehouse_fn, warehouse)
+
+	if work_order.get('print_order_item'):
+		work_order.max_qty = flt(frappe.db.get_value("Print Order Item", work_order.print_order_item, "stock_fabric_length"))
+
+
 def update_print_order_status(self, hook, status=None):
 	if not (self.get('print_order') and self.get('print_order_item')):
 		return

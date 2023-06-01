@@ -35,7 +35,6 @@ override_doctype_class = {
 	"Sales Order": "textile.overrides.sales_order_hooks.SalesOrderDP",
 	"Delivery Note": "textile.overrides.delivery_note_hooks.DeliveryNoteDP",
 	"Sales Invoice": "textile.overrides.sales_invoice_hooks.SalesInvoiceDP",
-	"Stock Entry": "textile.overrides.stock_entry_hooks.StockEntryDP",
 	"Packing Slip": "textile.overrides.packing_slip_hooks.PackingSlipDP",
 	"Work Order": "textile.overrides.work_order_hooks.WorkOrderDP",
 }
@@ -64,12 +63,11 @@ update_item_override_fields = [
 ]
 
 calculate_taxes_and_totals = [
-    "textile.overrides.taxes_and_totals_hooks.calculate_panel_qty_for_taxes_and_totals"
+	"textile.overrides.taxes_and_totals_hooks.calculate_panel_qty_for_taxes_and_totals"
 ]
 
 update_work_order_from_sales_order = [
-	"textile.overrides.sales_order_hooks.set_print_order_reference_in_work_order",
-	"textile.overrides.sales_order_hooks.set_print_order_warehouses_in_work_order",
+	"textile.overrides.work_order_hooks.update_work_order_from_sales_order",
 ]
 
 update_packing_slip_from_sales_order_mapper = [

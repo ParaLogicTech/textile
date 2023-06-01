@@ -52,6 +52,7 @@ class PrintOrder(StatusUpdater):
 		self.validate_process_item()
 		self.validate_design_items()
 		self.validate_order_defaults()
+		self.validate_wastage()
 		self.calculate_totals()
 
 		if self.docstatus == 1:
@@ -149,6 +150,14 @@ class PrintOrder(StatusUpdater):
 
 	def validate_order_defaults(self):
 		validate_uom_and_qty_type(self)
+
+	def validate_wastage(self):
+		allowance = flt(frappe.db.get_single_value("Manufacturing Settings", "overproduction_percentage_for_work_order"))
+		for d in self.items:
+			if flt(d.per_wastage) > allowance:
+				frappe.throw(_("Row #{0}: Wastage cannot be greater than Over Production Allowance of {0}%").format(
+					d.idx, frappe.bold(frappe.format(allowance))
+				))
 
 	def validate_customer(self):
 		if self.get("customer"):
@@ -497,7 +506,7 @@ class PrintOrder(StatusUpdater):
 
 	def validate_produced_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
 	def set_packing_status(self, update=False, update_modified=True):
 		data = self.get_packed_status_data()
