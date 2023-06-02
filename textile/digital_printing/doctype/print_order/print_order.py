@@ -155,8 +155,8 @@ class PrintOrder(StatusUpdater):
 		allowance = flt(frappe.db.get_single_value("Manufacturing Settings", "overproduction_percentage_for_work_order"))
 		for d in self.items:
 			if flt(d.per_wastage) > allowance:
-				frappe.throw(_("Row #{0}: Wastage cannot be greater than Over Production Allowance of {0}%").format(
-					d.idx, frappe.bold(frappe.format(allowance))
+				frappe.throw(_("Row #{0}: Wastage cannot be greater than Over Production Allowance of {1}").format(
+					d.idx, frappe.bold(frappe.format(allowance, df=d.meta.get_field("per_wastage")))
 				))
 
 	def validate_customer(self):
