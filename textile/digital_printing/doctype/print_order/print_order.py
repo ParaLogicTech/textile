@@ -913,7 +913,7 @@ def make_design_bom(design_item, fabric_item, process_item, components=None):
 	bom_doc = frappe.new_doc("BOM")
 	bom_doc.update({
 		"item": design_item,
-		"quantity": 1
+		"quantity": 1,
 	})
 
 	validate_convertible_to_meter(fabric_item)
@@ -923,11 +923,13 @@ def make_design_bom(design_item, fabric_item, process_item, components=None):
 		"item_code": fabric_item,
 		"qty": 1,
 		"uom": "Meter",
+		"skip_transfer_for_manufacture": 0,
 	})
 	bom_doc.append("items", {
 		"item_code": process_item,
 		"qty": 1,
 		"uom": "Meter",
+		"skip_transfer_for_manufacture": 1,
 	})
 
 	for component_item in components:
@@ -937,6 +939,7 @@ def make_design_bom(design_item, fabric_item, process_item, components=None):
 			"item_code": component_item,
 			"qty": 1,
 			"uom": "Meter",
+			"skip_transfer_for_manufacture": 1,
 		})
 
 	return bom_doc
