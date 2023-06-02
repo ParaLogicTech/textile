@@ -426,17 +426,19 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	start_print_order() {
-		return frappe.call({
-			method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
-			args: {
-				print_order: this.frm.doc.name
-			},
-			freeze: true,
-			callback: (r) => {
-				if (!r.exc) {
-					this.frm.reload_doc();
+		frappe.confirm(__("Are you sure you want to start this Print Order?<br><br>Starting will create Design Items and BOMs, Sales Order and Work Orders"), () => {
+			return frappe.call({
+				method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
+				args: {
+					print_order: this.frm.doc.name
+				},
+				freeze: true,
+				callback: (r) => {
+					if (!r.exc) {
+						this.frm.reload_doc();
+					}
 				}
-			}
+			});
 		});
 	}
 
