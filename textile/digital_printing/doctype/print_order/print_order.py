@@ -675,7 +675,7 @@ class PrintOrder(StatusUpdater):
 
 	def validate_billed_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="billing")
+			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
 
 def update_conversion_factor_global_defaults():
