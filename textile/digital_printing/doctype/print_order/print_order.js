@@ -125,16 +125,23 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
 					can_create_packing_slip = true;
 					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
-					$(packing_slip_btn).removeClass("btn-default").addClass("btn-primary");
+
+					if (this.frm.doc.packing_status != "Packed") {
+						$(packing_slip_btn).removeClass("btn-default").addClass("btn-primary");
+					}
 				}
 
-				if (doc.per_produced && doc.per_delivered < doc.per_produced
-						&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
+				if (
+					doc.per_produced && doc.per_delivered < doc.per_produced
+					&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
 				) {
 					can_create_delivery_note = true;
 					let delivery_note_btn = this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note());
 
-					if (!can_create_packing_slip) {
+					if (
+						(doc.packing_slip_required && doc.packing_status == "Packed")
+						|| (!doc.packing_slip_required && doc.production_status == "Produced")
+					) {
 						$(delivery_note_btn).removeClass("btn-default").addClass("btn-primary");
 					}
 				}
