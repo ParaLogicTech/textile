@@ -36,10 +36,39 @@ def map_print_order_reference_in_delivery_note_item(item_mapper, source_doctype)
 
 
 def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
-	def postprocess(source, target):
-		if base_postprocess:
-			base_postprocess(source, target)
+	def item_condition(source, source_parent, target_parent):
+		if source.name in [d.sales_order_item for d in target_parent.get('items') if d.sales_order_item]:
+			return False
 
+		if source.delivered_by_supplier:
+			return False
+
+		if not source.is_stock_item:
+			return False
+
+		undelivered_qty, unpacked_qty = get_remaining_qty(source)
+		return undelivered_qty > 0 and unpacked_qty > 0
+
+	def update_item(source, target, source_parent, target_parent):
+		if base_update_item:
+			base_update_item(source, target, source_parent, target_parent)
+
+		if source.get("print_order_item"):
+			undelivered_qty, unpacked_qty = get_remaining_qty(source)
+			target.qty = min(undelivered_qty, unpacked_qty)
+
+	def get_remaining_qty(source):
+		if source.get("print_order_item"):
+			produced_qty = flt(frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1))
+			undelivered_qty = produced_qty - flt(source.delivered_qty)
+			unpacked_qty = produced_qty - flt(source.packed_qty)
+		else:
+			undelivered_qty = flt(source.qty) - flt(source.delivered_qty)
+			unpacked_qty = flt(source.qty) - flt(source.packed_qty)
+
+		return undelivered_qty, unpacked_qty
+
+	def postprocess(source, target):
 		print_orders = [d.get("print_order") for d in source.get("items") if d.get("print_order")]
 		print_orders = list(set(print_orders))
 
@@ -59,15 +88,8 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 		if print_orders and not target.package_type:
 			target.package_type = frappe.db.get_single_value("Digital Printing Settings", "default_package_type_for_printed_fabrics")
 
-	def update_item(source, target, source_parent, target_parent):
-		if base_update_item:
-			base_update_item(source, target, source_parent, target_parent)
-
-		if source.get("print_order_item"):
-			produced_qty = flt(frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1))
-			undelivered_qty = produced_qty - flt(source.delivered_qty)
-			unpacked_qty = produced_qty - flt(source.packed_qty)
-			target.qty = min(undelivered_qty, unpacked_qty)
+		if base_postprocess:
+			base_postprocess(source, target)
 
 	base_postprocess = mapper.get("postprocess")
 	mapper["postprocess"] = postprocess
@@ -75,6 +97,7 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 	item_mapper = mapper.get("Sales Order Item")
 	if item_mapper:
 		base_update_item = item_mapper.get("postprocess")
+		item_mapper["condition"] = item_condition
 		item_mapper["postprocess"] = update_item
 
 
