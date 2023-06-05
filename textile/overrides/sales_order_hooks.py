@@ -28,6 +28,9 @@ class SalesOrderDP(SalesOrder):
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
 
+		if frappe.flags.skip_print_order_status_update:
+			return
+
 		print_orders = [d.print_order for d in self.items if d.get('print_order')]
 		print_order_row_names = [d.print_order_item for d in self.items if d.get('print_order_item')]
 

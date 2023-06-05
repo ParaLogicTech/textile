@@ -19,9 +19,10 @@ class StockEntryDP(StockEntry):
 		if self.get("work_order"):
 			return
 
-		print_order = frappe.get_doc("Print Order", self.print_order)
-		print_order.set_fabric_transfer_status(update=True)
-		print_order.notify_update()
+		if not frappe.flags.skip_print_order_status_update:
+			print_order = frappe.get_doc("Print Order", self.print_order)
+			print_order.set_fabric_transfer_status(update=True)
+			print_order.notify_update()
 
 
 def update_stock_entry_from_work_order(stock_entry, work_order):

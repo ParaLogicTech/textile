@@ -837,14 +837,20 @@ def check_print_order_is_closed(doc):
 @frappe.whitelist()
 def start_print_order(print_order):
 	doc = frappe.get_doc('Print Order', print_order)
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Print Order {0} is not submitted").format(print_order))
+
 	if doc.status == "Closed":
 		frappe.throw(_("Print Order {0} is Closed").format(doc.name))
+
+	frappe.flags.skip_print_order_status_update = True
 
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		create_design_items_and_boms(doc)
 
 	if flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length):
-		stock_entry = make_fabric_transfer_entry(doc)
+		stock_entry = make_fabric_transfer_entry(doc, for_submit=True)
 		stock_entry.save()
 		stock_entry.submit()
 
@@ -865,6 +871,19 @@ def start_print_order(print_order):
 
 	if flt(doc.per_work_ordered) < 100:
 		create_work_orders(doc.name)
+
+	frappe.flags.skip_print_order_status_update = False
+
+	doc.set_item_creation_status(update=True)
+	doc.set_fabric_transfer_status(update=True)
+	doc.set_sales_order_status(update=True)
+	doc.set_work_order_status(update=True)
+	doc.set_status(update=True)
+
+	doc.validate_ordered_qty()
+	doc.validate_work_order_qty()
+
+	doc.notify_update()
 
 
 @frappe.whitelist()
@@ -903,8 +922,9 @@ def create_design_items_and_boms(print_order):
 
 			d.db_set("design_bom", bom_doc.name)
 
-	doc.set_item_creation_status(update=True)
-	doc.notify_update()
+	if not frappe.flags.skip_print_order_status_update:
+		doc.set_item_creation_status(update=True)
+		doc.notify_update()
 
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
@@ -1070,9 +1090,6 @@ def create_work_orders(print_order):
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Create Items and BOMs first"))
 
-	if doc.per_ordered <= 0:
-		frappe.throw(_("Create Sales Order first"))
-
 	if doc.per_work_ordered >= 100:
 		frappe.throw(_("Work Orders already created."))
 
@@ -1091,7 +1108,7 @@ def create_work_orders(print_order):
 		wo_list += wo
 
 	if wo_list:
-		frappe.msgprint(_("Work Orders Created: {0}").format(
+		frappe.msgprint(_("Work Orders created: {0}").format(
 			', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
 		), indicator='green')
 	else:

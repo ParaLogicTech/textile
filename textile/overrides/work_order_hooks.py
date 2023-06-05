@@ -48,6 +48,9 @@ def update_print_order_status(self, hook, status=None):
 	if not (self.get('print_order') and self.get('print_order_item')):
 		return
 
+	if frappe.flags.skip_print_order_status_update:
+		return
+
 	doc = frappe.get_doc("Print Order", self.print_order)
 
 	if hook == 'update_status':
