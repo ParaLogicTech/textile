@@ -4,7 +4,8 @@ $.extend(textile, {
 	get_items_from_print_order: function (frm, method, filters) {
 		let query_filters = {
 			docstatus: 1,
-			status: ["not in", ["Closed", "To Create Items"]],
+			status: ["!=", "Closed"],
+			items_created: 1,
 			company: frm.doc.company,
 			customer: frm.doc.customer || undefined,
 		}

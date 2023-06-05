@@ -2,16 +2,14 @@ frappe.listview_settings['Print Order'] = {
 	add_fields: ["status"],
 
 	get_indicator: function(doc) {
-		if(doc.status === "To Create Items") {
+		if(doc.status === "To Confirm Order") {
 			return [__(doc.status), "yellow", "status,=," + doc.status];
-		} else if(doc.status === "To Confirm Order") {
-			return [__(doc.status), "orange", "status,=," + doc.status];
 		} else if(doc.status === "To Produce") {
 			return [__(doc.status), "purple", "status,=," + doc.status];
 		} else if(doc.status === "To Deliver") {
 			return [__(doc.status), "orange", "status,=," + doc.status];
 		} else if(doc.status === "To Bill") {
-			return [__(doc.status), "orange", "status,=," + doc.status];
+			return [__(doc.status), "yellow", "status,=," + doc.status];
 		} else if(["Completed", "Closed"].includes(doc.status)) {
 			return [__(doc.status), "green", "status,=," + doc.status];
 		}

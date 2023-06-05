@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 
+
 def get_data():
 
 	return {
@@ -15,12 +16,16 @@ def get_data():
 				'items': ['Item', 'BOM']
 			},
 			{
-				'label': _("Sales"),
-				'items': ['Sales Order','Delivery Note', 'Sales Invoice']
+				'label': _("Order & Billing"),
+				'items': ['Sales Order', 'Sales Invoice']
 			},
 			{
 				'label': _("Production"),
-				'items': [ 'Work Order', 'Packing Slip']
+				'items': ['Work Order', 'Stock Entry']
+			},
+			{
+				'label': _("Delivery"),
+				'items': ['Packing Slip', 'Delivery Note']
 			}
 		]
 	}

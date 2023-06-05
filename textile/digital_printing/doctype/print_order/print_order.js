@@ -18,6 +18,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			'Packing Slip': 'Packing Slip',
 			'Delivery Note': 'Delivery Note',
 			'Sales Invoice': 'Sales Invoice',
+			'Stock Entry': 'Fabric Transfer Entry',
 		}
 
 		this.setup_queries();
@@ -101,9 +102,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
-			let can_create_packing_slip = false;
-			let can_create_delivery_note = false;
-			let can_create_sales_invoice = false;
 
 			if (!has_missing_item && doc.status != "Closed") {
 				if (doc.per_work_ordered > 0) {
@@ -122,8 +120,12 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						__("Create"));
 				}
 
+				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length)) {
+					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
+						__("Create"));
+				}
+
 				if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
-					can_create_packing_slip = true;
 					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
 
 					if (this.frm.doc.packing_status != "Packed") {
@@ -135,7 +137,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 					doc.per_produced && doc.per_delivered < doc.per_produced
 					&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
 				) {
-					can_create_delivery_note = true;
 					let delivery_note_btn = this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note());
 
 					if (
@@ -147,7 +148,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				}
 
 				if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
-					can_create_sales_invoice = true;
 					let sales_invoice_btn = this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice());
 
 					if (this.frm.doc.delivery_status == "Delivered") {
@@ -433,7 +433,10 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	start_print_order() {
-		frappe.confirm(__("Are you sure you want to start this Print Order?<br><br>Starting will create Design Items and BOMs, Sales Order and Work Orders"), () => {
+		frappe.confirm(__(
+			"Are you sure you want to start this Print Order?<br><br>" +
+			"Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"
+		), () => {
 			return frappe.call({
 				method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
 				args: {
@@ -483,6 +486,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 					this.frm.reload_doc();
 				}
 			}
+		});
+	}
+
+	make_fabric_transfer_entry() {
+		frappe.model.open_mapped_doc({
+			method: "textile.digital_printing.doctype.print_order.print_order.make_fabric_transfer_entry",
+			frm: this.frm
 		});
 	}
 

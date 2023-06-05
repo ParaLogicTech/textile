@@ -58,8 +58,10 @@ class PrintOrder(StatusUpdater):
 		if self.docstatus == 1:
 			self.set_existing_items_and_boms()
 
+		self.set_item_creation_status()
 		self.set_sales_order_status()
 		self.set_work_order_status()
+		self.set_fabric_transfer_status()
 		self.set_production_status()
 		self.set_packing_status()
 		self.set_delivery_status()
@@ -114,8 +116,6 @@ class PrintOrder(StatusUpdater):
 		elif self.docstatus == 1:
 			if self.status == "Closed":
 				self.status = "Closed"
-			elif not all(d.item_code and d.design_bom for d in self.items):
-				self.status = "To Create Items"
 			elif self.per_ordered < 100:
 				self.status = "To Confirm Order"
 			elif self.production_status == "To Produce":
@@ -137,6 +137,7 @@ class PrintOrder(StatusUpdater):
 
 	def update_status(self, status):
 		self.set_status(status=status)
+		self.set_fabric_transfer_status(update=True)
 		self.set_production_status(update=True)
 		self.set_packing_status(update=True)
 		self.set_delivery_status(update=True)
@@ -380,6 +381,11 @@ class PrintOrder(StatusUpdater):
 
 		return existing_bom[0] if existing_bom else None
 
+	def set_item_creation_status(self, update=False, update_modified=True):
+		self.items_created = cint(all(d.item_code and d.design_bom for d in self.items))
+		if update:
+			self.db_set("items_created", self.items_created, update_modified=update_modified)
+
 	def set_sales_order_status(self, update=False, update_modified=True):
 		data = self.get_ordered_status_data()
 
@@ -419,6 +425,46 @@ class PrintOrder(StatusUpdater):
 	def validate_ordered_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('ordered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names)
+
+	def set_fabric_transfer_status(self, update=False, update_modified=True):
+		self.fabric_transfer_qty = self.get_fabric_transfer_qty()
+		rounded_transfer_qty = flt(self.fabric_transfer_qty, self.precision("fabric_transfer_qty"))
+
+		if self.status == "Closed" and rounded_transfer_qty <= 0:
+			self.fabric_transfer_status = "Not Applicable"
+		elif rounded_transfer_qty >= self.total_print_length or self.status == "Closed":
+			self.fabric_transfer_status = "Transferred"
+		else:
+			self.fabric_transfer_status = "To Transfer"
+
+		if update:
+			self.db_set({
+				'fabric_transfer_qty': self.fabric_transfer_qty,
+				'fabric_transfer_status': self.fabric_transfer_status,
+			}, update_modified=update_modified)
+
+	def get_fabric_transfer_qty(self):
+		out = 0
+
+		if self.docstatus == 1:
+			ste_data = frappe.db.sql("""
+				select sum(IF(i.t_warehouse = %(wip_warehouse)s, i.transfer_qty, -1 * i.transfer_qty))
+				from `tabStock Entry Detail` i
+				inner join `tabStock Entry` ste on ste.name = i.parent
+				where ste.docstatus = 1
+					and ste.purpose in ('Material Transfer', 'Material Transfer for Manufacture')
+					and ste.print_order = %(print_order)s
+					and i.item_code = %(fabric_item)s
+					and (i.t_warehouse = %(wip_warehouse)s or i.s_warehouse = %(wip_warehouse)s)
+			""", {
+				"print_order": self.name,
+				"fabric_item": self.fabric_item,
+				"wip_warehouse": self.wip_warehouse,
+			})
+
+			out = flt(ste_data[0][0]) if ste_data else 0
+
+		return out
 
 	def set_work_order_status(self, update=False, update_modified=True):
 		data = self.get_work_order_status_data()
@@ -797,14 +843,27 @@ def start_print_order(print_order):
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		create_design_items_and_boms(doc)
 
-	if doc.per_ordered < 100:
+	if flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length):
+		stock_entry = make_fabric_transfer_entry(doc)
+		stock_entry.save()
+		stock_entry.submit()
+
+		stock_entry_row = stock_entry.items[0]
+
+		frappe.msgprint(_("Fabric Transferred to Work in Progress Warehouse ({0} {1}): {2}").format(
+			stock_entry_row.get_formatted("qty"),
+			stock_entry_row.uom,
+			frappe.utils.get_link_to_form("Stock Entry", stock_entry.name)
+		))
+
+	if flt(doc.per_ordered) < 100:
 		sales_order = make_sales_order(doc.name)
 		sales_order.save()
 		sales_order.submit()
 
 		frappe.msgprint(_("Sales Order created: {0}").format(frappe.utils.get_link_to_form("Sales Order", sales_order.name)))
 
-	if doc.per_work_ordered < 100:
+	if flt(doc.per_work_ordered) < 100:
 		create_work_orders(doc.name)
 
 
@@ -844,8 +903,9 @@ def create_design_items_and_boms(print_order):
 
 			d.db_set("design_bom", bom_doc.name)
 
-	doc.set_status(update=True)
+	doc.set_item_creation_status(update=True)
 	doc.notify_update()
+
 	frappe.msgprint(_("Design Items and BOMs created successfully."))
 
 
@@ -863,7 +923,7 @@ def make_design_item(design_item_row, fabric_item, customer):
 
 	item_doc = frappe.new_doc("Item")
 	if item_doc.item_naming_by == "Item Code":
-		item_doc.item_naming_by  = "Naming Series"
+		item_doc.item_naming_by = "Naming Series"
 
 	item_doc.update({
 		"item_group": default_item_group,
@@ -1036,6 +1096,41 @@ def create_work_orders(print_order):
 		), indicator='green')
 	else:
 		frappe.msgprint(_("Work Order already created in Draft."))
+
+
+@frappe.whitelist()
+def make_fabric_transfer_entry(print_order, for_submit=False):
+	if isinstance(print_order, str):
+		doc = frappe.get_doc('Print Order', print_order)
+	else:
+		doc = print_order
+
+	if not all(d.item_code and d.design_bom for d in doc.items):
+		frappe.throw(_("Create Items and BOMs first"))
+
+	stock_entry = frappe.new_doc("Stock Entry")
+	stock_entry.purpose = "Material Transfer for Manufacture"
+	stock_entry.print_order = doc.name
+	stock_entry.company = doc.company
+	stock_entry.from_warehouse = doc.source_warehouse
+	stock_entry.to_warehouse = doc.wip_warehouse
+
+	row = stock_entry.append("items")
+	row.item_code = doc.fabric_item
+	row.s_warehouse = stock_entry.from_warehouse
+	row.t_warehouse = stock_entry.to_warehouse
+
+	row.qty = max(flt(doc.total_fabric_length) - flt(doc.fabric_transfer_qty), 0)
+	row.uom = "Meter"
+
+	stock_entry.set_stock_entry_type()
+
+	if not for_submit:
+		stock_entry.run_method("set_missing_values")
+		stock_entry.run_method("set_actual_qty")
+		stock_entry.run_method("calculate_rate_and_amount", raise_error_if_no_rate=False)
+
+	return stock_entry
 
 
 @frappe.whitelist()

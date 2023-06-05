@@ -76,22 +76,25 @@
   "total_panel_qty",
   "tab_status",
   "status",
+  "items_created",
   "column_break_zltke",
   "per_ordered",
   "column_break_3qzv3",
   "per_work_ordered",
   "section_break_2pbh5",
+  "fabric_transfer_status",
+  "fabric_transfer_qty",
+  "column_break_rwkru",
   "production_status",
   "per_produced",
-  "column_break_rwkru",
+  "column_break_r0yyq",
   "packing_status",
   "per_packed",
-  "column_break_r0yyq",
+  "section_break_dtb5f",
   "delivery_status",
   "per_delivered",
-  "section_break_dtb5f",
-  "billing_status",
   "column_break_paad7",
+  "billing_status",
   "per_billed"
  ],
  "fields": [
@@ -369,10 +372,11 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nTo Create Items\nTo Confirm Order\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
+   "options": "Draft\nTo Confirm Order\nTo Produce\nTo Deliver\nTo Bill\nCompleted\nCancelled",
    "print_hide": 1,
    "read_only": 1,
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "tab_status",
@@ -683,12 +687,40 @@
   {
    "fieldname": "section_break_dtb5f",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "fabric_transfer_qty",
+   "fieldtype": "Float",
+   "label": "Fabric Transferred (Meter)",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Transfer",
+   "fieldname": "fabric_transfer_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Fabric Transfer Status",
+   "no_copy": 1,
+   "options": "To Transfer\nTransferred\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "items_created",
+   "fieldtype": "Check",
+   "label": "Items Created",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-30 18:20:17.156816",
+ "modified": "2023-06-05 17:42:23.980274",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

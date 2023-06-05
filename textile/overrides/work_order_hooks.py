@@ -1,22 +1,18 @@
 import frappe
 from frappe import _
 from frappe.utils import flt
-from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder, StockOverProductionError
+from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 
 
 class WorkOrderDP(WorkOrder):
-	def validate_overproduction(self):
-		if self.get("print_order") and self.get("print_order_item"):
-			transferred_qty = flt(self.material_transferred_for_manufacturing, self.precision("qty"))
-			stock_fabric_length = flt(frappe.db.get_value("Print Order Item", self.print_order_item, "stock_fabric_length"),
-				self.precision("qty"))
+	def set_required_items(self, reset_only_qty=False):
+		super().set_required_items(reset_only_qty)
 
-			if transferred_qty > stock_fabric_length:
-				frappe.throw(_("Cannot transfer more than Fabric Length {0} Meter for Print Order {1}").format(
-					frappe.bold(frappe.format(stock_fabric_length)), self.print_order
-				), StockOverProductionError)
-
-		super().validate_overproduction()
+		if not reset_only_qty and self.get("print_order"):
+			fabric_item = frappe.db.get_value("Print Order", self.print_order, "fabric_item", cache=1)
+			for d in self.get("required_items"):
+				if d.item_code == fabric_item:
+					d.source_warehouse = self.wip_warehouse
 
 
 def update_work_order_from_sales_order(work_order):
@@ -29,6 +25,9 @@ def update_work_order_from_sales_order(work_order):
 			work_order.print_order_item = so_item.print_order_item
 
 	if work_order.get('print_order'):
+		work_order.skip_transfer = 1
+		work_order.from_wip_warehouse = 0
+
 		po_to_wo_warehouse_fn_map = {
 			'source_warehouse': 'source_warehouse',
 			'wip_warehouse': 'wip_warehouse',

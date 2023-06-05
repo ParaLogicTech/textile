@@ -37,6 +37,7 @@ override_doctype_class = {
 	"Sales Invoice": "textile.overrides.sales_invoice_hooks.SalesInvoiceDP",
 	"Packing Slip": "textile.overrides.packing_slip_hooks.PackingSlipDP",
 	"Work Order": "textile.overrides.work_order_hooks.WorkOrderDP",
+	"Stock Entry": "textile.overrides.stock_entry_hooks.StockEntryDP",
 }
 
 override_doctype_dashboards = {
@@ -70,6 +71,10 @@ update_work_order_from_sales_order = [
 	"textile.overrides.work_order_hooks.update_work_order_from_sales_order",
 ]
 
+update_stock_entry_from_work_order = [
+	"textile.overrides.stock_entry_hooks.update_stock_entry_from_work_order"
+]
+
 update_packing_slip_from_sales_order_mapper = [
 	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
 	"textile.overrides.packing_slip_hooks.update_packing_slip_from_sales_order_mapper",
@@ -101,6 +106,7 @@ fixtures = [
 				'Customer-default_printing_gap',
 				'Customer-default_printing_qty_type',
 				'Customer-default_printing_length_uom',
+
 				'Item-print_item_type',
 				'Item-print_process_component',
 				'Item-print_process_properties',
@@ -132,24 +138,32 @@ fixtures = [
 				'Item-fabric_item_name',
 				'Item Group-print_item_type',
 				'Item Source-print_item_type',
+
 				'Brand-print_item_type',
+
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
 				'Sales Order Item-panel_length_meter',
 				'Sales Order Item-panel_qty',
 				'Sales Order Item-panel_based_qty',
+
 				'Work Order-print_order',
 				'Work Order-print_order_item',
+
+				'Stock Entry-print_order',
+
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
 				'Delivery Note Item-panel_length_meter',
 				'Delivery Note Item-panel_qty',
 				'Delivery Note Item-panel_based_qty',
+
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
 				'Sales Invoice Item-panel_length_meter',
 				'Sales Invoice Item-panel_qty',
 				'Sales Invoice Item-panel_based_qty',
+
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
 				'Packing Slip Item-column_break_zytx5',
