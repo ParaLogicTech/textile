@@ -9,9 +9,7 @@
  "engine": "InnoDB",
  "field_order": [
   "fabric_material",
-  "abbreviation",
-  "default_process_item",
-  "default_process_item_name"
+  "abbreviation"
  ],
  "fields": [
   {
@@ -27,22 +25,6 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Abbreviation"
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "default_process_item",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Default Process Item",
-   "options": "Item"
-  },
-  {
-   "depends_on": "eval:!doc.default_process_item || doc.default_process_item_name != doc.default_process_item",
-   "fetch_from": "default_process_item.item_name",
-   "fieldname": "default_process_item_name",
-   "fieldtype": "Data",
-   "label": "Default Process Item Name",
-   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -53,7 +35,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2023-05-26 15:54:14.575688",
+ "modified": "2023-06-08 01:29:33.667007",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Material",

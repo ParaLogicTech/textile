@@ -109,6 +109,7 @@ fixtures = [
 
 				'Item-print_item_type',
 				'Item-print_process_component',
+
 				'Item-print_process_properties',
 				'Item-softener_item_required',
 				'Item-column_break_wdop0',
@@ -117,6 +118,7 @@ fixtures = [
 				'Item-sublimation_paper_item_required',
 				'Item-column_break_0brhk',
 				'Item-protection_paper_item_required',
+
 				'Item-sec_design_properties',
 				'Item-design_name',
 				'Item-design_width',
@@ -126,6 +128,7 @@ fixtures = [
 				'Item-per_wastage',
 				'Item-column_break_mjbrg',
 				'Item-design_notes',
+
 				'Item-sec_fabric_properties',
 				'Item-fabric_material',
 				'Item-fabric_type',
@@ -136,9 +139,14 @@ fixtures = [
 				'Item-fabric_construction',
 				'Item-fabric_item',
 				'Item-fabric_item_name',
+
+				'Item-paper_properties',
+				'Item-paper_width',
+				'Item-column_break_ysj7q',
+				'Item-paper_gsm',
+
 				'Item Group-print_item_type',
 				'Item Source-print_item_type',
-
 				'Brand-print_item_type',
 
 				'Sales Order Item-print_order',
@@ -146,11 +154,6 @@ fixtures = [
 				'Sales Order Item-panel_length_meter',
 				'Sales Order Item-panel_qty',
 				'Sales Order Item-panel_based_qty',
-
-				'Work Order-print_order',
-				'Work Order-print_order_item',
-
-				'Stock Entry-print_order',
 
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
@@ -170,6 +173,11 @@ fixtures = [
 				'Packing Slip Item-panel_length_meter',
 				'Packing Slip Item-panel_qty',
 				'Packing Slip Item-panel_based_qty',
+
+				'Work Order-print_order',
+				'Work Order-print_order_item',
+
+				'Stock Entry-print_order',
 			]]
 		}
 	},

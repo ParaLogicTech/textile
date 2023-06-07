@@ -3,13 +3,6 @@
 
 frappe.provide("textile");
 
-textile.print_process_components = {
-	"coating_item": "Coating",
-	"softener_item": "Softener",
-	"sublimation_paper_item": "Sublimation Paper",
-	"protection_paper_item": "Protection Paper",
-}
-
 textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	setup() {
 		this.frm.custom_make_buttons = {
@@ -54,10 +47,20 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 		for (let [component_item_field, component_type] of Object.entries(textile.print_process_components)) {
 			this.frm.set_query(component_item_field, () => {
-				return erpnext.queries.item({
+				let filters = {
 					print_item_type: 'Process Component',
 					print_process_component: component_type
-				});
+				};
+
+				if (["Sublimation Paper", "Protection Paper"].includes(component_type) && this.frm.doc.fabric_item) {
+					filters["fabric_item"] = this.frm.doc.fabric_item;
+					return {
+						query: "textile.digital_printing.doctype.print_process_rule.print_process_rule.paper_item_query",
+						filters: filters,
+					}
+				} else {
+					return erpnext.queries.item(filters);
+				}
 			});
 		}
 
@@ -184,6 +187,35 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		}
 	}
 
+	customer() {
+		this.get_order_defaults_from_customer();
+	}
+
+	fabric_item() {
+		this.get_fabric_stock_qty();
+		this.get_fabric_item_details();
+	}
+
+	source_warehouse() {
+		this.get_fabric_stock_qty();
+	}
+
+	get_fabric_item_details() {
+		if (this.frm.doc.fabric_item) {
+			return this.frm.call({
+				method: "textile.digital_printing.doctype.print_order.print_order.get_fabric_item_details",
+				args: {
+					fabric_item: this.frm.doc.fabric_item,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value(r.message);
+					}
+				}
+			});
+		}
+	}
+
 	get_fabric_stock_qty() {
 		if (this.frm.doc.fabric_item && this.frm.doc.source_warehouse) {
 			return this.frm.call({
@@ -201,18 +233,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		} else {
 			this.frm.set_value('fabric_stock_qty', 0);
 		}
-	}
-
-	customer() {
-		this.get_order_defaults_from_customer();
-	}
-
-	fabric_item() {
-		this.get_fabric_stock_qty();
-	}
-
-	source_warehouse() {
-		this.get_fabric_stock_qty();
 	}
 
 	default_gap() {

@@ -80,13 +80,17 @@ class ItemDP(Item):
 			self.fabric_item = None
 
 	def validate_process_properties(self):
-		from textile.digital_printing.doctype.print_order.print_order import print_process_components
+		from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components
 		if self.print_item_type != "Print Process":
 			for component_item_field in print_process_components:
 				self.set(f"{component_item_field}_required", 0)
 
 		if self.print_item_type != "Process Component":
 			self.print_process_component = None
+
+		if self.print_process_component not in ("Sublimation Paper", "Protection Paper"):
+			self.paper_width = None
+			self.paper_gsm = None
 
 	def validate_fabric_uoms(self):
 		from textile.digital_printing.doctype.print_order.print_order import get_yard_to_meter

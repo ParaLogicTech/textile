@@ -1,5 +1,12 @@
 frappe.provide("textile");
 
+textile.print_process_components = {
+	"coating_item": "Coating",
+	"softener_item": "Softener",
+	"sublimation_paper_item": "Sublimation Paper",
+	"protection_paper_item": "Protection Paper",
+}
+
 $.extend(textile, {
 	get_items_from_print_order: function (frm, method, filters) {
 		let query_filters = {

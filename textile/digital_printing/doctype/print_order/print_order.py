@@ -8,6 +8,8 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
+from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components,\
+	get_print_process_values, get_applicable_papers
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -18,13 +20,6 @@ default_fields_map = {
 	"default_printing_gap": "default_gap",
 	"default_printing_qty_type": "default_qty_type",
 	"default_printing_length_uom": "default_length_uom"
-}
-
-print_process_components = {
-	"coating_item": "Coating",
-	"softener_item": "Softener",
-	"sublimation_paper_item": "Sublimation Paper",
-	"protection_paper_item": "Protection Paper",
 }
 
 
@@ -1307,6 +1302,57 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 	target_doc.run_method("calculate_rate_and_amount")
 
 	return target_doc
+
+
+@frappe.whitelist()
+def get_fabric_item_details(fabric_item):
+	if not fabric_item:
+		frappe.throw(_("Fabric Item not provided"))
+
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item)
+
+	out = frappe._dict()
+	out.fabric_item_name = fabric_doc.item_name
+	out.fabric_material = fabric_doc.fabric_material
+	out.fabric_type = fabric_doc.fabric_type
+	out.fabric_width = fabric_doc.fabric_width
+	out.fabric_gsm = fabric_doc.fabric_gsm
+
+	# Set process values as None to unset in UI
+	out.process_item = None
+	out.process_item_name = None
+
+	for component_item_field in print_process_components:
+		out[component_item_field] = None
+		out[f"{component_item_field}_name"] = None
+		out[f"{component_item_field}_required"] = 0
+
+	# Set process and component from rules
+	print_process_defaults = get_print_process_values(fabric_doc.name)
+	out.update(print_process_defaults)
+
+	if out.process_item:
+		process_doc = frappe.get_cached_doc("Item", out.process_item)
+
+		# Set process component required
+		for component_item_field in print_process_components:
+			out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
+
+		# Default Sublimation Paper
+		if frappe.get_cached_value("Item", out.process_item, "sublimation_paper_item_required"):
+			sublimation_papers = get_applicable_papers("Sublimation Paper", fabric_doc.fabric_width)
+			if len(sublimation_papers) == 1:
+				out.sublimation_paper_item = sublimation_papers[0].name
+				out.sublimation_paper_item_name = sublimation_papers[0].item_name
+
+		# Default Protection Paper
+		if frappe.get_cached_value("Item", out.process_item, "protection_paper_item_required"):
+			protection_papers = get_applicable_papers("Protection Paper", fabric_doc.fabric_width)
+			if len(protection_papers) == 1:
+				out.protection_paper_item = protection_papers[0].name
+				out.protection_paper_item_name = protection_papers[0].item_name
+
+	return out
 
 
 def publish_print_order_progress(print_order, title, progress, total, description=None):

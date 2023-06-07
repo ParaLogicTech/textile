@@ -139,7 +139,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Settings",
-   "link_count": 3,
+   "link_count": 4,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -172,9 +172,19 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Process Rule",
+   "link_count": 0,
+   "link_to": "Print Process Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-05-06 15:32:47.134216",
+ "modified": "2023-06-07 16:42:55.259145",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",
