@@ -29,6 +29,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
+		this.setup_progressbar();
 	}
 
 	on_upload_complete() {
@@ -433,22 +434,40 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	start_print_order() {
-		frappe.confirm(__(
-			"Are you sure you want to start this Print Order?<br><br>" +
-			"Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"
-		), () => {
-			return frappe.call({
-				method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
-				args: {
-					print_order: this.frm.doc.name
-				},
-				freeze: true,
-				callback: (r) => {
-					if (!r.exc) {
-						this.frm.reload_doc();
-					}
+		let remaining_transfer_qty = Math.max(flt(this.frm.doc.total_fabric_length) - flt(this.frm.doc.fabric_transfer_qty), 0);
+		frappe.prompt([
+			{
+				label: __("Fabric Transfer Qty"),
+				fieldname: "fabric_transfer_qty",
+				fieldtype: "Float",
+				default: remaining_transfer_qty,
+				description: __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders")
+			},
+			{
+				label: __("Fabric Qty In Stock"),
+				fieldname: "fabric_stock_qty",
+				fieldtype: "Float",
+				default: this.frm.doc.fabric_stock_qty,
+				read_only: 1,
+			},
+		], (data) => {
+			return this._start_print_order(data.fabric_transfer_qty);
+		}, "Enter Fabric Transfer Qty");
+	}
+
+	_start_print_order(fabric_transfer_qty) {
+		return frappe.call({
+			method: "textile.digital_printing.doctype.print_order.print_order.start_print_order",
+			args: {
+				print_order: this.frm.doc.name,
+				fabric_transfer_qty: flt(fabric_transfer_qty),
+			},
+			freeze: true,
+			callback: (r) => {
+				if (!r.exc) {
+					this.frm.reload_doc();
 				}
-			});
+			}
 		});
 	}
 
@@ -546,6 +565,29 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			print_order: this.frm.doc.name
 		}
 		return frappe.set_route("List", "Work Order");
+	}
+
+	setup_progressbar() {
+		frappe.realtime.off("print_order_progress");
+		frappe.realtime.on("print_order_progress", (progress_data) => {
+			if (progress_data && progress_data.print_order == this.frm.doc.name) {
+				this.update_progress(progress_data);
+			}
+		});
+	}
+
+	update_progress(progress_data) {
+		if (progress_data) {
+			this.frm.dashboard.show_progress(
+				progress_data.title || "Progress",
+				cint(progress_data.total) ? cint(progress_data.progress) / cint(progress_data.total) * 100 : 0,
+				progress_data.description || progress_data.title
+			);
+
+			if (progress_data.reload) {
+				this.frm.reload_doc();
+			}
+		}
 	}
 };
 

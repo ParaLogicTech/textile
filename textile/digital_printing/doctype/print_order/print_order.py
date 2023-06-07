@@ -81,6 +81,7 @@ class PrintOrder(StatusUpdater):
 
 	def set_fabric_stock_qty(self):
 		if not (self.fabric_item and self.source_warehouse):
+			self.fabric_stock_qty = 0
 			return
 
 		bin_details = get_bin_details(self.fabric_item, self.source_warehouse)
@@ -723,6 +724,102 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
+	def _start_print_order(self, fabric_transfer_qty, publish_progress=False):
+		frappe.flags.skip_print_order_status_update = True
+
+		# Design Items
+		if not all(d.item_code and d.design_bom for d in self.items):
+			self._create_design_items_and_boms(publish_progress=publish_progress)
+
+		# Fabric Transfer
+		if flt(fabric_transfer_qty) > 0:
+			if publish_progress:
+				publish_print_order_progress(self.name, "Transferring Fabric", 0, 1)
+
+			stock_entry = make_fabric_transfer_entry(self, fabric_transfer_qty, for_submit=True)
+			stock_entry.save()
+			stock_entry.submit()
+
+			stock_entry_row = stock_entry.items[0]
+
+			fabric_transfer_msg = _("Fabric Transferred to Work in Progress Warehouse ({0} {1}): {2}").format(
+				stock_entry_row.get_formatted("qty"),
+				stock_entry_row.uom,
+				frappe.utils.get_link_to_form("Stock Entry", stock_entry.name)
+			)
+			frappe.msgprint(fabric_transfer_msg)
+
+			if publish_progress:
+				publish_print_order_progress(self.name, "Transferring Fabric", 1, 1)
+
+		# Sales Order
+		if flt(self.per_ordered) < 100:
+			if publish_progress:
+				publish_print_order_progress(self.name, "Creating Sales Order", 0, 1)
+
+			sales_order = make_sales_order(self.name)
+			sales_order.save()
+			sales_order.submit()
+
+			sales_order_msg = _("Sales Order created: {0}").format(
+				frappe.utils.get_link_to_form("Sales Order", sales_order.name)
+			)
+			frappe.msgprint(sales_order_msg)
+
+			if publish_progress:
+				publish_print_order_progress(self.name, "Creating Sales Order", 1, 1)
+
+		# Work Orders
+		if flt(self.per_work_ordered) < 100:
+			create_work_orders(self.name, publish_progress=publish_progress)
+
+		# Status Update
+		frappe.flags.skip_print_order_status_update = False
+
+		self.set_item_creation_status(update=True)
+		self.set_fabric_transfer_status(update=True)
+		self.set_sales_order_status(update=True)
+		self.set_work_order_status(update=True)
+		self.set_status(update=True)
+
+		self.validate_ordered_qty()
+		self.validate_work_order_qty()
+
+		self.notify_update()
+
+	def _create_design_items_and_boms(self, publish_progress=False):
+		for i, d in enumerate(self.items):
+			if not d.item_code:
+				item_doc = make_design_item(d, self.fabric_item, self.customer)
+				item_doc.save()
+
+				d.db_set({
+					"item_code": item_doc.name,
+					"item_name": item_doc.item_name
+				})
+
+			if not d.design_bom:
+				components = []
+				for component_item_field in print_process_components:
+					if self.get(f"{component_item_field}_required"):
+						components.append(self.get(component_item_field))
+
+				bom_doc = make_design_bom(d.item_code, self.fabric_item, self.process_item, components=components)
+
+				bom_doc.save()
+				bom_doc.submit()
+
+				d.db_set("design_bom", bom_doc.name)
+
+			if publish_progress:
+				publish_print_order_progress(self.name, "Creating Design Items and BOMs", i + 1, len(self.items))
+
+		if not frappe.flags.skip_print_order_status_update:
+			self.set_item_creation_status(update=True)
+			self.notify_update()
+
+		frappe.msgprint(_("Design Items and BOMs created successfully."))
+
 
 def update_conversion_factor_global_defaults():
 	from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import get_uom_conv_factor
@@ -835,55 +932,32 @@ def check_print_order_is_closed(doc):
 
 
 @frappe.whitelist()
-def start_print_order(print_order):
+def start_print_order(print_order, fabric_transfer_qty=None):
+	from erpnext.stock.stock_ledger import get_allow_negative_stock
+
 	doc = frappe.get_doc('Print Order', print_order)
 
 	if doc.docstatus != 1:
-		frappe.throw(_("Print Order {0} is not submitted").format(print_order))
-
+		frappe.throw(_("Print Order {0} is not submitted").format(doc.name))
 	if doc.status == "Closed":
 		frappe.throw(_("Print Order {0} is Closed").format(doc.name))
 
-	frappe.flags.skip_print_order_status_update = True
+	if fabric_transfer_qty is None:
+		fabric_transfer_qty = max(doc.total_fabric_length - doc.fabric_transfer_qty, 0)
 
-	if not all(d.item_code and d.design_bom for d in doc.items):
-		create_design_items_and_boms(doc)
+	fabric_transfer_qty = flt(fabric_transfer_qty, precision=doc.precision("total_fabric_length"))
 
-	if flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length):
-		stock_entry = make_fabric_transfer_entry(doc, for_submit=True)
-		stock_entry.save()
-		stock_entry.submit()
-
-		stock_entry_row = stock_entry.items[0]
-
-		frappe.msgprint(_("Fabric Transferred to Work in Progress Warehouse ({0} {1}): {2}").format(
-			stock_entry_row.get_formatted("qty"),
-			stock_entry_row.uom,
-			frappe.utils.get_link_to_form("Stock Entry", stock_entry.name)
+	doc.set_fabric_stock_qty()
+	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
+		frappe.throw(_("Not enough Fabric Item {0} in Work in Progress Warehouse ({1} Meter in stock)").format(
+			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
 		))
 
-	if flt(doc.per_ordered) < 100:
-		sales_order = make_sales_order(doc.name)
-		sales_order.save()
-		sales_order.submit()
-
-		frappe.msgprint(_("Sales Order created: {0}").format(frappe.utils.get_link_to_form("Sales Order", sales_order.name)))
-
-	if flt(doc.per_work_ordered) < 100:
-		create_work_orders(doc.name)
-
-	frappe.flags.skip_print_order_status_update = False
-
-	doc.set_item_creation_status(update=True)
-	doc.set_fabric_transfer_status(update=True)
-	doc.set_sales_order_status(update=True)
-	doc.set_work_order_status(update=True)
-	doc.set_status(update=True)
-
-	doc.validate_ordered_qty()
-	doc.validate_work_order_qty()
-
-	doc.notify_update()
+	if len(doc.items) >= 10:
+		doc.queue_action("_start_print_order", fabric_transfer_qty=fabric_transfer_qty, publish_progress=True, timeout=600)
+		frappe.msgprint(_("Starting Print Order..."), alert=True)
+	else:
+		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty, publish_progress=False)
 
 
 @frappe.whitelist()
@@ -899,34 +973,11 @@ def create_design_items_and_boms(print_order):
 	if all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Printed Design Items and BOMs already created."))
 
-	for d in doc.items:
-		if not d.item_code:
-			item_doc = make_design_item(d, doc.fabric_item, doc.customer)
-			item_doc.save()
-
-			d.db_set({
-				"item_code": item_doc.name,
-				"item_name": item_doc.item_name
-			})
-
-		if not d.design_bom:
-			components = []
-			for component_item_field in print_process_components:
-				if doc.get(f"{component_item_field}_required"):
-					components.append(doc.get(component_item_field))
-
-			bom_doc = make_design_bom(d.item_code, doc.fabric_item, doc.process_item, components=components)
-
-			bom_doc.save()
-			bom_doc.submit()
-
-			d.db_set("design_bom", bom_doc.name)
-
-	if not frappe.flags.skip_print_order_status_update:
-		doc.set_item_creation_status(update=True)
-		doc.notify_update()
-
-	frappe.msgprint(_("Design Items and BOMs created successfully."))
+	if len(doc.items) >= 10:
+		doc.queue_action("_create_design_items_and_boms", publish_progress=True, timeout=600)
+		frappe.msgprint(_("Creating Design Items and BOMs..."), alert=True)
+	else:
+		doc._create_design_items_and_boms(publish_progress=False)
 
 
 def make_design_item(design_item_row, fabric_item, customer):
@@ -1076,7 +1127,7 @@ def make_sales_order(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def create_work_orders(print_order):
+def create_work_orders(print_order, publish_progress=False):
 	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
 
 	if isinstance(print_order, str):
@@ -1090,33 +1141,35 @@ def create_work_orders(print_order):
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Create Items and BOMs first"))
 
-	if doc.per_work_ordered >= 100:
-		frappe.throw(_("Work Orders already created."))
-
-	sales_orders = frappe.get_all("Sales Order Item", 'parent', {
+	sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
 		'print_order': doc.name,
 		'docstatus': 1
-	})
+	}, pluck="sales_order")
 
-	sales_orders = {d.parent for d in sales_orders}
+	wo_items = []
 
-	wo_list = []
 	for so in sales_orders:
 		so_doc = frappe.get_doc('Sales Order', so)
-		wo_items = so_doc.get_work_order_items()
-		wo = make_work_orders(wo_items, so, so_doc.company)
-		wo_list += wo
+		wo_items += so_doc.get_work_order_items()
+
+	wo_list = []
+	for i, d in enumerate(wo_items):
+		wo_list += make_work_orders([d], so_doc.company)
+
+		if publish_progress:
+			publish_print_order_progress(doc.name, "Creating Work Orders", i+1, len(wo_items))
 
 	if wo_list:
-		frappe.msgprint(_("Work Orders created: {0}").format(
-			', '.join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
-		), indicator='green')
+		wo_message = _("Work Orders created: {0}").format(
+			", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+		)
+		frappe.msgprint(wo_message, indicator='green')
 	else:
-		frappe.msgprint(_("Work Order already created in Draft."))
+		frappe.msgprint(_("Work Orders already created"))
 
 
 @frappe.whitelist()
-def make_fabric_transfer_entry(print_order, for_submit=False):
+def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit=False):
 	if isinstance(print_order, str):
 		doc = frappe.get_doc('Print Order', print_order)
 	else:
@@ -1137,7 +1190,12 @@ def make_fabric_transfer_entry(print_order, for_submit=False):
 	row.s_warehouse = stock_entry.from_warehouse
 	row.t_warehouse = stock_entry.to_warehouse
 
-	row.qty = max(flt(doc.total_fabric_length) - flt(doc.fabric_transfer_qty), 0)
+	if fabric_transfer_qty is None:
+		fabric_transfer_qty = max(flt(doc.total_fabric_length) - flt(doc.fabric_transfer_qty), 0)
+
+	fabric_transfer_qty = flt(fabric_transfer_qty)
+
+	row.qty = fabric_transfer_qty
 	row.uom = "Meter"
 
 	stock_entry.set_stock_entry_type()
@@ -1249,3 +1307,15 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 	target_doc.run_method("calculate_rate_and_amount")
 
 	return target_doc
+
+
+def publish_print_order_progress(print_order, title, progress, total, description=None):
+	progress_data = {
+		"print_order": print_order,
+		"title": title,
+		"progress": progress,
+		"total": total,
+		"description": description,
+	}
+
+	frappe.publish_realtime("print_order_progress", progress_data, doctype="Print Order", docname=print_order)
