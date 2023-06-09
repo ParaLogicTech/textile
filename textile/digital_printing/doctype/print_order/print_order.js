@@ -196,6 +196,10 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		this.get_fabric_item_details();
 	}
 
+	process_item() {
+		this.get_process_item_details();
+	}
+
 	source_warehouse() {
 		this.get_fabric_stock_qty();
 	}
@@ -206,6 +210,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				method: "textile.digital_printing.doctype.print_order.print_order.get_fabric_item_details",
 				args: {
 					fabric_item: this.frm.doc.fabric_item,
+					get_default_process: 1
 				},
 				callback: (r) => {
 					if (r.message) {
@@ -222,7 +227,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				method: "erpnext.stock.get_item_details.get_bin_details",
 				args: {
 					item_code: this.frm.doc.fabric_item,
-					warehouse: this.frm.doc.source_warehouse
+					warehouse: this.frm.doc.source_warehouse,
 				},
 				callback: (r) => {
 					if (r.message) {
@@ -232,6 +237,24 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			});
 		} else {
 			this.frm.set_value('fabric_stock_qty', 0);
+		}
+	}
+
+	get_process_item_details() {
+		if (this.frm.doc.process_item) {
+			return this.frm.call({
+				method: "textile.digital_printing.doctype.print_order.print_order.get_process_item_details",
+				args: {
+					process_item: this.frm.doc.process_item,
+					fabric_item: this.frm.doc.fabric_item,
+					get_default_paper: 1,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value(r.message);
+					}
+				}
+			});
 		}
 	}
 
@@ -280,21 +303,21 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	design_image(doc, cdt, cdn) {
-		var me = this;
 		let row = frappe.get_doc(cdt, cdn);
 
-		return frappe.call({
-			method: "get_image_details",
-			args: {
-				image_url: row.design_image
-			},
-			doc: me.frm.doc,
-			callback: function(r) {
-				if (!r.exc && r.message) {
-					return frappe.model.set_value(cdt, cdn, r.message);
+		if (row.design_image) {
+			return frappe.call({
+				method: "textile.digital_printing.doctype.print_order.print_order.get_image_details",
+				args: {
+					image_url: row.design_image
+				},
+				callback: function (r) {
+					if (!r.exc && r.message) {
+						return frappe.model.set_value(cdt, cdn, r.message);
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	design_gap() {

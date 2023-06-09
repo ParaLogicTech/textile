@@ -22,6 +22,12 @@ default_fields_map = {
 	"default_printing_length_uom": "default_length_uom"
 }
 
+force_customer_fields = ["customer_name"]
+force_fabric_fields = ["fabric_item_name", "fabric_material", "fabric_type", "fabric_width", "fabric_gsm"]
+force_process_fields = ["process_item_name"] + [f"{component_item_field}_required" for component_item_field in print_process_components]
+
+force_fields = force_customer_fields + force_fabric_fields + force_process_fields
+
 
 class PrintOrder(StatusUpdater):
 	def get_feed(self):
@@ -85,6 +91,53 @@ class PrintOrder(StatusUpdater):
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
+		self.set_fabric_item_details()
+		self.set_process_item_details()
+
+	def attach_unlinked_item_images(self):
+		filters = {
+			'attached_to_doctype': self.doctype,
+			'attached_to_name': self.name
+		}
+		files_urls = frappe.db.get_all('File', filters, ['file_url'], order_by="creation", pluck="file_url")
+
+		linked_images = {d.design_image for d in self.items}
+
+		for file_url in files_urls:
+			if file_url in linked_images:
+				continue
+
+			row = frappe.new_doc("Print Order Item")
+			row.design_image = file_url
+			row.design_gap = self.default_gap
+			row.qty = self.default_qty
+			row.uom = self.default_uom
+			row.qty_type = self.default_qty_type
+			row.per_wastage = self.default_wastage
+			row.length_uom = self.default_length_uom
+			self.append('items', row)
+
+	def set_design_details_from_image(self):
+		for d in self.items:
+			if not d.design_image:
+				continue
+			if d.design_width and d.design_height:
+				continue
+
+			design_details = get_image_details(d.design_image)
+			d.update(design_details)
+
+	def set_fabric_item_details(self):
+		details = get_fabric_item_details(self.fabric_item, get_default_process=False)
+		for k, v in details.items():
+			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
+				self.set(k, v)
+
+	def set_process_item_details(self):
+		details = get_process_item_details(self.process_item, get_default_paper=False)
+		for k, v in details.items():
+			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
+				self.set(k, v)
 
 	def set_order_defaults_for_customer(self):
 		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
@@ -192,8 +245,9 @@ class PrintOrder(StatusUpdater):
 			if not self.get("process_item"):
 				frappe.throw(_("Process Item is mandatory for submission"))
 
+			process_doc = frappe.get_cached_doc("Item", self.process_item)
 			for component_item_field in print_process_components:
-				if self.get(f"{component_item_field}_required") and not self.get(component_item_field):
+				if process_doc.get(f"{component_item_field}_required") and not self.get(component_item_field):
 					field_label = self.meta.get_label(component_item_field)
 					frappe.throw(_("{0} is mandatory for submission").format(frappe.bold(field_label)))
 
@@ -207,58 +261,6 @@ class PrintOrder(StatusUpdater):
 
 			if not d.qty:
 				frappe.throw(_("Row #{0}: Qty cannot be 0").format(d.idx))
-
-	def attach_unlinked_item_images(self):
-		filters = {
-			'attached_to_doctype': self.doctype,
-			'attached_to_name': self.name
-		}
-		files_urls = frappe.db.get_all('File', filters, ['file_url'], order_by="creation", pluck="file_url")
-
-		linked_images = {d.design_image for d in self.items}
-
-		for file_url in files_urls:
-			if file_url in linked_images:
-				continue
-
-			row = frappe.new_doc("Print Order Item")
-			row.design_image = file_url
-			row.design_gap = self.default_gap
-			row.qty = self.default_qty
-			row.uom = self.default_uom
-			row.qty_type = self.default_qty_type
-			row.per_wastage = self.default_wastage
-			row.length_uom = self.default_length_uom
-			self.append('items', row)
-
-	def set_design_details_from_image(self):
-		for d in self.items:
-			if not d.design_image:
-				continue
-			if d.design_width and d.design_height:
-				continue
-
-			design_details = self.get_image_details(d.design_image)
-			d.update(design_details)
-
-	@frappe.whitelist()
-	def get_image_details(self, image_url):
-		doc_name = frappe.get_value('File', filters={'file_url': image_url})
-
-		if not doc_name:
-			frappe.throw(_("File {0} not found").format(image_url))
-
-		file_doc = frappe.get_doc("File", doc_name)
-		file_name = file_doc.get("original_file_name") or file_doc.file_name
-
-		out = frappe._dict()
-		out.design_name = ".".join(file_name.split('.')[:-1]) or file_name
-
-		im = Image.open(file_doc.get_full_path())
-		out.design_width = flt(im.size[0] / 10, 1)
-		out.design_height = flt(im.size[1] / 10, 1)
-
-		return out
 
 	def calculate_totals(self):
 		self.total_print_length = 0
@@ -1305,11 +1307,28 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def get_fabric_item_details(fabric_item):
-	if not fabric_item:
-		frappe.throw(_("Fabric Item not provided"))
+def get_image_details(image_url):
+	doc_name = frappe.get_value('File', filters={'file_url': image_url})
 
-	fabric_doc = frappe.get_cached_doc("Item", fabric_item)
+	if not doc_name:
+		frappe.throw(_("File {0} not found").format(image_url))
+
+	file_doc = frappe.get_doc("File", doc_name)
+	file_name = file_doc.get("original_file_name") or file_doc.file_name
+
+	out = frappe._dict()
+	out.design_name = ".".join(file_name.split('.')[:-1]) or file_name
+
+	im = Image.open(file_doc.get_full_path())
+	out.design_width = flt(im.size[0] / 10, 1)
+	out.design_height = flt(im.size[1] / 10, 1)
+
+	return out
+
+
+@frappe.whitelist()
+def get_fabric_item_details(fabric_item, get_default_process=True):
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
 
 	out = frappe._dict()
 	out.fabric_item_name = fabric_doc.item_name
@@ -1317,6 +1336,18 @@ def get_fabric_item_details(fabric_item):
 	out.fabric_type = fabric_doc.fabric_type
 	out.fabric_width = fabric_doc.fabric_width
 	out.fabric_gsm = fabric_doc.fabric_gsm
+
+	if fabric_item and cint(get_default_process):
+		process_details = get_default_fabric_process(fabric_item)
+		out.update(process_details)
+
+	return out
+
+
+@frappe.whitelist()
+def get_default_fabric_process(fabric_item):
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
+	out = frappe._dict()
 
 	# Set process values as None to unset in UI
 	out.process_item = None
@@ -1331,26 +1362,53 @@ def get_fabric_item_details(fabric_item):
 	print_process_defaults = get_print_process_values(fabric_doc.name)
 	out.update(print_process_defaults)
 
-	if out.process_item:
-		process_doc = frappe.get_cached_doc("Item", out.process_item)
+	process_details = get_process_item_details(out.process_item, fabric_doc.name, get_default_paper=True)
+	out.update(process_details)
 
-		# Set process component required
-		for component_item_field in print_process_components:
-			out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
+	return out
 
-		# Default Sublimation Paper
-		if frappe.get_cached_value("Item", out.process_item, "sublimation_paper_item_required"):
-			sublimation_papers = get_applicable_papers("Sublimation Paper", fabric_doc.fabric_width)
-			if len(sublimation_papers) == 1:
-				out.sublimation_paper_item = sublimation_papers[0].name
-				out.sublimation_paper_item_name = sublimation_papers[0].item_name
 
-		# Default Protection Paper
-		if frappe.get_cached_value("Item", out.process_item, "protection_paper_item_required"):
-			protection_papers = get_applicable_papers("Protection Paper", fabric_doc.fabric_width)
-			if len(protection_papers) == 1:
-				out.protection_paper_item = protection_papers[0].name
-				out.protection_paper_item_name = protection_papers[0].item_name
+@frappe.whitelist()
+def get_process_item_details(process_item, fabric_item=None, get_default_paper=True):
+	process_doc = frappe.get_cached_doc("Item", process_item) if process_item else frappe._dict()
+
+	out = frappe._dict()
+	out.process_item_name = process_doc.item_name
+
+	for component_item_field in print_process_components:
+		out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
+
+	if fabric_item and process_item and get_default_paper:
+		out.update(get_default_paper_items(fabric_item, process_item))
+
+	return out
+
+
+@frappe.whitelist()
+def get_default_paper_items(fabric_item, process_item):
+	if not fabric_item:
+		frappe.throw(_("Fabric Item not provided"))
+	if not process_item:
+		frappe.throw(_("Process Item not provided"))
+
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item)
+	process_doc = frappe.get_cached_doc("Item", process_item)
+
+	out = frappe._dict()
+
+	# Default Sublimation Paper
+	if process_doc.sublimation_paper_item_required:
+		sublimation_papers = get_applicable_papers("Sublimation Paper", fabric_doc.fabric_width)
+		if len(sublimation_papers) == 1:
+			out.sublimation_paper_item = sublimation_papers[0].name
+			out.sublimation_paper_item_name = sublimation_papers[0].item_name
+
+	# Default Protection Paper
+	if process_doc.protection_paper_item_required:
+		protection_papers = get_applicable_papers("Protection Paper", fabric_doc.fabric_width)
+		if len(protection_papers) == 1:
+			out.protection_paper_item = protection_papers[0].name
+			out.protection_paper_item_name = protection_papers[0].item_name
 
 	return out
 
