@@ -27,6 +27,9 @@ doc_events = {
 	},
 	"UOM Conversion Factor": {
 		"on_update": "textile.overrides.uom_hooks.on_uom_conversion_factor_update",
+	},
+	"BOM": {
+		"on_cancel": "textile.overrides.bom_hooks.on_bom_cancel",
 	}
 }
 
