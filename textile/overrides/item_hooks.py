@@ -16,6 +16,29 @@ class ItemDP(Item):
 		self.validate_design_properties()
 		self.validate_process_properties()
 
+	def on_trash(self):
+		super().on_trash()
+
+		print_orders = frappe.db.sql_list("""
+			select distinct parent
+			from `tabPrint Order Item`
+			where item_code = %s
+		""", self.name)
+
+		if not print_orders:
+			return
+
+		frappe.db.sql("""
+			update `tabPrint Order Item`
+			set item_code = null
+			where item_code = %s
+		""", self.name)
+
+		for name in print_orders:
+			doc = frappe.get_doc("Print Order", name)
+			doc.set_item_creation_status(update=True)
+			doc.notify_update()
+
 	def validate_print_item_type(self):
 		match self.print_item_type:
 			case "Fabric":

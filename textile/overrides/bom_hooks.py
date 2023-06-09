@@ -20,5 +20,4 @@ def on_bom_cancel(doc, method):
 	for name in print_orders:
 		doc = frappe.get_doc("Print Order", name)
 		doc.set_item_creation_status(update=True)
-		doc.set_status(update=True)
 		doc.notify_update()
