@@ -984,7 +984,6 @@ def make_design_item(design_item_row, fabric_item, customer):
 		frappe.throw(_('Fabric Item is mandatory.'))
 
 	default_item_group = frappe.db.get_single_value("Digital Printing Settings", "default_item_group_for_printed_design_item")
-	fabric_item_name = frappe.get_cached_value('Item', fabric_item, 'item_name')
 
 	if not default_item_group:
 		frappe.throw(_("Select Default Item Group for Printed Design Item in Digital Printing Settings."))
@@ -996,12 +995,11 @@ def make_design_item(design_item_row, fabric_item, customer):
 	item_doc.update({
 		"item_group": default_item_group,
 		"print_item_type": "Printed Design",
-		"item_name": "{0} ({1})".format(design_item_row.design_name, fabric_item_name),
+		"item_name": design_item_row.design_name,
 		"stock_uom": design_item_row.stock_uom,
 		"sales_uom": design_item_row.uom,
 		"fabric_item": fabric_item,
 		"image": design_item_row.design_image,
-		"design_name": design_item_row.design_name,
 		"design_width": design_item_row.design_width,
 		"design_height": design_item_row.design_height,
 		"design_gap": design_item_row.design_gap,
@@ -1110,6 +1108,7 @@ def make_sales_order(source_name, target_doc=None):
 				"parent": "print_order",
 				"bom": "bom",
 				"item_code": "item_code",
+				"design_name": "item_name",
 				"print_length": "qty",
 				"length_uom": "uom",
 				"panel_length_meter": "panel_length_meter",

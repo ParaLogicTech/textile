@@ -8,3 +8,4 @@ textile.patches.update_fabric_items_conversions
 textile.patches.set_panel_based_qty
 textile.patches.update_print_order_statuses
 textile.patches.update_print_order_item_creation_status
+textile.patches.remove_item_design_name_field

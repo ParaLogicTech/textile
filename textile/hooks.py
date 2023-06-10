@@ -123,7 +123,6 @@ fixtures = [
 				'Item-protection_paper_item_required',
 
 				'Item-sec_design_properties',
-				'Item-design_name',
 				'Item-design_width',
 				'Item-design_height',
 				'Item-column_break_9y2g0',

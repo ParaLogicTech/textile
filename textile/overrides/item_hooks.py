@@ -57,8 +57,6 @@ class ItemDP(Item):
 				if not self.is_sales_item:
 					frappe.throw(_("Printed Design Item must be a Sales Item"))
 
-				if not self.design_name:
-					frappe.throw(_("Design Name is mandatory for Printed Design Item"))
 				if not self.fabric_item:
 					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
 
@@ -93,7 +91,6 @@ class ItemDP(Item):
 
 	def validate_design_properties(self):
 		if self.print_item_type != "Printed Design":
-			self.design_name = None
 			self.design_width = None
 			self.design_height = None
 			self.design_uom = None
