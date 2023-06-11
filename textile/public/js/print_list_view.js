@@ -3,10 +3,6 @@ frappe.provide("textile");
 textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	hide_row_button = true;
 
-	set_breadcrumbs() {
-		frappe.breadcrumbs.add("Digital Printing", this.doctype);
-	}
-
 	get_header_html() {
 		let subject_html = `
 			<input class="level-item list-check-all" type="checkbox"
@@ -122,8 +118,6 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 }
 
 textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListView {
-	page_title = __("Print Work Order")
-
 	async set_fields() {
 		await super.set_fields();
 		this._add_field("customer");
@@ -135,16 +129,6 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		this._add_field("per_produced");
 		this._add_field("fabric_item");
 		this._add_field("fabric_item_name");
-	}
-
-	get_filters_for_args() {
-		let filters = super.get_filters_for_args();
-		const print_order_filter = filters.find((f) => f[1] == "print_order" && f[2] == "is" && f[3] == "set");
-		if (!print_order_filter) {
-			filters.push();
-		}
-
-		return filters;
 	}
 
 	get_progress_html(doc) {
