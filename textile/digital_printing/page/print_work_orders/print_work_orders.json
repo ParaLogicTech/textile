@@ -1,0 +1,26 @@
+{
+ "content": null,
+ "creation": "2023-06-10 02:50:18.298628",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2023-06-12 01:46:48.014537",
+ "modified_by": "Administrator",
+ "module": "Digital Printing",
+ "name": "print-work-orders",
+ "owner": "Administrator",
+ "page_name": "print-work-orders",
+ "roles": [
+  {
+   "role": "Manufacturing User"
+  },
+  {
+   "role": "Stock User"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Print Work Orders"
+}
