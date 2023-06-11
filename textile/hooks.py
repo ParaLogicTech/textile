@@ -178,6 +178,14 @@ fixtures = [
 
 				'Work Order-print_order',
 				'Work Order-print_order_item',
+				'Work Order-fabric_details',
+				'Work Order-fabric_item',
+				'Work Order-fabric_item_name',
+				'Work Order-column_break_tdpdc',
+				'Work Order-fabric_material',
+				'Work Order-fabric_width',
+				'Work Order-column_break_xvc9e',
+				'Work Order-fabric_gsm',
 
 				'Stock Entry-print_order',
 			]]

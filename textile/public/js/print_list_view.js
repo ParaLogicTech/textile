@@ -133,6 +133,8 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		this._add_field("produced_qty");
 		this._add_field("stock_uom");
 		this._add_field("per_produced");
+		this._add_field("fabric_item");
+		this._add_field("fabric_item_name");
 	}
 
 	get_filters_for_args() {
@@ -176,12 +178,18 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 							<td>${doc.customer_name || doc.customer || ""}</td>
 						</tr>
 						<tr>
-							<th style="padding-right: 3px;">Order Qty:</th>
-							<td>${this.get_formatted("qty", doc)} ${doc.stock_uom}</td>
+							<th style="padding-right: 3px;">Fabric:</th>
+							<td>${doc.fabric_item_name || doc.fabric_item || ""}</td>
 						</tr>
 						<tr>
 							<th style="padding-right: 3px;">Produced:</th>
-							<td>${this.get_formatted("produced_qty", doc)} ${doc.stock_uom}</td>
+							<td>
+								${this.get_formatted("produced_qty", doc)}
+								/
+								${this.get_formatted("qty", doc)}
+								${doc.stock_uom}
+								(${this.get_formatted("per_produced", doc)})
+							</td>
 						</tr>
 					</table>
 				</div>
