@@ -608,7 +608,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			print_order: this.frm.doc.name,
 			selected_page_count: 100,
 		}
-		return frappe.set_route("print-work-orders");
+		return frappe.set_route("List", "Work Order");
 	}
 
 	setup_progressbar() {
