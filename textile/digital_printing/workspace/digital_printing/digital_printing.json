@@ -156,11 +156,11 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Print Work Order",
+   "label": "Work Order",
    "link_count": 0,
-   "link_to": "print-work-orders",
-   "link_type": "Page",
-   "onboard": 0,
+   "link_to": "Work Order",
+   "link_type": "DocType",
+   "onboard": 1,
    "type": "Link"
   },
   {
@@ -184,7 +184,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-06-12 00:49:16.962152",
+ "modified": "2023-06-12 03:07:00.601038",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",

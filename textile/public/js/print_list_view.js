@@ -147,12 +147,6 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		return filters;
 	}
 
-	get_args() {
-		const args = super.get_args();
-		args.filters.push(["Work Order", "print_order", "is", "set"]);
-		return args;
-	}
-
 	get_progress_html(doc) {
 		return `
 			<div class="progress" style="margin-top: 5px;">
@@ -200,3 +194,6 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		`;
 	}
 }
+
+frappe.provide("frappe.views.custom_view_classes.Work Order");
+frappe.views.custom_view_classes["Work Order"]["List"] = textile.PrintWorkOrderList;

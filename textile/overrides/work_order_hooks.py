@@ -40,6 +40,11 @@ def update_work_order_from_sales_order(work_order):
 			if warehouse:
 				work_order.set(wo_warehouse_fn, warehouse)
 
+		fabric_fields = ["fabric_item", "fabric_item_name", "fabric_material", "fabric_width", "fabric_gsm"]
+		for field in fabric_fields:
+			value = frappe.db.get_value("Print Order", work_order.print_order, field, cache=True)
+			work_order.set(field, value)
+
 	if work_order.get('print_order_item'):
 		work_order.max_qty = flt(frappe.db.get_value("Print Order Item", work_order.print_order_item, "stock_fabric_length"))
 
