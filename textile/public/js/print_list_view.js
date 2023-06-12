@@ -93,7 +93,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_image_html(doc) {
-		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURI(doc.image)}" style="max-height: 123px;" alt="">`
+		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc.image)}" style="max-height: 123px;" alt="">`
 	}
 
 	get_button_html(doc) {
