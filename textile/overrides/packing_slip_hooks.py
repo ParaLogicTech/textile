@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, round_down
 from erpnext.stock.doctype.packing_slip.packing_slip import PackingSlip
 from textile.overrides.taxes_and_totals_hooks import calculate_panel_qty
 
@@ -60,8 +60,10 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 	def get_remaining_qty(source):
 		if source.get("print_order_item"):
 			produced_qty = flt(frappe.db.get_value("Print Order Item", source.get("print_order_item"), "produced_qty", cache=1))
-			undelivered_qty = produced_qty - flt(source.delivered_qty)
-			unpacked_qty = produced_qty - flt(source.packed_qty)
+			produced_qty_order_uom = produced_qty / source.conversion_factor
+
+			undelivered_qty = round_down(produced_qty_order_uom - flt(source.delivered_qty), source.precision("qty"))
+			unpacked_qty = round_down(produced_qty_order_uom - flt(source.packed_qty), source.precision("qty"))
 		else:
 			undelivered_qty = flt(source.qty) - flt(source.delivered_qty)
 			unpacked_qty = flt(source.qty) - flt(source.packed_qty)
