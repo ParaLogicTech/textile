@@ -726,7 +726,7 @@ class PrintOrder(StatusUpdater):
 
 		# Design Items
 		if not all(d.item_code and d.design_bom for d in self.items):
-			self._create_design_items_and_boms(publish_progress=publish_progress)
+			self._create_design_items_and_boms(publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
 
 		# Fabric Transfer
 		if flt(fabric_transfer_qty) > 0:
@@ -734,6 +734,8 @@ class PrintOrder(StatusUpdater):
 				publish_print_order_progress(self.name, "Transferring Fabric", 0, 1)
 
 			stock_entry = make_fabric_transfer_entry(self, fabric_transfer_qty, for_submit=True)
+			stock_entry.flags.ignore_version = True
+			stock_entry.flags.ignore_feed = True
 			stock_entry.save()
 			stock_entry.submit()
 
@@ -755,6 +757,8 @@ class PrintOrder(StatusUpdater):
 				publish_print_order_progress(self.name, "Creating Sales Order", 0, 1)
 
 			sales_order = make_sales_order(self.name)
+			sales_order.flags.ignore_version = True
+			sales_order.flags.ignore_feed = True
 			sales_order.save()
 			sales_order.submit()
 
@@ -768,7 +772,7 @@ class PrintOrder(StatusUpdater):
 
 		# Work Orders
 		if flt(self.per_work_ordered) < 100:
-			create_work_orders(self.name, publish_progress=publish_progress)
+			create_work_orders(self.name, publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
 
 		# Status Update
 		frappe.flags.skip_print_order_status_update = False
@@ -784,10 +788,12 @@ class PrintOrder(StatusUpdater):
 
 		self.notify_update()
 
-	def _create_design_items_and_boms(self, publish_progress=False):
+	def _create_design_items_and_boms(self, publish_progress=False, ignore_version=True, ignore_feed=True):
 		for i, d in enumerate(self.items):
 			if not d.item_code:
 				item_doc = make_design_item(d, self.fabric_item, self.customer)
+				item_doc.flags.ignore_version = ignore_version
+				item_doc.flags.ignore_feed = ignore_feed
 				item_doc.save()
 
 				d.db_set({
@@ -802,7 +808,8 @@ class PrintOrder(StatusUpdater):
 						components.append(self.get(component_item_field))
 
 				bom_doc = make_design_bom(d.item_code, self.fabric_item, self.process_item, components=components)
-
+				bom_doc.flags.ignore_version = ignore_version
+				bom_doc.flags.ignore_feed = ignore_feed
 				bom_doc.save()
 				bom_doc.submit()
 
@@ -1123,7 +1130,7 @@ def make_sales_order(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def create_work_orders(print_order, publish_progress=False):
+def create_work_orders(print_order, publish_progress=False, ignore_version=True, ignore_feed=True):
 	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
 
 	if isinstance(print_order, str):
@@ -1150,7 +1157,7 @@ def create_work_orders(print_order, publish_progress=False):
 
 	wo_list = []
 	for i, d in enumerate(wo_items):
-		wo_list += make_work_orders([d], so_doc.company)
+		wo_list += make_work_orders([d], so_doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 		if publish_progress:
 			publish_print_order_progress(doc.name, "Creating Work Orders", i+1, len(wo_items))
