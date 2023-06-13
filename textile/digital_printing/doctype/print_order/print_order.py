@@ -957,11 +957,11 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
 		))
 
-	if len(doc.items) >= 10:
+	if len(doc.items) > 5:
 		doc.queue_action("_start_print_order", fabric_transfer_qty=fabric_transfer_qty, publish_progress=True, timeout=600)
 		frappe.msgprint(_("Starting Print Order..."), alert=True)
 	else:
-		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty, publish_progress=False)
+		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty, publish_progress=True)
 
 
 @frappe.whitelist()
@@ -977,11 +977,11 @@ def create_design_items_and_boms(print_order):
 	if all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Printed Design Items and BOMs already created."))
 
-	if len(doc.items) >= 10:
+	if len(doc.items) > 5:
 		doc.queue_action("_create_design_items_and_boms", publish_progress=True, timeout=600)
 		frappe.msgprint(_("Creating Design Items and BOMs..."), alert=True)
 	else:
-		doc._create_design_items_and_boms(publish_progress=False)
+		doc._create_design_items_and_boms(publish_progress=True)
 
 
 def make_design_item(design_item_row, fabric_item, customer):
