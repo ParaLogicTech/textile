@@ -99,11 +99,15 @@ update_delivery_note_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.map_print_order_reference_in_delivery_note_item",
 ]
 
+delete_file_data_content = "textile.utils.delete_file_data_content"
+
 fixtures = [
 	{
 		"doctype": "Custom Field",
 		"filters": {
 			"name": ["in", [
+				'File-rotated_image',
+
 				'Customer-printing_tab',
 				'Customer-default_printing_uom',
 				'Customer-default_printing_gap',
