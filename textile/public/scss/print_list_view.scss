@@ -1,0 +1,35 @@
+.print-list-view-row {
+	.list-row {
+		height: auto;
+		padding: 10px 15px;
+	}
+
+	.design-details {
+		width: 65%;
+
+		.design-name {
+			font-size: 16px;
+		}
+
+		.progress {
+			margin-top: 5px;
+		}
+
+		.design-properties {
+			margin-top: 5px;
+
+			table th {
+				padding-right: 4px;
+			}
+		}
+	}
+
+	.design-image {
+		width: 35%;
+		padding-left: 15px;
+
+		img {
+			max-height: 123px;
+		}
+	}
+}

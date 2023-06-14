@@ -19,8 +19,8 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 
 	get_list_row_html_skeleton(left = "", right = "") {
 		return `
-			<div class="list-row-container" tabindex="1">
-				<div class="level list-row" style="height: auto; padding: 10px 15px;">
+			<div class="list-row-container print-list-view-row" tabindex="1">
+				<div class="level list-row">
 					<div class="level-left">
 						${left}
 					</div>
@@ -40,12 +40,12 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 				</span>
 
 				<div class="clearfix" style="width: 100%">
-					<div class="pull-left" style="width: 65%;">
+					<div class="pull-left design-details">
 						${this.get_subject_html(doc)}
 						${this.get_progress_html(doc)}
 						${this.get_details_html(doc)}
 					</div>
-					<div class="pull-right" style="width: 35%; padding-left: 15px;">
+					<div class="pull-right design-image">
 						${this.get_image_html(doc)}
 					</div>
 				</div>
@@ -69,7 +69,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		return `
 			<div class="clearfix" title="${escaped_subject}">
 				<div class="pull-left">
-					<a style="font-size: 16px;"
+					<a class="design-name"
 						href="${this.get_form_link(doc)}"
 						title="${escaped_subject}"
 						data-doctype="${this.doctype}"
@@ -93,7 +93,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_image_html(doc) {
-		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc.image)}" style="max-height: 123px;" alt="">`
+		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc.image)}" alt="">`
 	}
 
 	get_button_html(doc) {
@@ -133,7 +133,7 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 
 	get_progress_html(doc) {
 		return `
-			<div class="progress" style="margin-top: 5px;">
+			<div class="progress">
 				<div class="progress-bar progress-bar-success" role="progressbar"
 					aria-valuenow="${doc.per_produced}"
 					aria-valuemin="0" aria-valuemax="100" style="width: ${Math.round(doc.per_produced)}%;">
@@ -144,23 +144,23 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 
 	get_details_html(doc) {
 		return `
-			<div class="clearfix" style="margin-top: 5px;">
+			<div class="clearfix design-properties">
 				<div class="pull-left">
 					<table>
 						<tr>
-							<th style="padding-right: 3px;">Print Order:</th>
+							<th>Print Order:</th>
 							<td>${doc.print_order || ""}</td>
 						</tr>
 						<tr>
-							<th style="padding-right: 3px;">Customer:</th>
+							<th>Customer:</th>
 							<td>${doc.customer_name || doc.customer || ""}</td>
 						</tr>
 						<tr>
-							<th style="padding-right: 3px;">Fabric:</th>
+							<th>Fabric:</th>
 							<td>${doc.fabric_item_name || doc.fabric_item || ""}</td>
 						</tr>
 						<tr>
-							<th style="padding-right: 3px;">Produced:</th>
+							<th>Produced:</th>
 							<td>
 								${this.get_formatted("produced_qty", doc)}
 								/

@@ -9,6 +9,7 @@ app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext"]
 
 app_include_js = "textile.bundle.js"
+app_include_css = "textile.bundle.css"
 
 after_install = "textile.install.after_install"
 notification_config = "textile.notifications.get_notification_config"
