@@ -150,7 +150,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			if (e.target) {
 				e.target.blur();
 			}
-			let input = base.pro_fields[fieldname].$control.$input;
+			let input = base.pro_fields[fieldname]?.$control?.$input;
 			if (input) {
 				input.focus();
 			}
