@@ -563,6 +563,10 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			d.panel_length_meter = d.panel_length_inch * conversion_factors.inch_to_meter;
 			d.panel_length_yard = d.panel_length_meter / conversion_factors.yard_to_meter;
 
+			if (d.uom != "Panel") {
+				d.length_uom = d.uom;
+			}
+
 			let waste = d.per_wastage / 100;
 			let uom_to_convert = d.length_uom + '_to_' + d.stock_uom;
 			let conversion_factor = conversion_factors[uom_to_convert.toLowerCase()] || 1;
