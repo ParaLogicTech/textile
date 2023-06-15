@@ -135,7 +135,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			let value = doc[fieldname];
 			let is_editable_field = this.print_order_item_editable_fields.includes(fieldname);
 
-			field.df = frappe.meta.get_docfield(doc.doctype, fieldname, doc.name);
+			field.df = grid_row.docfields.find((col) => col?.fieldname === fieldname);
 
 			if (field.df) {
 				grid_row.set_dependant_property(field.df);
@@ -159,6 +159,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			field.$value.toggle(field.display_status == "Read" || !is_editable_field);
 
 			if (is_editable_field) {
+				field.$control.docname = doc.name;
 				field.$control.df = field.df;
 				field.$control.doc = doc;
 				field.$control.refresh();
