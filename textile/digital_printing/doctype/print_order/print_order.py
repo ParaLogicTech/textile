@@ -297,9 +297,6 @@ class PrintOrder(StatusUpdater):
 				d.print_length = d.qty * d.panel_length_meter / conversion_factor
 				d.fabric_length = d.print_length / (1 - waste) if waste < 1 else 0
 
-			d.print_length = flt(d.print_length, d.precision("print_length"))
-			d.fabric_length = flt(d.fabric_length, d.precision("fabric_length"))
-
 			d.stock_print_length = d.print_length * conversion_factor
 			d.stock_fabric_length = d.fabric_length * conversion_factor
 
