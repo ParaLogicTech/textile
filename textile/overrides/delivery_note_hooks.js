@@ -6,7 +6,9 @@ frappe.ui.form.on("Delivery Note", {
 			frm.add_custom_button(__('Print Order'), function() {
 				textile.get_items_from_print_order(frm,
 					"textile.digital_printing.doctype.print_order.print_order.make_delivery_note",
-					{delivery_status: "To Deliver"});
+					null,
+					"textile.digital_printing.doctype.print_order.print_order.get_print_orders_to_be_delivered"
+				);
 			}, __("Get Items From"));
 		}
 	},

@@ -8,7 +8,7 @@ textile.print_process_components = {
 }
 
 $.extend(textile, {
-	get_items_from_print_order: function (frm, method, filters) {
+	get_items_from_print_order: function (frm, method, filters, query) {
 		let query_filters = {
 			docstatus: 1,
 			status: ["!=", "Closed"],
@@ -52,7 +52,12 @@ $.extend(textile, {
 				},
 			],
 			columns: ['customer_name', 'fabric_item_name', 'process_item_name', 'transaction_date'],
-			get_query_filters: query_filters,
+			get_query: () => {
+				return {
+					query: query,
+					filters: query_filters,
+				}
+			},
 		});
 	},
 });

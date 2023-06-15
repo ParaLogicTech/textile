@@ -1432,3 +1432,44 @@ def publish_print_order_progress(print_order, title, progress, total, descriptio
 	}
 
 	frappe.publish_realtime("print_order_progress", progress_data, doctype="Print Order", docname=print_order)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_print_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict):
+	return _get_print_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict)
+
+
+def _get_print_orders_to_be_delivered(doctype="Print Order", txt="", searchfield="name", start=0, page_len=0,
+		filters=None, as_dict=True, ignore_permissions=False):
+	from frappe.desk.reportview import get_match_cond, get_filters_cond
+	from erpnext.controllers.queries import get_fields
+
+	fields = get_fields("Print Order")
+	select_fields = ", ".join(["`tabPrint Order`.{0}".format(f) for f in fields])
+	limit = "limit {0}, {1}".format(start, page_len) if page_len else ""
+
+	if not filters:
+		filters = {}
+
+	return frappe.db.sql("""
+		select {fields}
+		from `tabPrint Order`
+		where `tabPrint Order`.docstatus = 1
+			and `tabPrint Order`.`status` != 'Closed'
+			and `tabPrint Order`.`items_created` = 1
+			and `tabPrint Order`.`delivery_status` = 'To Deliver'
+			and `tabPrint Order`.`{key}` like {txt}
+			and `tabPrint Order`.`per_delivered` < `tabPrint Order`.`per_produced`
+			and (`tabPrint Order`.`packing_slip_required` = 0 or `tabPrint Order`.`per_delivered` < `tabPrint Order`.`per_packed`)
+			{fcond} {mcond}
+		order by `tabPrint Order`.transaction_date, `tabPrint Order`.creation
+		{limit}
+	""".format(
+		fields=select_fields,
+		key=searchfield,
+		fcond=get_filters_cond(doctype, filters, [], ignore_permissions=ignore_permissions),
+		mcond="" if ignore_permissions else get_match_cond(doctype),
+		limit=limit,
+		txt="%(txt)s",
+	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)
