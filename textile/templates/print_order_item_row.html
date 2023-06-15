@@ -1,0 +1,84 @@
+<div class="col grid-static-col col-xs-8 {% if (doc) { %}design-details{% } %}"">
+	{% if (doc) { %}
+		<table class="table table-bordered print-order-item">
+			<tr>
+				<th colspan="6" class="reqd" style="width: 50%;">Design Name</th>
+				<th colspan="1" class="reqd" style="width: 12.5%;">Qty</th>
+				<th colspan="1" style="width: 12.5%;">UOM</th>
+				<th colspan="1" style="width: 12.5%;">Qty Type</th>
+				<th colspan="1" style="width: 12.5%;">Gap (in.)</th>
+			</tr>
+			<tr>
+				<td colspan="6">
+					<div class="formatted-value" data-fieldname="design_name"></div>
+					<div class="field-control" data-fieldname="design_name"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="qty"></div>
+					<div class="field-control" data-fieldname="qty"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="uom"></div>
+					<div class="field-control" data-fieldname="uom"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="qty_type"></div>
+					<div class="field-control" data-fieldname="qty_type"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="design_gap"></div>
+					<div class="field-control" data-fieldname="design_gap"></div>
+				</td>
+			</tr>
+
+			<tr>
+				<th colspan="2" style="width: 16.67%;">Size (in.)</th>
+				<th colspan="2" style="width: 16.67%;">Print Qty</th>
+				<th colspan="2" style="width: 16.67%;">Fabric Qty</th>
+				<th colspan="1">Panel Qty</th>
+				<th colspan="1">Produced</th>
+				<th colspan="1">Packed</th>
+				<th colspan="1">Delivered</th>
+			</tr>
+			<tr>
+				<td colspan="2" class="text-nowrap">
+					<div class="formatted-value" data-fieldname="design_size"></div>
+				</td>
+				<td colspan="2">
+					<div class="formatted-value" data-fieldname="stock_print_length"></div>
+				</td>
+				<td colspan="2">
+					<div class="formatted-value" data-fieldname="stock_fabric_length"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="panel_qty"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="produced_qty"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="packed_qty"></div>
+				</td>
+				<td colspan="1">
+					<div class="formatted-value" data-fieldname="delivered_qty"></div>
+				</td>
+			</tr>
+
+			<tr>
+				<td colspan="10">
+					<div class="formatted-value" data-fieldname="design_notes"></div>
+					<div class="field-control" data-fieldname="design_notes"></div>
+				</td>
+			</tr>
+		</table>
+	{% } else { %}
+		{%= __("Design Details") %}
+	{% } %}
+</div>
+<div class="col grid-static-col col-xs-3 sortable-handle {% if (doc) { %}design-image{% } %}">
+	{% if (doc) { %}
+		<img class="formatted-value" data-fieldname="design_image" src="" alt="">
+	{% } else { %}
+		{%= __("Design Image") %}
+	{% } %}
+</div>

@@ -4,6 +4,18 @@
 frappe.provide("textile");
 
 textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
+	print_order_item_editable_fields = [
+		"design_name", "qty", "uom", "qty_type", "design_gap", "design_notes",
+	]
+
+	print_order_item_static_fields = [
+		"design_size", "design_image",
+		"stock_print_length", "stock_fabric_length", "panel_qty",
+		"produced_qty", "packed_qty", "delivered_qty",
+	]
+
+	print_order_item_fields = this.print_order_item_editable_fields.concat(this.print_order_item_static_fields)
+
 	setup() {
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
@@ -15,6 +27,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		}
 
 		this.setup_queries();
+		this.setup_custom_items_table();
 	}
 
 	refresh() {
@@ -68,6 +81,144 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			this.frm.set_query(warehouse_field, () => {
 				return erpnext.queries.warehouse(this.frm.doc);
 			});
+		}
+	}
+
+	setup_custom_items_table() {
+		this.frm.fields_dict.items.grid.template = (doc, grid_row) => this.render_print_order_item_row(doc, grid_row);
+	}
+
+	render_print_order_item_row(doc, grid_row) {
+		if (!grid_row.row_display) {
+			grid_row.row_display = $(frappe.render(frappe.templates.print_order_item_row, {
+				doc: doc ? frappe.get_format_helper(doc) : null,
+				frm: this.frm,
+				row: grid_row,
+			})).appendTo(grid_row.row);
+		}
+
+		if (doc) {
+			if (!grid_row.pro_fields) {
+				grid_row.pro_fields = {};
+				for (let fieldname of this.print_order_item_fields) {
+					let field = grid_row.pro_fields[fieldname] = {};
+					field.fieldname = fieldname;
+					field.df = frappe.meta.get_docfield(doc.doctype, fieldname, doc.name);
+
+					field.$value = $(`.formatted-value[data-fieldname="${fieldname}"]`, grid_row.row_display);
+
+					if (this.print_order_item_editable_fields.includes(fieldname)) {
+						field.$control = frappe.ui.form.make_control({
+							parent: $(`.field-control[data-fieldname=${fieldname}]`, grid_row.row_display),
+							df: field.df,
+							doc: doc,
+							only_input: true,
+							render_input: true,
+							with_link_btn: true,
+							doctype: doc.doctype,
+							docname: doc.name,
+							frm: this.frm,
+							value: doc[fieldname],
+						});
+						field.$control.$input.attr("placeholder", __(field.df.placeholder || field.df.label));
+					}
+				}
+			}
+
+			this.update_print_order_item_row(doc, grid_row);
+		}
+	}
+
+	update_print_order_item_row(doc, grid_row) {
+		for (let fieldname of this.print_order_item_fields) {
+			let field = grid_row.pro_fields[fieldname];
+			let value = doc[fieldname];
+			let is_editable_field = this.print_order_item_editable_fields.includes(fieldname);
+
+			field.df = frappe.meta.get_docfield(doc.doctype, fieldname, doc.name);
+
+			if (field.df) {
+				grid_row.set_dependant_property(field.df);
+			}
+
+			if (!field.df) {
+				field.display_status = "Read";
+			} else if (field.df.fieldtype == "Attach Image") {
+				field.display_status = value ? "Read" : "None";
+			} else {
+				field.display_status = frappe.perm.get_field_display_status(field.df, doc, this.frm.perm);
+			}
+
+			let formatted_value = this.get_formatted_print_order_item_value(field, doc);
+			if (field.df?.fieldtype == "Attach Image") {
+				field.$value.attr("src", formatted_value);
+			} else {
+				field.$value.html(this.get_formatted_print_order_item_value(field, doc));
+			}
+
+			field.$value.toggle(field.display_status == "Read" || !is_editable_field);
+
+			if (is_editable_field) {
+				field.$control.df = field.df;
+				field.$control.doc = doc;
+				field.$control.refresh();
+				field.$control.$wrapper.toggle(field.display_status == "Write");
+			}
+		}
+	}
+
+	get_formatted_print_order_item_value(field, doc) {
+		let fieldnames_with_suffix = {
+			"stock_print_length": "m",
+			"stock_fabric_length": "m",
+			"produced_qty": "m",
+			"packed_qty": "m",
+			"delivered_qty": "m",
+		}
+
+		let nbsp_fields = ["design_name", "design_notes"];
+
+		if (field.fieldname == "design_size") {
+			let width_df =  frappe.meta.get_docfield(doc.doctype, "design_width");
+			let height_df =  frappe.meta.get_docfield(doc.doctype, "design_height");
+
+			return frappe.format(doc["design_width"], width_df, { inline: 1 }, doc)
+				+ " x "
+				+ frappe.format(doc["design_height"], height_df, { inline: 1 }, doc);
+		} else if (field.fieldname == "design_image") {
+			if (doc[field.fieldname]) {
+				return `/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc.design_image)}`;
+			} else {
+				return "";
+			}
+		} else {
+			let txt = frappe.format(doc[field.fieldname], field.df, { inline: 1 }, doc);
+			if (fieldnames_with_suffix[field.fieldname]) {
+				txt += fieldnames_with_suffix[field.fieldname];
+			}
+
+			if (["packed_qty", "delivered_qty", "produced_qty"].includes(field.fieldname)) {
+				if (doc.docstatus == 0) {
+					return "";
+				}
+
+				let min_qty = flt(doc.stock_print_length, precision("stock_print_length", doc));
+
+				let indicator_color = "orange";
+				if (flt(doc[field.fieldname], precision("stock_print_length", doc)) >= min_qty) {
+					indicator_color = "green";
+				} else if (flt(doc[field.fieldname]) > 0) {
+					indicator_color = "yellow";
+				}
+
+				txt = `<span class="indicator ${indicator_color}">${txt}</span>`;
+			}
+
+			if (!txt && nbsp_fields.includes(field.fieldname)) {
+				return "&nbsp";
+			} else {
+				return txt;
+			}
 		}
 	}
 

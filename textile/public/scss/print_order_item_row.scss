@@ -1,0 +1,85 @@
+[data-fieldtype="Table"][data-fieldname="items"] .grid-field {
+	.design-details {
+		padding: 0;
+
+		.reqd:after {
+			content: ' *';
+			color: var(--red-400);
+		}
+
+		table {
+			width: 100%;
+			margin: 0;
+			border: 0;
+
+			thead td {
+				padding: 0;
+				border: 0;
+			}
+
+			th {
+				font-size: var(--text-sm);
+				background-color: var(--gray-100);
+				font-weight: 600;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			th, .formatted-value {
+				padding: 4px 7px;
+			}
+			td {
+				padding: 0;
+				font-size: var(--text-md);
+			}
+
+			tr:first-child {
+				td, th {
+					border-top: 0;
+				}
+			}
+			tr:last-child {
+				td, th {
+					border-bottom: 0;
+				}
+			}
+			tr {
+				td:first-child, th:first-child {
+					border-left: 0;
+				}
+				td:last-child, th:last-child {
+					border-right: 0;
+				}
+			}
+		}
+
+		.form-control {
+			padding: 4px 7px;
+			border-radius: 0;
+			border: 0;
+			height: auto;
+			font-size: var(--text-md);
+			background-color: var(--gray-50);
+		}
+		.form-control.bold {
+			font-weight: 400;
+			background-color: var(--yellow-50);
+		}
+		textarea.form-control {
+			height: 28px !important;
+		}
+
+		.select-icon {
+			top: 3px;
+			right: 2px;
+		}
+	}
+
+	.design-image {
+		padding: 5px;
+		img {
+			max-height: 129px;
+		}
+	}
+}
