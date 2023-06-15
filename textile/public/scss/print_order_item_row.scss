@@ -20,7 +20,6 @@
 			th {
 				font-size: var(--text-sm);
 				background-color: var(--gray-100);
-				font-weight: 600;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
@@ -32,6 +31,7 @@
 			td {
 				padding: 0;
 				font-size: var(--text-md);
+				font-weight: 500;
 			}
 
 			tr:first-child {
@@ -61,9 +61,10 @@
 			height: auto;
 			font-size: var(--text-md);
 			background-color: var(--gray-50);
+			font-weight: 500;
 		}
 		.form-control.bold {
-			font-weight: 400;
+			font-weight: inherit;
 			background-color: var(--yellow-50);
 		}
 		textarea.form-control {
