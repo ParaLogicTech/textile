@@ -121,11 +121,56 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 							value: doc[fieldname],
 						});
 						field.$control.$input.attr("placeholder", __(field.df.placeholder || field.df.label));
+						field.$control.$input.on("keydown", (e) => this.handle_arrow_key(e, grid_row));
 					}
 				}
 			}
 
 			this.update_print_order_item_row(doc, grid_row);
+		}
+	}
+
+	handle_arrow_key(e, grid_row) {
+		let { UP: UP_ARROW, DOWN: DOWN_ARROW } = frappe.ui.keyCode;
+		if (!in_list([UP_ARROW, DOWN_ARROW], e.which)) {
+			return;
+		}
+
+		let ignore_fieldtypes = ["Text", "Small Text", "Code", "Text Editor", "HTML Editor", "Select"];
+
+		let values = grid_row.grid.get_data();
+		let fieldname = $(e.target).attr("data-fieldname");
+		let fieldtype = $(e.target).attr("data-fieldtype");
+
+		let move_up_down = function (base) {
+			if (in_list(ignore_fieldtypes, fieldtype) && !e.altKey) {
+				return false;
+			}
+
+			if (e.target) {
+				e.target.blur();
+			}
+			let input = base.pro_fields[fieldname].$control.$input;
+			if (input) {
+				input.focus();
+			}
+			return true;
+		};
+
+		if (e.which === UP_ARROW) {
+			if (grid_row.doc.idx > 1) {
+				let prev = grid_row.grid.grid_rows[grid_row.doc.idx - 2];
+				if (move_up_down(prev)) {
+					return false;
+				}
+			}
+		} else if (e.which === DOWN_ARROW) {
+			if (grid_row.doc.idx < values.length) {
+				let next = grid_row.grid.grid_rows[grid_row.doc.idx];
+				if (move_up_down(next)) {
+					return false;
+				}
+			}
 		}
 	}
 
