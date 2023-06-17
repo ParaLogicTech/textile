@@ -18,12 +18,14 @@ frappe.listview_settings['Print Order'] = {
 	onload: function(listview) {
 		var method = "textile.digital_printing.doctype.print_order.print_order.close_or_unclose_print_orders";
 
-		listview.page.add_action_item(__("Close"), function() {
-			listview.call_for_selected_items(method, {"status": "Closed"});
-		});
+		if (listview.can_write) {
+			listview.page.add_action_item(__("Close"), function () {
+				listview.call_for_selected_items(method, {"status": "Closed"});
+			});
 
-		listview.page.add_action_item(__("Re-Open"), function() {
-			listview.call_for_selected_items(method, {"status": "Submitted"});
-		});
+			listview.page.add_action_item(__("Re-Open"), function () {
+				listview.call_for_selected_items(method, {"status": "Submitted"});
+			});
+		}
 	}
 };
