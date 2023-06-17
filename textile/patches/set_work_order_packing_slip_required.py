@@ -3,6 +3,7 @@ import frappe
 
 def execute():
 	frappe.reload_doctype("Work Order")
+	frappe.reload_doctype("Packing Slip Item")
 
 	frappe.db.sql("""
 		update `tabWork Order` wo
