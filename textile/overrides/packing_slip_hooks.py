@@ -13,7 +13,7 @@ class PackingSlipDP(PackingSlip):
 
 		for name in print_orders:
 			doc = frappe.get_doc("Print Order", name)
-			doc.set_packing_status(update=True)
+			doc.set_production_packing_status(update=True)
 
 			doc.validate_packed_qty(from_doctype=self.doctype, row_names=print_order_row_names)
 

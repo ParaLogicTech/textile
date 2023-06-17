@@ -61,10 +61,8 @@ class PrintOrder(StatusUpdater):
 
 		self.set_item_creation_status()
 		self.set_sales_order_status()
-		self.set_work_order_status()
 		self.set_fabric_transfer_status()
-		self.set_production_status()
-		self.set_packing_status()
+		self.set_production_packing_status()
 		self.set_delivery_status()
 		self.set_billing_status()
 		self.set_status()
@@ -187,8 +185,7 @@ class PrintOrder(StatusUpdater):
 	def update_status(self, status):
 		self.set_status(status=status)
 		self.set_fabric_transfer_status(update=True)
-		self.set_production_status(update=True)
-		self.set_packing_status(update=True)
+		self.set_production_packing_status(update=True)
 		self.set_delivery_status(update=True)
 		self.set_billing_status(update=True)
 		self.set_status(update=True, status=status)
@@ -464,31 +461,58 @@ class PrintOrder(StatusUpdater):
 
 		return out
 
-	def set_work_order_status(self, update=False, update_modified=True):
-		data = self.get_work_order_status_data()
+	def set_production_packing_status(self, update=False, update_modified=True):
+		data = self.get_production_packing_data()
 
 		for d in self.items:
 			d.work_order_qty = flt(data.work_order_qty_map.get(d.name))
+			d.produced_qty = flt(data.produced_qty_map.get(d.name))
+			d.packed_qty = flt(data.packed_qty_map.get(d.name))
+
 			if update:
 				d.db_set({
-					'work_order_qty': d.work_order_qty
+					'work_order_qty': d.work_order_qty,
+					'produced_qty': d.produced_qty,
+					'packed_qty': d.packed_qty,
 				}, update_modified=update_modified)
 
 		self.per_work_ordered = flt(self.calculate_status_percentage('work_order_qty', 'stock_print_length', self.items))
+		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
+		self.per_packed = flt(self.calculate_status_percentage('packed_qty', 'stock_print_length', self.items))
+
+		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_incomplete_work_order
+		self.production_status = self.get_completion_status('per_produced', 'Produce',
+			not_applicable=self.status == "Closed", within_allowance=production_within_allowance)
+
+		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_incomplete_packing
+		self.packing_status = self.get_completion_status('per_packed', 'Pack',
+			not_applicable=self.status == "Closed" or not self.packing_slip_required,
+			within_allowance=packing_within_allowance)
+
 		if update:
 			self.db_set({
-				'per_work_ordered': self.per_work_ordered
+				'per_work_ordered': self.per_work_ordered,
+				'per_produced': self.per_produced,
+				'per_packed': self.per_packed,
+
+				'production_status': self.production_status,
+				'packing_status': self.packing_status,
 			}, update_modified=update_modified)
 
-	def get_work_order_status_data(self):
+	def get_production_packing_data(self):
 		out = frappe._dict()
 		out.work_order_qty_map = {}
+		out.produced_qty_map = {}
+		out.packed_qty_map = {}
+		out.has_incomplete_packing = False
+		out.has_incomplete_work_order = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
 			if row_names:
+				# Work Order
 				work_order_data = frappe.db.sql("""
-					SELECT print_order_item, qty
+					SELECT print_order_item, qty, produced_qty, production_status
 					FROM `tabWork Order`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
@@ -497,92 +521,13 @@ class PrintOrder(StatusUpdater):
 					out.work_order_qty_map.setdefault(d.print_order_item, 0)
 					out.work_order_qty_map[d.print_order_item] += flt(d.qty)
 
-		return out
-
-	def validate_work_order_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
-
-	def set_production_status(self, update=False, update_modified=True):
-		data = self.get_produced_status_data()
-
-		for d in self.items:
-			d.produced_qty = flt(data.produced_qty_map.get(d.name))
-			if update:
-				d.db_set({
-					'produced_qty': d.produced_qty
-				}, update_modified=update_modified)
-
-		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
-		within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_incomplete_work_order
-
-		self.production_status = self.get_completion_status('per_produced', 'Produce',
-			not_applicable=self.status == "Closed", within_allowance=within_allowance)
-
-		if update:
-			self.db_set({
-				'per_produced': self.per_produced,
-				'production_status': self.production_status,
-			}, update_modified=update_modified)
-
-	def get_produced_status_data(self):
-		out = frappe._dict()
-		out.produced_qty_map = {}
-		out.has_incomplete_work_order = False
-
-		if self.docstatus == 1:
-			row_names = [d.name for d in self.items]
-			if row_names:
-				produced_data = frappe.db.sql("""
-					SELECT name, print_order_item, produced_qty, status
-					FROM `tabWork Order`
-					WHERE docstatus = 1 AND print_order_item IN %s
-				""", [row_names], as_dict=1)
-
-				for d in produced_data:
 					out.produced_qty_map.setdefault(d.print_order_item, 0)
 					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
 
-					if d.status not in ("Completed", "Stopped"):
+					if d.production_status != "Produced":
 						out.has_incomplete_work_order = True
 
-		return out
-
-	def validate_produced_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
-
-	def set_packing_status(self, update=False, update_modified=True):
-		data = self.get_packed_status_data()
-
-		for d in self.items:
-			d.packed_qty = flt(data.packed_qty_map.get(d.name))
-			if update:
-				d.db_set({
-					'packed_qty': d.packed_qty
-				}, update_modified=update_modified)
-
-		self.per_packed = flt(self.calculate_status_percentage('packed_qty', 'stock_print_length', self.items))
-		within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_incomplete_packing
-
-		self.packing_status = self.get_completion_status('per_packed', 'Pack',
-			not_applicable=self.status == "Closed" or not self.packing_slip_required,
-			within_allowance=within_allowance)
-
-		if update:
-			self.db_set({
-				'per_packed': self.per_packed,
-				'packing_status': self.packing_status,
-			}, update_modified=update_modified)
-
-	def get_packed_status_data(self):
-		out = frappe._dict()
-		out.packed_qty_map = {}
-		out.has_incomplete_packing = False
-
-		if self.docstatus == 1:
-			row_names = [d.name for d in self.items]
-			if row_names:
+				# Packing Slips
 				packed_data = frappe.db.sql("""
 					SELECT print_order_item, stock_qty
 					FROM `tabPacking Slip Item`
@@ -593,6 +538,7 @@ class PrintOrder(StatusUpdater):
 					out.packed_qty_map.setdefault(d.print_order_item, 0)
 					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
 
+			# Unpacked Sales Orders
 			sales_orders_to_pack = frappe.db.sql_list("""
 				select count(so.name)
 				from `tabSales Order Item` i
@@ -604,6 +550,14 @@ class PrintOrder(StatusUpdater):
 				out.has_incomplete_packing = True
 
 		return out
+
+	def validate_work_order_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
+
+	def validate_produced_qty(self, from_doctype=None, row_names=None):
+		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
+			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
 	def validate_packed_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('packed_qty', 'stock_print_length', self.items,
@@ -780,7 +734,7 @@ class PrintOrder(StatusUpdater):
 		self.set_item_creation_status(update=True)
 		self.set_fabric_transfer_status(update=True)
 		self.set_sales_order_status(update=True)
-		self.set_work_order_status(update=True)
+		self.set_production_packing_status(update=True)
 		self.set_status(update=True)
 
 		self.validate_ordered_qty()
@@ -1241,7 +1195,7 @@ def make_packing_slip(source_name, target_doc=None, selected_rows=None):
 		FROM `tabSales Order Item` i
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
-			AND s.per_packed < 100 AND s.company = %(company)s AND i.print_order = %(print_order)s
+			AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
 	if not sales_orders:
@@ -1489,3 +1443,19 @@ def _get_print_orders_to_be_delivered(doctype="Print Order", txt="", searchfield
 		limit=limit,
 		txt="%(txt)s",
 	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)
+
+
+@frappe.whitelist()
+@frappe.read_only()
+def get_print_order_items_to_be_packed():
+	from frappe.desk.reportview import get_form_params, compress, execute
+	from frappe.query_builder import Column
+
+	args = get_form_params()
+	args.filters.append(["Print Order", "docstatus", "=", 1])
+	args.filters.append(["Print Order", "packing_slip_required", "=", 1])
+	args.filters.append(["Print Order", "packing_status", "=", "To Pack"])
+	args.filters.append(["Print Order Item", "produced_qty", ">", Column("packed_qty")])
+
+	data = compress(execute(**args), args=args)
+	return data
