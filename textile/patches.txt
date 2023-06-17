@@ -3,6 +3,7 @@ textile.patches.reinstall_digital_printing #2-Mar #18-05-22
 textile.patches.update_conversion_factor_global_defaults
 execute:frappe.delete_doc_if_exists("Custom Field", "Item-process_item")
 textile.patches.update_fabric_items_conversions
+textile.patches.set_work_order_packing_slip_required
 
 [post_model_sync]
 textile.patches.set_panel_based_qty

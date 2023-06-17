@@ -304,6 +304,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
 
+			let has_unpacked = doc.items.filter(d => d.produced_qty && d.packed_qty < d.produced_qty).length;
+			let has_undelivered = doc.items.filter(d => {
+				return d.produced_qty
+					&& d.delivered_qty < d.produced_qty
+					&& (!doc.packing_slip_required || d.delivered_qty < d.packed_qty)
+			}).length;
+
 			if (!has_missing_item && doc.status != "Closed") {
 				if (doc.per_work_ordered > 0) {
 					this.frm.add_custom_button(__("Work Order List"), () => this.show_work_orders());
@@ -326,7 +333,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						__("Create"));
 				}
 
-				if (doc.per_produced && doc.per_packed < doc.per_produced && doc.per_delivered < 100) {
+				if (has_unpacked) {
 					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
 
 					if (this.frm.doc.packing_status != "Packed") {
@@ -334,10 +341,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 					}
 				}
 
-				if (
-					doc.per_produced && doc.per_delivered < doc.per_produced
-					&& (!doc.packing_slip_required || doc.per_delivered < doc.per_packed)
-				) {
+				if (has_undelivered) {
 					let delivery_note_btn = this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note());
 
 					if (
