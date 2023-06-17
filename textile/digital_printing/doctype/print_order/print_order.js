@@ -35,7 +35,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
-		this.setup_progressbar();
+		this.setup_progressbars();
 	}
 
 	on_upload_complete() {
@@ -304,12 +304,19 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
 
-			let has_unpacked = doc.items.filter(d => d.produced_qty && d.packed_qty < d.produced_qty).length;
-			let has_undelivered = doc.items.filter(d => {
-				return d.produced_qty
-					&& d.delivered_qty < d.produced_qty
-					&& (!doc.packing_slip_required || d.delivered_qty < d.packed_qty)
-			}).length;
+			let has_unpacked = doc.items.some(d => {
+				let qty_precision = precision("stock_print_length", d);
+				return flt(d.produced_qty, qty_precision)
+					&& flt(d.packed_qty, qty_precision) < flt(d.produced_qty, qty_precision)
+			});
+
+			let has_undelivered = doc.items.some(d => {
+				let qty_precision = precision("stock_print_length", d);
+				return flt(d.produced_qty, qty_precision)
+					&& flt(d.delivered_qty, qty_precision) < flt(d.produced_qty, qty_precision)
+					&& (!doc.packing_slip_required || flt(d.delivered_qty, qty_precision) < flt(d.packed_qty, qty_precision)
+					)
+			});
 
 			if (!has_missing_item && doc.status != "Closed") {
 				if (doc.per_work_ordered > 0) {
@@ -817,13 +824,19 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		return frappe.set_route("List", "Work Order");
 	}
 
-	setup_progressbar() {
+	setup_progressbars() {
 		frappe.realtime.off("print_order_progress");
 		frappe.realtime.on("print_order_progress", (progress_data) => {
 			if (progress_data && progress_data.print_order == this.frm.doc.name) {
 				this.update_progress(progress_data);
 			}
 		});
+
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.per_work_ordered) {
+			this.show_progress_for_production();
+			this.show_progress_for_packing();
+			this.show_progress_for_delivery();
+		}
 	}
 
 	update_progress(progress_data) {
@@ -831,13 +844,110 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			this.frm.dashboard.show_progress(
 				progress_data.title || "Progress",
 				cint(progress_data.total) ? cint(progress_data.progress) / cint(progress_data.total) * 100 : 0,
-				progress_data.description || progress_data.title
+				progress_data.description
 			);
 
 			if (progress_data.reload) {
 				this.frm.reload_doc();
 			}
 		}
+	}
+
+	show_progress_for_production() {
+		let produced_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.produced_qty));
+		let remaining_print = this.frm.doc.total_print_length - produced_qty;
+		remaining_print = Math.max(remaining_print, 0);
+
+		erpnext.utils.show_progress_for_qty(this.frm, {
+			title: __('Production Status'),
+			total_qty: this.frm.doc.total_print_length,
+			progress_bars: [
+				{
+					title: __('<b>Produced:</b> {0} / {1} {2} ({3}%)', [
+						format_number(produced_qty),
+						format_number(this.frm.doc.total_print_length),
+						"Meter",
+						format_number(produced_qty / this.frm.doc.total_print_length * 100, null, 1),
+					]),
+					completed_qty: produced_qty,
+					progressbar_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Remaining:</b> {0} {1}", [format_number(remaining_print), "Meter"]),
+					completed_qty: remaining_print,
+					progressbar_class: "progress-bar-warning",
+				},
+			],
+		});
+	}
+
+	show_progress_for_packing() {
+		let produced_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.produced_qty));
+		if (!produced_qty || !this.frm.doc.packing_slip_required) {
+			return;
+		}
+
+		let packed_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.packed_qty));
+		let to_pack_qty = produced_qty - packed_qty;
+		to_pack_qty = Math.max(to_pack_qty, 0);
+
+		erpnext.utils.show_progress_for_qty(this.frm, {
+			title: __('Packing Status'),
+			total_qty: this.frm.doc.total_print_length,
+			progress_bars: [
+				{
+					title: __('<b>Packed:</b> {0} {1} ({2}%)', [
+						format_number(packed_qty),
+						"Meter",
+						format_number(packed_qty / this.frm.doc.total_print_length * 100, null, 1),
+					]),
+					completed_qty: packed_qty,
+					progressbar_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Ready to Pack:</b> {0} {1}", [format_number(to_pack_qty), "Meter"]),
+					completed_qty: to_pack_qty,
+					progressbar_class: "progress-bar-warning",
+				},
+			],
+		});
+	}
+
+	show_progress_for_delivery() {
+		let produced_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.produced_qty));
+		let packed_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.packed_qty));
+		let deliverable_qty = this.frm.doc.packing_slip_required ? packed_qty : produced_qty;
+		if (!deliverable_qty) {
+			return;
+		}
+
+		let delivered_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.delivered_qty));
+		let to_deliver = deliverable_qty - delivered_qty;
+		to_deliver = Math.max(to_deliver, 0);
+
+		erpnext.utils.show_progress_for_qty(this.frm, {
+			title: __('Delivery Status'),
+			total_qty: this.frm.doc.total_print_length,
+			progress_bars: [
+				{
+					title: __('<b>Delivered:</b> {0} {1} ({2}%)', [
+						format_number(delivered_qty),
+						"Meter",
+						format_number(delivered_qty / this.frm.doc.total_print_length * 100, null, 1),
+					]),
+					completed_qty: delivered_qty,
+					progressbar_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Ready to Deliver:</b> {0} {1}", [format_number(to_deliver), "Meter"]),
+					completed_qty: to_deliver,
+					progressbar_class: "progress-bar-warning",
+				},
+			],
+		});
 	}
 };
 
