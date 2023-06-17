@@ -1212,10 +1212,29 @@ def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit
 
 
 @frappe.whitelist()
-def make_packing_slip(source_name, target_doc=None):
+def make_packing_slip_for_items(source, target_doc=None):
+	if isinstance(source, str):
+		source = json.loads(source)
+
+	for print_order, selected_rows in source.items():
+		if selected_rows:
+			target_doc = make_packing_slip(print_order, target_doc, selected_rows=selected_rows)
+
+	return target_doc
+
+
+@frappe.whitelist()
+def make_packing_slip(source_name, target_doc=None, selected_rows=None):
 	from erpnext.selling.doctype.sales_order.sales_order import make_packing_slip
 
 	doc = frappe.get_doc("Print Order", source_name)
+
+	if selected_rows and isinstance(selected_rows, str):
+		selected_rows = json.loads(selected_rows)
+
+	if selected_rows:
+		selected_children = frappe.get_all("Sales Order Item", filters={"print_order_item": ["in", selected_rows]}, pluck="name")
+		frappe.flags.selected_children = {"items": selected_children}
 
 	sales_orders = frappe.db.sql("""
 		SELECT DISTINCT s.name

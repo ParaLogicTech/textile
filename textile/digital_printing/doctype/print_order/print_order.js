@@ -758,10 +758,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	make_packing_slip() {
+		let selected_rows = this.frm.fields_dict.items.grid.get_selected();
+
 		return frappe.call({
 			method: "textile.digital_printing.doctype.print_order.print_order.make_packing_slip",
 			args: {
 				"source_name": this.frm.doc.name,
+				"selected_rows": selected_rows,
 			},
 			callback: function (r) {
 				if (!r.exc) {
