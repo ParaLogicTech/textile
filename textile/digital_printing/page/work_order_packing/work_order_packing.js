@@ -40,6 +40,7 @@ textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintL
 		let out = super.setup_defaults();
 		this.can_create = false;
 		this.can_write = false;
+		this.page_length = 100;
 		return out;
 	}
 
