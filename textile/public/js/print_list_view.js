@@ -2,6 +2,7 @@ frappe.provide("textile");
 
 textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	hide_row_button = true;
+	image_fieldname = "image"
 
 	get_header_html() {
 		let subject_html = `
@@ -36,7 +37,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		return `
 			<div class="list-row-col list-subject level">
 				<span class="level-item select-like">
-					<input class="list-row-checkbox" type="checkbox" data-name="${escape(doc.name)}">
+					${this.get_checkbox_html(doc)}
 				</span>
 
 				<div class="clearfix" style="width: 100%">
@@ -53,13 +54,14 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		`;
 	}
 
+	get_checkbox_html(doc) {
+		return `<input class="list-row-checkbox" type="checkbox" data-name="${escape(doc.name)}">`;
+	}
+
 	get_subject_html(doc) {
-		let subject_field = this.columns[0].df;
-		let value = doc[subject_field.fieldname];
-		if (this.settings.formatters && this.settings.formatters[subject_field.fieldname]) {
-			let formatter = this.settings.formatters[subject_field.fieldname];
-			value = formatter(value, subject_field, doc);
-		}
+		let subject_fieldname = this.subject_fieldname || this.columns[0].df.fieldname;
+		let value = doc[subject_fieldname];
+
 		if (!value) {
 			value = doc.name;
 		}
@@ -93,7 +95,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_image_html(doc) {
-		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc.image)}" alt="">`
+		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc[this.image_fieldname])}" alt="">`
 	}
 
 	get_button_html(doc) {
@@ -120,26 +122,20 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListView {
 	async set_fields() {
 		await super.set_fields();
+		this._add_field("print_order");
 		this._add_field("customer");
 		this._add_field("customer_name");
-		this._add_field("print_order");
+		this._add_field("fabric_item");
+		this._add_field("fabric_item_name");
 		this._add_field("qty");
 		this._add_field("produced_qty");
 		this._add_field("stock_uom");
 		this._add_field("per_produced");
-		this._add_field("fabric_item");
-		this._add_field("fabric_item_name");
+		this._add_field("production_status");
 	}
 
 	get_progress_html(doc) {
-		return `
-			<div class="progress">
-				<div class="progress-bar progress-bar-success" role="progressbar"
-					aria-valuenow="${doc.per_produced}"
-					aria-valuemin="0" aria-valuemax="100" style="width: ${Math.round(doc.per_produced)}%;">
-				</div>
-			</div>
-		`;
+		return erpnext.manufacturing.show_progress_for_production(doc);
 	}
 
 	get_details_html(doc) {

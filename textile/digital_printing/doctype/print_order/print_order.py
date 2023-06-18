@@ -1443,19 +1443,3 @@ def _get_print_orders_to_be_delivered(doctype="Print Order", txt="", searchfield
 		limit=limit,
 		txt="%(txt)s",
 	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)
-
-
-@frappe.whitelist()
-@frappe.read_only()
-def get_print_order_items_to_be_packed():
-	from frappe.desk.reportview import get_form_params, compress, execute
-	from frappe.query_builder import Column
-
-	args = get_form_params()
-	args.filters.append(["Print Order", "docstatus", "=", 1])
-	args.filters.append(["Print Order", "packing_slip_required", "=", 1])
-	args.filters.append(["Print Order", "packing_status", "=", "To Pack"])
-	args.filters.append(["Print Order Item", "produced_qty", ">", Column("packed_qty")])
-
-	data = compress(execute(**args), args=args)
-	return data

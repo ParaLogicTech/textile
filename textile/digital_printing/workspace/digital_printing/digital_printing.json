@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"SDqkHndkYS\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"id\":\"o74uuOtKRT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"id\":\"zqUNJjBFdH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Work Order\",\"col\":3}},{\"id\":\"O6vyMD7pEJ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"4O29Q-CIXU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"2s8u4gxb4O\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"BxEHzbPcrr\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"7Z6i10Ohdv\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Digital Printing Documents</b></span>\",\"col\":12}},{\"id\":\"rZ6puD_WBV\",\"type\":\"card\",\"data\":{\"card_name\":\"Order\",\"col\":4}},{\"id\":\"lgIh2JSFqa\",\"type\":\"card\",\"data\":{\"card_name\":\"Production\",\"col\":4}},{\"id\":\"93NoRhdz5u\",\"type\":\"card\",\"data\":{\"card_name\":\"Fulfilment\",\"col\":4}},{\"id\":\"Du3uJ2Yz7z\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
+ "content": "[{\"id\":\"SDqkHndkYS\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Digital Printing</span>\",\"col\":12}},{\"id\":\"o74uuOtKRT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Print Order\",\"col\":3}},{\"id\":\"zqUNJjBFdH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Work Order\",\"col\":3}},{\"id\":\"O6vyMD7pEJ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"4O29Q-CIXU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"2s8u4gxb4O\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"bc_WeGR8V3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Work Order Packing\",\"col\":3}},{\"id\":\"BxEHzbPcrr\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"7Z6i10Ohdv\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Digital Printing Documents</b></span>\",\"col\":12}},{\"id\":\"rZ6puD_WBV\",\"type\":\"card\",\"data\":{\"card_name\":\"Order\",\"col\":4}},{\"id\":\"lgIh2JSFqa\",\"type\":\"card\",\"data\":{\"card_name\":\"Production\",\"col\":4}},{\"id\":\"93NoRhdz5u\",\"type\":\"card\",\"data\":{\"card_name\":\"Fulfilment\",\"col\":4}},{\"id\":\"Du3uJ2Yz7z\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}}]",
  "creation": "2023-03-08 13:30:34.124082",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -55,44 +55,6 @@
    "label": "Customer",
    "link_count": 0,
    "link_to": "Customer",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fulfilment",
-   "link_count": 3,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Delivery Note",
-   "link_count": 0,
-   "link_to": "Delivery Note",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Packing Slip",
-   "link_count": 0,
-   "link_to": "Packing Slip",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sales Invoice",
-   "link_count": 0,
-   "link_to": "Sales Invoice",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -182,9 +144,57 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fulfilment",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Packing Slip",
+   "link_count": 0,
+   "link_to": "Packing Slip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Work Order Packing",
+   "link_count": 0,
+   "link_to": "work-order-packing",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-06-12 03:07:00.601038",
+ "modified": "2023-06-18 17:42:27.322038",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",
@@ -196,6 +206,14 @@
  "roles": [],
  "sequence_id": 21.0,
  "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Work Order Packing",
+   "link_to": "work-order-packing",
+   "stats_filter": "",
+   "type": "Page"
+  },
   {
    "color": "Blue",
    "doc_view": "List",
