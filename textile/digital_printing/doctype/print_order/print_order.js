@@ -858,7 +858,8 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		let remaining_print = this.frm.doc.total_print_length - produced_qty;
 		remaining_print = Math.max(remaining_print, 0);
 
-		erpnext.utils.show_progress_for_qty(this.frm, {
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
 			title: __('Production Status'),
 			total_qty: this.frm.doc.total_print_length,
 			progress_bars: [
@@ -870,13 +871,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						format_number(produced_qty / this.frm.doc.total_print_length * 100, null, 1),
 					]),
 					completed_qty: produced_qty,
-					progressbar_class: "progress-bar-success",
+					progress_class: "progress-bar-success",
 					add_min_width: 0.5,
 				},
 				{
 					title: __("<b>Remaining:</b> {0} {1}", [format_number(remaining_print), "Meter"]),
 					completed_qty: remaining_print,
-					progressbar_class: "progress-bar-warning",
+					progress_class: "progress-bar-warning",
 				},
 			],
 		});
@@ -892,7 +893,8 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		let to_pack_qty = produced_qty - packed_qty;
 		to_pack_qty = Math.max(to_pack_qty, 0);
 
-		erpnext.utils.show_progress_for_qty(this.frm, {
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
 			title: __('Packing Status'),
 			total_qty: this.frm.doc.total_print_length,
 			progress_bars: [
@@ -903,13 +905,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						format_number(packed_qty / this.frm.doc.total_print_length * 100, null, 1),
 					]),
 					completed_qty: packed_qty,
-					progressbar_class: "progress-bar-success",
+					progress_class: "progress-bar-success",
 					add_min_width: 0.5,
 				},
 				{
 					title: __("<b>Ready to Pack:</b> {0} {1}", [format_number(to_pack_qty), "Meter"]),
 					completed_qty: to_pack_qty,
-					progressbar_class: "progress-bar-warning",
+					progress_class: "progress-bar-warning",
 				},
 			],
 		});
@@ -927,7 +929,8 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		let to_deliver = deliverable_qty - delivered_qty;
 		to_deliver = Math.max(to_deliver, 0);
 
-		erpnext.utils.show_progress_for_qty(this.frm, {
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
 			title: __('Delivery Status'),
 			total_qty: this.frm.doc.total_print_length,
 			progress_bars: [
@@ -938,13 +941,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						format_number(delivered_qty / this.frm.doc.total_print_length * 100, null, 1),
 					]),
 					completed_qty: delivered_qty,
-					progressbar_class: "progress-bar-success",
+					progress_class: "progress-bar-success",
 					add_min_width: 0.5,
 				},
 				{
 					title: __("<b>Ready to Deliver:</b> {0} {1}", [format_number(to_deliver), "Meter"]),
 					completed_qty: to_deliver,
-					progressbar_class: "progress-bar-warning",
+					progress_class: "progress-bar-warning",
 				},
 			],
 		});
