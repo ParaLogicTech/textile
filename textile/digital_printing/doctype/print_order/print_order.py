@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, cint
+from frappe.utils import flt, cint, getdate
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
@@ -48,6 +48,7 @@ class PrintOrder(StatusUpdater):
 
 	def validate(self):
 		self.set_missing_values()
+		self.validate_dates()
 		self.validate_customer()
 		self.validate_fabric_item()
 		self.validate_process_item()
@@ -205,6 +206,14 @@ class PrintOrder(StatusUpdater):
 				frappe.throw(_("Row #{0}: Wastage cannot be greater than Over Production Allowance of {1}").format(
 					d.idx, frappe.bold(frappe.format(allowance, df=d.meta.get_field("per_wastage")))
 				))
+
+	def validate_dates(self):
+		if self.delivery_date:
+			if self.transaction_date and getdate(self.delivery_date) < getdate(self.transaction_date):
+				frappe.throw(_("Planned Delivery Date cannot be before Order Date"))
+
+			if self.po_date and getdate(self.delivery_date) < getdate(self.po_date):
+				frappe.throw(_("Planned Delivery Date cannot be before Customer's Purchase Order Date"))
 
 	def validate_customer(self):
 		if self.get("customer"):
@@ -907,7 +916,7 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 
 	doc.set_fabric_stock_qty()
 	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
-		frappe.throw(_("Not enough Fabric Item {0} in Work in Progress Warehouse ({1} Meter in stock)").format(
+		frappe.throw(_("Not enough Fabric Item {0} in Raw Material Warehouse ({1} Meter in stock)").format(
 			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
 		))
 
