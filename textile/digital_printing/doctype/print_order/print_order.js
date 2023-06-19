@@ -5,7 +5,7 @@ frappe.provide("textile");
 
 textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	print_order_item_editable_fields = [
-		"design_name", "qty", "uom", "qty_type", "design_gap", "design_notes",
+		"design_name", "qty", "uom", "qty_type", "design_gap",
 	]
 
 	print_order_item_static_fields = [
@@ -222,7 +222,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			"delivered_qty": "m",
 		}
 
-		let nbsp_fields = ["design_name", "design_notes"];
+		let nbsp_fields = ["design_name"];
 
 		if (field.fieldname == "design_size") {
 			let width_df =  frappe.meta.get_docfield(doc.doctype, "design_width");
