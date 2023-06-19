@@ -113,6 +113,24 @@ textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintL
 		});
 	}
 
+	get_indicator_html(doc) {
+		const indicator = frappe.get_indicator(doc, this.doctype);
+		// sequence is important
+		const docstatus_description = [
+			__("Document is in draft state"),
+			__("Document has been submitted"),
+			__("Document has been cancelled"),
+		];
+		const title = docstatus_description[doc.docstatus || 0];
+		if (indicator) {
+			return `<span class="indicator-pill ${indicator[1]} filterable ellipsis"
+				data-filter='${indicator[2]}' title='${title}'>
+				<span class="ellipsis">${doc.docstatus == 1 ? "Production" : ""} ${__(indicator[0])}</span>
+			<span>`;
+		}
+		return "";
+	}
+
 	get_progress_html(doc) {
 		return erpnext.manufacturing.show_progress_for_packing(doc);
 	}
