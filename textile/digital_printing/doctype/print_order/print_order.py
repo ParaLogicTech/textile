@@ -921,7 +921,7 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 		))
 
 	if len(doc.items) > 5:
-		doc.queue_action("_start_print_order", fabric_transfer_qty=fabric_transfer_qty, publish_progress=True, timeout=600)
+		doc.queue_action("_start_print_order", fabric_transfer_qty=fabric_transfer_qty, publish_progress=True, timeout=1800)
 		frappe.msgprint(_("Starting Print Order..."), alert=True)
 	else:
 		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty, publish_progress=True)
