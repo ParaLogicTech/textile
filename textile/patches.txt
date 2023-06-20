@@ -12,3 +12,4 @@ textile.patches.update_print_order_item_creation_status
 textile.patches.remove_item_design_name_field
 textile.patches.set_work_order_fabric_details
 execute:frappe.delete_doc_if_exists("Page", "print-work-orders")
+textile.patches.update_print_order_production_packing_status

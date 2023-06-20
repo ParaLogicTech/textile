@@ -77,7 +77,7 @@ class PrintOrder(StatusUpdater):
 		if self.status == "Closed":
 			frappe.throw(_("Closed Order cannot be cancelled. Re-open to cancel."))
 
-		self.db_set("status", "Cancelled")
+		self.update_status_on_cancel()
 
 	def set_fabric_stock_qty(self):
 		if not (self.fabric_item and self.source_warehouse):
@@ -152,6 +152,16 @@ class PrintOrder(StatusUpdater):
 
 		frappe.db.set_value("Customer", self.customer, new_values_to_update, notify=True)
 
+	def update_status_on_cancel(self):
+		self.db_set({
+			"status": "Cancelled",
+			"fabric_transfer_status": "Not Applicable",
+			"production_status": "Not Applicable",
+			"packing_status": "Not Applicable",
+			"delivery_status": "Not Applicable",
+			"billing_status": "Not Applicable",
+		})
+
 	def set_status(self, status=None, update=False, update_modified=True):
 		previous_status = self.status
 
@@ -170,8 +180,6 @@ class PrintOrder(StatusUpdater):
 				self.status = "To Produce"
 			elif self.delivery_status == "To Deliver":
 				self.status = "To Deliver"
-			elif self.billing_status == "To Bill":
-				self.status = "To Bill"
 			else:
 				self.status = "Completed"
 
@@ -489,13 +497,14 @@ class PrintOrder(StatusUpdater):
 		self.per_produced = flt(self.calculate_status_percentage('produced_qty', 'stock_print_length', self.items))
 		self.per_packed = flt(self.calculate_status_percentage('packed_qty', 'stock_print_length', self.items))
 
-		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_incomplete_work_order
+		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_work_order_to_produce
 		self.production_status = self.get_completion_status('per_produced', 'Produce',
-			not_applicable=self.status == "Closed", within_allowance=production_within_allowance)
+			not_applicable=self.status == "Closed" or not self.per_work_ordered,
+			within_allowance=production_within_allowance)
 
-		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_incomplete_packing
+		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
 		self.packing_status = self.get_completion_status('per_packed', 'Pack',
-			not_applicable=self.status == "Closed" or not self.packing_slip_required,
+			not_applicable=self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
 			within_allowance=packing_within_allowance)
 
 		if update:
@@ -513,15 +522,15 @@ class PrintOrder(StatusUpdater):
 		out.work_order_qty_map = {}
 		out.produced_qty_map = {}
 		out.packed_qty_map = {}
-		out.has_incomplete_packing = False
-		out.has_incomplete_work_order = False
+		out.has_work_order_to_pack = False
+		out.has_work_order_to_produce = False
 
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
 			if row_names:
 				# Work Order
 				work_order_data = frappe.db.sql("""
-					SELECT print_order_item, qty, produced_qty, production_status
+					SELECT print_order_item, qty, produced_qty, production_status, packing_status
 					FROM `tabWork Order`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
@@ -534,7 +543,9 @@ class PrintOrder(StatusUpdater):
 					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
 
 					if d.production_status != "Produced":
-						out.has_incomplete_work_order = True
+						out.has_work_order_to_produce = True
+					if d.packing_status != "Packed":
+						out.has_work_order_to_pack = True
 
 				# Packing Slips
 				packed_data = frappe.db.sql("""
@@ -546,17 +557,6 @@ class PrintOrder(StatusUpdater):
 				for d in packed_data:
 					out.packed_qty_map.setdefault(d.print_order_item, 0)
 					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
-
-			# Unpacked Sales Orders
-			sales_orders_to_pack = frappe.db.sql_list("""
-				select count(so.name)
-				from `tabSales Order Item` i
-				inner join `tabSales Order` so on so.name = i.parent
-				where so.docstatus = 1 and so.packing_status = 'To Pack' and i.print_order = %s
-			""", self.name)
-			sales_orders_to_pack = cint(sales_orders_to_pack[0]) if sales_orders_to_pack else 0
-			if sales_orders_to_pack:
-				out.has_incomplete_packing = True
 
 		return out
 
