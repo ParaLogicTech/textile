@@ -183,6 +183,7 @@ fixtures = [
 
 				'Work Order-print_order',
 				'Work Order-print_order_item',
+
 				'Work Order-fabric_details',
 				'Work Order-fabric_item',
 				'Work Order-fabric_item_name',
@@ -192,7 +193,13 @@ fixtures = [
 				'Work Order-column_break_xvc9e',
 				'Work Order-fabric_gsm',
 
+				'Work Order-process_details',
+				'Work Order-process_item',
+				'Work Order-column_break_4pknu',
+				'Work Order-process_item_name',
+
 				'Stock Entry-print_order',
+				'Stock Entry-fabric_printer',
 			]]
 		}
 	},

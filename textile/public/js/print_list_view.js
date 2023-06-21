@@ -127,6 +127,8 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		this._add_field("customer_name");
 		this._add_field("fabric_item");
 		this._add_field("fabric_item_name");
+		this._add_field("process_item");
+		this._add_field("process_item_name");
 		this._add_field("qty");
 		this._add_field("produced_qty");
 		this._add_field("stock_uom");

@@ -11,6 +11,7 @@ po_to_wo_warehouse_fn_map = {
 }
 
 fabric_copy_fields = ["fabric_item", "fabric_item_name", "fabric_material", "fabric_width", "fabric_gsm"]
+process_copy_fields = ["process_item", "process_item_name"]
 
 
 class WorkOrderDP(WorkOrder):
@@ -26,7 +27,7 @@ class WorkOrderDP(WorkOrder):
 
 def update_work_order_from_sales_order(work_order):
 	def cache_generator():
-		fields = ["packing_slip_required"] + fabric_copy_fields + list(po_to_wo_warehouse_fn_map.keys())
+		fields = ["packing_slip_required"] + fabric_copy_fields + process_copy_fields + list(po_to_wo_warehouse_fn_map.keys())
 		return frappe.db.get_value("Print Order", work_order.print_order, fields, as_dict=1)
 
 	# Set Print Order Reference
@@ -51,7 +52,7 @@ def update_work_order_from_sales_order(work_order):
 			if warehouse:
 				work_order.set(wo_warehouse_fn, warehouse)
 
-		for field in fabric_copy_fields:
+		for field in fabric_copy_fields + process_copy_fields:
 			work_order.set(field, print_order_details.get(field))
 
 	# Set max qty
