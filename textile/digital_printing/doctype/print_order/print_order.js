@@ -689,7 +689,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	start_print_order() {
 		this.show_fabric_transfer_qty_prompt((data) => {
 			return this._start_print_order(data.fabric_transfer_qty);
-		});
+		}, __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"));
 	}
 
 	_start_print_order(fabric_transfer_qty) {
@@ -763,7 +763,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		});
 	}
 
-	show_fabric_transfer_qty_prompt(callback) {
+	show_fabric_transfer_qty_prompt(callback, qty_description) {
 		let remaining_transfer_qty = Math.max(flt(this.frm.doc.total_fabric_length) - flt(this.frm.doc.fabric_transfer_qty), 0);
 		return frappe.prompt([
 			{
@@ -771,7 +771,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				fieldname: "fabric_transfer_qty",
 				fieldtype: "Float",
 				default: remaining_transfer_qty,
-				description: __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders")
+				description: qty_description
 			},
 			{
 				label: __("Fabric Qty In Stock"),
