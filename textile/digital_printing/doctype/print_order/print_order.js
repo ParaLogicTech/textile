@@ -335,7 +335,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						__("Create"));
 				}
 
-				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length)) {
+				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length) || doc.packing_status == "To Pack") {
 					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
 						__("Create"));
 				}
