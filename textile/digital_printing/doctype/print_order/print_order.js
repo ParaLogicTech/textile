@@ -335,7 +335,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						__("Create"));
 				}
 
-				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length) || doc.packing_status == "To Pack") {
+				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length) || doc.delivery_status == "To Deliver") {
 					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
 						__("Create"));
 				}
@@ -687,25 +687,9 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	start_print_order() {
-		let remaining_transfer_qty = Math.max(flt(this.frm.doc.total_fabric_length) - flt(this.frm.doc.fabric_transfer_qty), 0);
-		frappe.prompt([
-			{
-				label: __("Fabric Transfer Qty"),
-				fieldname: "fabric_transfer_qty",
-				fieldtype: "Float",
-				default: remaining_transfer_qty,
-				description: __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders")
-			},
-			{
-				label: __("Fabric Qty In Stock"),
-				fieldname: "fabric_stock_qty",
-				fieldtype: "Float",
-				default: this.frm.doc.fabric_stock_qty,
-				read_only: 1,
-			},
-		], (data) => {
+		this.show_fabric_transfer_qty_prompt((data) => {
 			return this._start_print_order(data.fabric_transfer_qty);
-		}, "Enter Fabric Transfer Qty");
+		});
 	}
 
 	_start_print_order(fabric_transfer_qty) {
@@ -762,10 +746,43 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	make_fabric_transfer_entry() {
-		frappe.model.open_mapped_doc({
-			method: "textile.digital_printing.doctype.print_order.print_order.make_fabric_transfer_entry",
-			frm: this.frm
+		this.show_fabric_transfer_qty_prompt((data) => {
+			return frappe.call({
+				method: "textile.digital_printing.doctype.print_order.print_order.make_fabric_transfer_entry",
+				args: {
+					"print_order": this.frm.doc.name,
+					"fabric_transfer_qty": flt(data.fabric_transfer_qty),
+				},
+				callback: function (r) {
+					if (!r.exc) {
+						var doclist = frappe.model.sync(r.message);
+						frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+					}
+				}
+			});
 		});
+	}
+
+	show_fabric_transfer_qty_prompt(callback) {
+		let remaining_transfer_qty = Math.max(flt(this.frm.doc.total_fabric_length) - flt(this.frm.doc.fabric_transfer_qty), 0);
+		return frappe.prompt([
+			{
+				label: __("Fabric Transfer Qty"),
+				fieldname: "fabric_transfer_qty",
+				fieldtype: "Float",
+				default: remaining_transfer_qty,
+				description: __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders")
+			},
+			{
+				label: __("Fabric Qty In Stock"),
+				fieldname: "fabric_stock_qty",
+				fieldtype: "Float",
+				default: this.frm.doc.fabric_stock_qty,
+				read_only: 1,
+			},
+		], (data) => {
+			return callback && callback(data);
+		}, "Enter Fabric Transfer Qty");
 	}
 
 	make_packing_slip() {
