@@ -339,6 +339,7 @@
    "fieldtype": "Float",
    "label": "Total Panel Qty",
    "non_negative": 1,
+   "precision": "1",
    "read_only": 1
   },
   {
@@ -718,7 +719,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-20 16:28:21.183082",
+ "modified": "2023-06-24 18:22:58.570877",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",

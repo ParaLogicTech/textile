@@ -182,6 +182,7 @@
    "fieldtype": "Float",
    "label": "Panel Qty",
    "non_negative": 1,
+   "precision": "1",
    "read_only": 1
   },
   {
@@ -404,7 +405,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-06-13 22:44:50.012496",
+ "modified": "2023-06-24 18:27:12.008820",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order Item",
