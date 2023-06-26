@@ -19,7 +19,7 @@
 
 			th {
 				font-size: var(--text-sm);
-				background-color: var(--control-bg);
+				background-color: var(--gray-100);
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
@@ -60,12 +60,12 @@
 			border: 0;
 			height: auto;
 			font-size: var(--text-md);
-			background-color: var(--control-bg);
+			background-color: var(--gray-50);
 			font-weight: 500;
 		}
 		.form-control.bold {
 			font-weight: inherit;
-			background-color: var(--alert-bg-warning);
+			background-color: var(--yellow-50);
 		}
 		textarea.form-control {
 			height: 28px !important;
@@ -81,6 +81,24 @@
 		padding: 5px;
 		img {
 			max-height: 108px;
+		}
+	}
+}
+
+[data-theme="dark"] {
+	[data-fieldtype="Table"][data-fieldname="items"] .grid-field {
+		.design-details {
+			table th {
+				background-color: var(--gray-900);
+			}
+		}
+
+		.form-control {
+			background-color: var(--gray-700);
+		}
+
+		.form-control.bold {
+			background-color: var(--yellow-300);
 		}
 	}
 }
