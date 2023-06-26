@@ -19,7 +19,7 @@
 
 			th {
 				font-size: var(--text-sm);
-				background-color: var(--gray-100);
+				background-color: var(--control-bg);
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
@@ -60,12 +60,12 @@
 			border: 0;
 			height: auto;
 			font-size: var(--text-md);
-			background-color: var(--gray-50);
+			background-color: var(--control-bg);
 			font-weight: 500;
 		}
 		.form-control.bold {
 			font-weight: inherit;
-			background-color: var(--yellow-50);
+			background-color: var(--alert-bg-warning);
 		}
 		textarea.form-control {
 			height: 28px !important;
