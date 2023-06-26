@@ -84,3 +84,21 @@
 		}
 	}
 }
+
+[data-theme="dark"] {
+	[data-fieldtype="Table"][data-fieldname="items"] .grid-field {
+		.design-details {
+			table th {
+				background-color: var(--gray-900);
+			}
+		}
+
+		.form-control {
+			background-color: var(--gray-700);
+		}
+
+		.form-control.bold {
+			background-color: #1b0e00;
+		}
+	}
+}
