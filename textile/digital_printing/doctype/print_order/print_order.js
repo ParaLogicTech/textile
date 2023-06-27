@@ -39,8 +39,10 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	on_upload_complete() {
-		this.frm.dirty();
-		return this.get_items_from_attachments();
+		if (this.frm.doc.docstatus == 0) {
+			this.frm.dirty();
+			return this.get_items_from_attachments();
+		}
 	}
 
 	setup_queries() {
