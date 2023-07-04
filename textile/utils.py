@@ -15,15 +15,7 @@ def get_rotated_image(file):
 	if not file:
 		frappe.throw(_("File URL not provided"))
 
-	file_id = frappe.db.sql_list("""
-		select name
-		from `tabFile`
-		where file_url = %s
-		order by if(attached_to_doctype = 'Print Order', 0, 1), creation
-		limit 1
-	""", file)
-
-	file_id = file_id[0] if file_id else None
+	file_id = get_file_id(file)
 	if not file_id:
 		raise frappe.DoesNotExistError
 
@@ -31,10 +23,7 @@ def get_rotated_image(file):
 	if file_doc.is_private and is_website_user():
 		file_doc.raise_no_permission_to("read")
 
-	rotated_image_url = frappe.get_all("File", filters={
-		"file_url": file, "rotated_image": ["is", "set"]
-	}, pluck="rotated_image", limit=1)
-	rotated_image_url = rotated_image_url[0] if rotated_image_url else None
+	rotated_image_url = get_rotated_image_url(file)
 
 	if rotated_image_url and os.path.isfile(get_file_path(rotated_image_url)):
 		rotated_file_path = get_file_path(rotated_image_url)
@@ -49,6 +38,37 @@ def get_rotated_image(file):
 		mimetype=mimetypes.guess_type(rotated_filename)[0] or "image/jpeg",
 		download_name=rotated_filename,
 	)
+
+
+def get_file_id(file_url):
+	files = frappe.db.sql("""
+		select name, file_url
+		from `tabFile`
+		where file_url = %s
+		order by if(attached_to_doctype = 'Print Order', 0, 1), creation
+	""", file_url, as_dict=1)
+
+	file_id = None
+	for d in files:
+		if d.file_url == file_url:
+			file_id = d.name
+			break
+
+	return file_id
+
+
+def get_rotated_image_url(file_url):
+	files = frappe.get_all("File", filters={
+		"file_url": file_url, "rotated_image": ["is", "set"]
+	}, fields=["file_url", "rotated_image"])
+
+	rotated_image_url = None
+	for d in files:
+		if d.file_url == file_url:
+			rotated_image_url = d.rotated_image
+			break
+
+	return rotated_image_url
 
 
 def save_rotated_image_file(file, file_doc):
