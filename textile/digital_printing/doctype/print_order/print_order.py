@@ -499,7 +499,7 @@ class PrintOrder(StatusUpdater):
 
 		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_work_order_to_produce
 		self.production_status = self.get_completion_status('per_produced', 'Produce',
-			not_applicable=self.status == "Closed" or not self.per_work_ordered,
+			not_applicable=self.status == "Closed" or not self.per_ordered,
 			within_allowance=production_within_allowance)
 
 		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
