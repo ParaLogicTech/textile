@@ -175,7 +175,7 @@ class PrintOrder(StatusUpdater):
 			if self.status == "Closed":
 				self.status = "Closed"
 			elif self.per_ordered < 100:
-				self.status = "To Confirm Order"
+				self.status = "Not Started"
 			elif self.production_status == "To Produce":
 				self.status = "To Produce"
 			elif self.delivery_status == "To Deliver":
