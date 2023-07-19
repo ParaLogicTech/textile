@@ -202,7 +202,18 @@ class PrintOrder(StatusUpdater):
 		clear_doctype_notifications(self)
 
 	def set_title(self):
-		self.title = self.customer_name or self.customer
+		fabric_material_abbr = None
+		if self.fabric_material:
+			fabric_material_abbr = frappe.db.get_value("Fabric Material", self.fabric_material, "abbreviation")
+
+		customer_name = cstr(self.customer_name or self.customer)
+		customer_name = customer_name[:15]
+
+		self.title = "{0} {1} {2} m".format(
+			customer_name,
+			fabric_material_abbr or "Xx",
+			cint(flt(self.total_print_length, 0))
+		)
 
 	def validate_order_defaults(self):
 		validate_uom_and_qty_type(self)
