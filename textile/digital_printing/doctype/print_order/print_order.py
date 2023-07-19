@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, cint, getdate
+from frappe.utils import flt, cint, getdate, cstr
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
@@ -123,7 +123,7 @@ class PrintOrder(StatusUpdater):
 			if d.design_width and d.design_height:
 				continue
 
-			design_details = get_image_details(d.design_image)
+			design_details = get_image_details(d.design_image, throw_not_found=self.docstatus == 1)
 			d.update(design_details)
 
 	def set_fabric_item_details(self):
@@ -1306,7 +1306,7 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def get_image_details(image_url):
+def get_image_details(image_url, throw_not_found=True):
 	doc_name = frappe.get_value('File', filters={'file_url': image_url})
 
 	if not doc_name:
@@ -1318,9 +1318,14 @@ def get_image_details(image_url):
 	out = frappe._dict()
 	out.design_name = ".".join(file_name.split('.')[:-1]) or file_name
 
-	im = Image.open(file_doc.get_full_path())
-	out.design_width = flt(im.size[0] / 10, 1)
-	out.design_height = flt(im.size[1] / 10, 1)
+	file_full_path = file_doc.get_full_path()
+	try:
+		im = Image.open(file_full_path)
+		out.design_width = flt(im.size[0] / 10, 1)
+		out.design_height = flt(im.size[1] / 10, 1)
+	except FileNotFoundError:
+		frappe.msgprint(_("Design {0} file not found").format(out.design_name or file_full_path),
+			raise_exception=throw_not_found, indicator="red" if throw_not_found else "orange")
 
 	return out
 
