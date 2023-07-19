@@ -27,5 +27,13 @@ frappe.listview_settings['Print Order'] = {
 				listview.call_for_selected_items(method, {"status": "Submitted"});
 			});
 		}
-	}
+
+		listview.page.fields_dict.fabric_item.get_query = () => {
+			return erpnext.queries.item({"print_item_type": "Fabric", "include_disabled": 1});
+		}
+
+		listview.page.fields_dict.process_item.get_query = () => {
+			return erpnext.queries.item({"print_item_type": "Print Process", "include_disabled": 1});
+		}
+	},
 };
