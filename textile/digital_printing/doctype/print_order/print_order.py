@@ -730,9 +730,10 @@ class PrintOrder(StatusUpdater):
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Sales Order", 0, 1)
 
-			sales_order = make_sales_order(self.name)
+			sales_order = _make_sales_order(self.name, ignore_permissions=True)
 			sales_order.flags.ignore_version = True
 			sales_order.flags.ignore_feed = True
+			sales_order.flags.ignore_permissions = True
 			sales_order.save()
 			sales_order.submit()
 
@@ -768,6 +769,7 @@ class PrintOrder(StatusUpdater):
 				item_doc = make_design_item(d, self.fabric_item, self.customer)
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
+				item_doc.flags.ignore_permissions = True
 				item_doc.save()
 
 				d.db_set({
@@ -784,6 +786,7 @@ class PrintOrder(StatusUpdater):
 				bom_doc = make_design_bom(d.item_code, self.fabric_item, self.process_item, components=components)
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
+				bom_doc.flags.ignore_permissions = True
 				bom_doc.save()
 				bom_doc.submit()
 
@@ -1054,6 +1057,10 @@ def make_design_bom(design_item, fabric_item, process_item, components=None):
 
 @frappe.whitelist()
 def make_sales_order(source_name, target_doc=None):
+	return _make_sales_order(source_name, target_doc)
+
+
+def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	def set_missing_values(source, target):
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
@@ -1098,7 +1105,7 @@ def make_sales_order(source_name, target_doc=None):
 			"postprocess": update_item,
 			"condition": item_condition,
 		}
-	}, target_doc, set_missing_values)
+	}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
 
 	return doc
 
