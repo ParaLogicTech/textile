@@ -207,7 +207,7 @@ class PrintOrder(StatusUpdater):
 			fabric_material_abbr = frappe.db.get_value("Fabric Material", self.fabric_material, "abbreviation")
 
 		customer_name = cstr(self.customer_name or self.customer)
-		customer_name = customer_name[:15]
+		customer_name = customer_name[:20]
 
 		self.title = "{0} {1} {2} m".format(
 			customer_name,
