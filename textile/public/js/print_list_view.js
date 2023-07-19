@@ -59,13 +59,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_subject_html(doc) {
-		let subject_fieldname = this.subject_fieldname || this.columns[0].df.fieldname;
-		let value = doc[subject_fieldname];
-
-		if (!value) {
-			value = doc.name;
-		}
-		let subject = strip_html(value.toString());
+		let subject = this.get_subject(doc);
 		let escaped_subject = frappe.utils.escape_html(subject);
 
 		return `
@@ -84,6 +78,22 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 				</div>
 			</div>
 		`;
+	}
+
+	get_subject(doc) {
+		let subject_fieldname = this.subject_fieldname || this.columns[0].df.fieldname;
+		let subject = doc[subject_fieldname];
+
+		if (!subject) {
+			subject = doc.name;
+		}
+		subject = strip_html(subject.toString());
+
+		if (doc.order_line_no) {
+			subject = `(${doc.order_line_no}) ${subject}`;
+		}
+
+		return subject;
 	}
 
 	get_progress_html(doc) {
@@ -134,6 +144,7 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 		this._add_field("stock_uom");
 		this._add_field("per_produced");
 		this._add_field("production_status");
+		this._add_field("order_line_no");
 	}
 
 	get_progress_html(doc) {

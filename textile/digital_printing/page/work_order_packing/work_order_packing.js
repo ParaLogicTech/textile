@@ -60,6 +60,7 @@ textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintL
 		this._add_field("packing_slip_required");
 		this._add_field("production_status");
 		this._add_field("packing_status");
+		this._add_field("order_line_no");
 	}
 
 	get_args() {
