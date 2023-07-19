@@ -118,7 +118,6 @@
   {
    "fieldname": "delivery_date",
    "fieldtype": "Date",
-   "in_standard_filter": 1,
    "label": "Planned Delivery Date",
    "no_copy": 1
   },
@@ -656,7 +655,6 @@
    "default": "To Bill",
    "fieldname": "billing_status",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
    "label": "Billing Status",
    "no_copy": 1,
    "options": "To Bill\nBilled\nNot Applicable",
@@ -699,7 +697,6 @@
    "default": "To Transfer",
    "fieldname": "fabric_transfer_status",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
    "label": "Fabric Transfer Status",
    "no_copy": 1,
    "options": "To Transfer\nTransferred\nNot Applicable",
@@ -719,7 +716,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-24 18:22:58.570877",
+ "modified": "2023-07-19 17:16:04.882278",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Order",
