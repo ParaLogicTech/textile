@@ -217,11 +217,11 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 	get_formatted_print_order_item_value(field, doc) {
 		let fieldnames_with_suffix = {
-			"stock_print_length": "m",
-			"stock_fabric_length": "m",
-			"produced_qty": "m",
-			"packed_qty": "m",
-			"delivered_qty": "m",
+			"stock_print_length": " m",
+			"stock_fabric_length": " m",
+			"produced_qty": " m",
+			"packed_qty": " m",
+			"delivered_qty": " m",
 		}
 
 		let nbsp_fields = ["design_name"];
