@@ -124,9 +124,9 @@ class ItemDP(Item):
 		if 'Yard' not in uoms:
 			self.append("uom_conversion_graph", {
 				"from_uom": "Yard",
-				"from_qty": flt(1/get_yard_to_meter(), self.precision("conversion_factor", "uoms")),
+				"from_qty": 1,
 				"to_uom": "Meter",
-				"to_qty": 1
+				"to_qty": get_yard_to_meter()
 			})
 
 		sq_meter_row = [d for d in self.uom_conversion_graph if
