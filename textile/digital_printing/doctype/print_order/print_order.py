@@ -282,7 +282,7 @@ class PrintOrder(StatusUpdater):
 			frappe.throw(_("Design Items cannot be empty."))
 
 		for d in self.items:
-			if d.design_image and not (d.design_width or d.design_height):
+			if d.design_image and not d.design_width or not d.design_height:
 				frappe.throw(_("Row #{0}: Image Dimensions cannot be empty").format(d.idx))
 
 			if not d.qty:
