@@ -2,7 +2,10 @@ import frappe
 
 
 def execute():
-	item_codes = frappe.get_all("Item", filters={"print_item_type": ["in", ["Fabric", "Printed Design"]]}, pluck="name")
+	item_codes = frappe.get_all("Item", filters={
+		"textile_item_type": ["in", ["Fabric", "Ready Fabric", "Greige Fabric", "Printed Design"]]
+	}, pluck="name")
+
 	for item_code in item_codes:
 		doc = frappe.get_doc("Item", item_code)
 		doc.run_method("validate_fabric_uoms")

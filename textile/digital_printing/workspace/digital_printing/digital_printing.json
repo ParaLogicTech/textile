@@ -204,7 +204,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-06-21 16:14:40.877667",
+ "modified": "2023-07-20 00:43:29.962185",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Digital Printing",
@@ -247,7 +247,7 @@
    "format": "{} Print Items",
    "label": "Item",
    "link_to": "Item",
-   "stats_filter": "{\"print_item_type\":[\"is\",\"set\"],\"disabled\":[\"=\",0]}",
+   "stats_filter": "{\"textile_item_type\":[\"=\",\"Printed Design\"],\"disabled\":[\"=\",0]}",
    "type": "DocType"
   },
   {

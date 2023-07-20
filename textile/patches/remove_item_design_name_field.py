@@ -12,7 +12,7 @@ def execute():
 	frappe.db.sql("""
 		update `tabItem`
 		set item_name = design_name
-		where ifnull(design_name, '') != '' and print_item_type = 'Printed Design'
+		where ifnull(design_name, '') != '' and textile_item_type = 'Printed Design'
 	""")
 
 	for dt in transaction_dts:
@@ -20,19 +20,19 @@ def execute():
 			update `tab{dt}` t
 			inner join `tabItem` i on i.name = t.item_code
 			set t.item_name = i.item_name
-			where i.print_item_type = 'Printed Design'
+			where i.textile_item_type = 'Printed Design'
 		""")
 
 	frappe.db.sql("""
 		update `tabWork Order` t
 		inner join `tabItem` i on i.name = t.production_item
 		set t.item_name = i.item_name
-		where i.print_item_type = 'Printed Design'
+		where i.textile_item_type = 'Printed Design'
 	""")
 
 	frappe.db.sql("""
 		update `tabBOM` t
 		inner join `tabItem` i on i.name = t.item
 		set t.item_name = i.item_name
-		where i.print_item_type = 'Printed Design'
+		where i.textile_item_type = 'Printed Design'
 	""")

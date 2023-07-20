@@ -11,7 +11,7 @@ class ItemDP(Item):
 
 	def validate(self):
 		super().validate()
-		self.validate_print_item_type()
+		self.validate_textile_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
 		self.validate_process_properties()
@@ -39,17 +39,17 @@ class ItemDP(Item):
 			doc.set_item_creation_status(update=True)
 			doc.notify_update()
 
-	def validate_print_item_type(self):
-		match self.print_item_type:
-			case "Fabric":
+	def validate_textile_item_type(self):
+		match self.textile_item_type:
+			case "Ready Fabric" | "Greige Fabric":
 				if not self.is_stock_item:
 					frappe.throw(_("Fabric Item must be a Stock Item"))
 
 			case "Print Process":
 				if self.is_stock_item:
-					frappe.throw(_("Print Process Item cannot be a Stock Item"))
+					frappe.throw(_("Print Process Item must not be a Stock Item"))
 				if self.is_fixed_asset:
-					frappe.throw(_("Print Process Item cannot be a Fixed Asset"))
+					frappe.throw(_("Print Process Item must not be a Fixed Asset"))
 
 			case "Printed Design":
 				if not self.is_stock_item:
@@ -60,29 +60,24 @@ class ItemDP(Item):
 				if not self.fabric_item:
 					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
 
-				if frappe.get_cached_value("Item", self.fabric_item, "print_item_type") != "Fabric":
-					frappe.throw(_("Item {0} is not a Fabric Item").format(self.fabric_item))
+				if frappe.get_cached_value("Item", self.fabric_item, "textile_item_type") != "Ready Fabric":
+					frappe.throw(_("Item {0} is not a Ready Fabric Item").format(self.fabric_item))
 
 			case "Process Component":
 				if not self.print_process_component:
 					frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
 
 	def validate_fabric_properties(self):
-		self.fabric_item = self.fabric_item if self.print_item_type == "Printed Design" else None
+		if self.textile_item_type != "Printed Design":
+			self.fabric_item = None
 
-		if self.print_item_type == "Fabric":
+		if self.textile_item_type in ("Ready Fabric", "Greige Fabric"):
 			if not self.fabric_width:
 				frappe.throw(_("Fabric Width is required for Fabric Item."))
-
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required for Fabric Item."))
-
 		else:
-			if self.fabric_item:
-				fabric_doc = frappe.get_cached_doc("Item", self.fabric_item)
-			else:
-				fabric_doc = frappe._dict()
-
+			fabric_doc = frappe.get_cached_doc("Item", self.fabric_item) if self.fabric_item else frappe._dict()
 			self.fabric_material = fabric_doc.fabric_material
 			self.fabric_type = fabric_doc.fabric_type
 			self.fabric_width = fabric_doc.fabric_width
@@ -90,7 +85,7 @@ class ItemDP(Item):
 			self.fabric_construction = fabric_doc.fabric_construction
 
 	def validate_design_properties(self):
-		if self.print_item_type != "Printed Design":
+		if self.textile_item_type != "Printed Design":
 			self.design_width = None
 			self.design_height = None
 			self.design_uom = None
@@ -101,11 +96,11 @@ class ItemDP(Item):
 
 	def validate_process_properties(self):
 		from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components
-		if self.print_item_type != "Print Process":
+		if self.textile_item_type != "Print Process":
 			for component_item_field in print_process_components:
 				self.set(f"{component_item_field}_required", 0)
 
-		if self.print_item_type != "Process Component":
+		if self.textile_item_type != "Process Component":
 			self.print_process_component = None
 
 		if self.print_process_component not in ("Sublimation Paper", "Protection Paper"):
@@ -115,7 +110,7 @@ class ItemDP(Item):
 	def validate_fabric_uoms(self):
 		from textile.digital_printing.doctype.print_order.print_order import get_yard_to_meter
 
-		if self.print_item_type not in ["Fabric", "Printed Design"]:
+		if self.textile_item_type not in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			return
 
 		if self.stock_uom != "Meter":
@@ -146,7 +141,7 @@ class ItemDP(Item):
 		})
 
 	def calculate_net_weight_per_unit(self):
-		if flt(self.fabric_gsm) and self.print_item_type in ["Fabric", "Printed Design"]:
+		if flt(self.fabric_gsm) and self.textile_item_type in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
 			self.net_weight_per_unit = flt(self.net_weight_per_unit, self.precision("net_weight_per_unit"))
 
@@ -155,7 +150,7 @@ class ItemDP(Item):
 
 
 def update_item_override_fields(item_fields, args, validate=False):
-	item_fields['print_item_type'] = 'Data'
+	item_fields['textile_item_type'] = 'Data'
 
 
 def override_item_dashboard(data):

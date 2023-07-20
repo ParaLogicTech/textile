@@ -10,6 +10,21 @@ import os
 import mimetypes
 
 
+def validate_textile_item(item_code, textile_item_type, print_process_component=None):
+	item = frappe.get_cached_doc("Item", item_code)
+
+	if textile_item_type:
+		if item.textile_item_type != textile_item_type:
+			frappe.throw(_("{0} is not a {1} Item").format(frappe.bold(item_code), textile_item_type))
+
+		if textile_item_type == "Process Component" and print_process_component:
+			if item.print_process_component != print_process_component:
+				frappe.throw(_("{0} is not a {1} Component Item").format(frappe.bold(item_code), print_process_component))
+
+	from erpnext.stock.doctype.item.item import validate_end_of_life
+	validate_end_of_life(item.name, item.end_of_life, item.disabled)
+
+
 @frappe.whitelist()
 def get_rotated_image(file):
 	if not file:

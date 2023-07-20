@@ -10,6 +10,7 @@ from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components,\
 	get_print_process_values, get_applicable_papers
+from textile.utils import validate_textile_item
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -240,7 +241,7 @@ class PrintOrder(StatusUpdater):
 
 	def validate_fabric_item(self):
 		if self.get("fabric_item"):
-			validate_print_item(self.fabric_item, "Fabric")
+			validate_textile_item(self.fabric_item, "Ready Fabric")
 
 			if not self.is_fabric_provided_by_customer:
 				return
@@ -256,12 +257,12 @@ class PrintOrder(StatusUpdater):
 
 	def validate_process_item(self):
 		if self.get("process_item"):
-			validate_print_item(self.process_item, "Print Process")
+			validate_textile_item(self.process_item, "Print Process")
 
 		for component_item_field, component_type in print_process_components.items():
 			if self.get(f"{component_item_field}_required"):
 				if self.get(component_item_field):
-					validate_print_item(self.get(component_item_field), "Process Component", component_type)
+					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
 			else:
 				self.set(component_item_field, None)
 				self.set(f"{component_item_field}_name", None)
@@ -823,21 +824,6 @@ def get_dp_conversion_factors():
 	}
 
 
-def validate_print_item(item_code, print_item_type, print_process_component=None):
-	item = frappe.get_cached_doc("Item", item_code)
-
-	if print_item_type:
-		if item.print_item_type != print_item_type:
-			frappe.throw(_("{0} is not a {1} Item").format(frappe.bold(item_code), print_item_type))
-
-		if print_item_type == "Process Component" and print_process_component:
-			if item.print_process_component != print_process_component:
-				frappe.throw(_("{0} is not a {1} Component Item").format(frappe.bold(item_code), print_process_component))
-
-	from erpnext.stock.doctype.item.item import validate_end_of_life
-	validate_end_of_life(item.name, item.end_of_life, item.disabled)
-
-
 def validate_uom_and_qty_type(doc):
 	fn_map = frappe._dict()
 
@@ -978,7 +964,7 @@ def make_design_item(design_item_row, fabric_item, customer):
 
 	item_doc.update({
 		"item_group": default_item_group,
-		"print_item_type": "Printed Design",
+		"textile_item_type": "Printed Design",
 		"item_name": design_item_row.design_name,
 		"stock_uom": design_item_row.stock_uom,
 		"sales_uom": design_item_row.uom,

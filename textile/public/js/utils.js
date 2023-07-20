@@ -38,7 +38,7 @@ $.extend(textile, {
 					options: 'Item',
 					fieldname: 'fabric_item',
 					get_query: () => {
-						return erpnext.queries.item({ print_item_type: 'Fabric' });
+						return erpnext.queries.item({ textile_item_type: 'Ready Fabric' });
 					},
 				},
 				{
@@ -47,7 +47,7 @@ $.extend(textile, {
 					options: 'Item',
 					fieldname: 'process_item',
 					get_query: () => {
-						return erpnext.queries.item({ print_item_type: 'Print Process' });
+						return erpnext.queries.item({ textile_item_type: 'Print Process' });
 					},
 				},
 			],

@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint
 from frappe.model.document import Document
+from textile.utils import validate_textile_item
 
 
 filter_fields = ['fabric_material', 'fabric_type']
@@ -29,15 +30,13 @@ class PrintProcessRule(Document):
 		clear_print_process_rule_cache()
 
 	def validate_process_item(self):
-		from textile.digital_printing.doctype.print_order.print_order import validate_print_item
-
 		if self.get("process_item"):
-			validate_print_item(self.process_item, "Print Process")
+			validate_textile_item(self.process_item, "Print Process")
 
 		for component_item_field, component_type in print_process_components.items():
 			if self.get(f"{component_item_field}_required"):
 				if self.get(component_item_field):
-					validate_print_item(self.get(component_item_field), "Process Component", component_type)
+					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
 			else:
 				self.set(component_item_field, None)
 				self.set(f"{component_item_field}_name", None)
@@ -212,7 +211,7 @@ def paper_item_query(doctype, txt, searchfield, start, page_len, filters, as_dic
 	if not filters:
 		filters = {}
 
-	filters["print_item_type"] = "Process Component"
+	filters["textile_item_type"] = "Process Component"
 
 	print_process_component = filters.pop("print_process_component", None)
 	fabric_item = filters.pop("fabric_item", None)
@@ -237,7 +236,7 @@ def get_applicable_papers(print_process_component, fabric_width):
 	fabric_width = flt(fabric_width)
 
 	items = frappe.get_all("Item", fields=["name", "item_name", "paper_width"], filters={
-		"print_item_type": "Process Component",
+		"textile_item_type": "Process Component",
 		"print_process_component": print_process_component,
 		"paper_width": [">", fabric_width],
 		"disabled": 0,

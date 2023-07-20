@@ -4,7 +4,7 @@
 frappe.ui.form.on('Fabric Printer', {
 	setup: function(frm) {
 		frm.set_query("process_item", () => {
-			return erpnext.queries.item({ print_item_type: 'Print Process' });
+			return erpnext.queries.item({ textile_item_type: 'Print Process' });
 		});
 	}
 });

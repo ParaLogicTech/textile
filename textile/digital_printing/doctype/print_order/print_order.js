@@ -48,7 +48,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	setup_queries() {
 		this.frm.set_query("fabric_item", () => {
 			let filters = {
-				'print_item_type': 'Fabric',
+				'textile_item_type': 'Ready Fabric',
 			}
 			if (this.frm.doc.is_fabric_provided_by_customer) {
 				filters.customer = this.frm.doc.customer;
@@ -57,13 +57,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		});
 
 		this.frm.set_query("process_item", () => {
-			return erpnext.queries.item({ print_item_type: 'Print Process' });
+			return erpnext.queries.item({ textile_item_type: 'Print Process' });
 		});
 
 		for (let [component_item_field, component_type] of Object.entries(textile.print_process_components)) {
 			this.frm.set_query(component_item_field, () => {
 				let filters = {
-					print_item_type: 'Process Component',
+					textile_item_type: 'Process Component',
 					print_process_component: component_type
 				};
 

@@ -115,7 +115,7 @@ fixtures = [
 				'Customer-default_printing_qty_type',
 				'Customer-default_printing_length_uom',
 
-				'Item-print_item_type',
+				'Item-textile_item_type',
 				'Item-print_process_component',
 
 				'Item-print_process_properties',
@@ -152,9 +152,9 @@ fixtures = [
 				'Item-column_break_ysj7q',
 				'Item-paper_gsm',
 
-				'Item Group-print_item_type',
-				'Item Source-print_item_type',
-				'Brand-print_item_type',
+				'Item Group-textile_item_type',
+				'Item Source-textile_item_type',
+				'Brand-textile_item_type',
 
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
