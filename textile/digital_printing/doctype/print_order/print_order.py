@@ -289,7 +289,7 @@ class PrintOrder(StatusUpdater):
 
 			if d.design_width > self.fabric_width:
 				frappe.msgprint(_("Row #{0}: Design Width {1} is greater than Fabric Width {2}").format(
-					d.idx, d.design_width, self.fabric_width), indicator='red')
+					d.idx, d.design_width, self.fabric_width), indicator='orange')
 
 	def calculate_totals(self):
 		self.total_print_length = 0
