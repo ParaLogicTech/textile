@@ -288,6 +288,10 @@ class PrintOrder(StatusUpdater):
 			if not d.qty:
 				frappe.throw(_("Row #{0}: Qty cannot be 0").format(d.idx))
 
+			if d.design_width > self.fabric_width:
+				frappe.msgprint(_("Row #{0}: Design Width {1} is greater than Fabric Width {2}").format(
+					d.idx, d.design_width, self.fabric_width), indicator='orange')
+
 	def calculate_totals(self):
 		self.total_print_length = 0
 		self.total_fabric_length = 0
