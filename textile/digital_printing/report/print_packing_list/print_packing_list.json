@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2023-08-02 17:58:33.135702",
+ "modified": "2023-08-02 18:06:21.325683",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Print Packing List",
@@ -24,6 +24,15 @@
   },
   {
    "role": "Accounts User"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales User (Read Only)"
+  },
+  {
+   "role": "Delivery User"
   }
  ]
 }
