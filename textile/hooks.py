@@ -167,12 +167,14 @@ fixtures = [
 				'Delivery Note Item-panel_length_meter',
 				'Delivery Note Item-panel_qty',
 				'Delivery Note Item-panel_based_qty',
+				'Delivery Note Item-is_return_fabric',
 
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
 				'Sales Invoice Item-panel_length_meter',
 				'Sales Invoice Item-panel_qty',
 				'Sales Invoice Item-panel_based_qty',
+				'Sales Invoice Item-is_return_fabric',
 
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
@@ -180,6 +182,7 @@ fixtures = [
 				'Packing Slip Item-panel_length_meter',
 				'Packing Slip Item-panel_qty',
 				'Packing Slip Item-panel_based_qty',
+				'Packing Slip Item-is_return_fabric',
 
 				'Work Order-print_order',
 				'Work Order-print_order_item',

@@ -155,3 +155,11 @@ def delete_file_data_content(doc, only_thumbnail=False):
 	doc.delete_file_from_filesystem(only_thumbnail=only_thumbnail)
 	if doc.rotated_image:
 		delete_file(doc.rotated_image)
+
+
+def is_row_return_fabric(row):
+	if not row.get("print_order"):
+		return 0
+
+	print_order_fabric = frappe.db.get_value("Print Order", row.print_order, "fabric_item", cache=1)
+	return cint(row.item_code == print_order_fabric)

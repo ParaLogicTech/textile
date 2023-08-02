@@ -2,9 +2,18 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.packing_slip.packing_slip import PackingSlip
 from textile.overrides.taxes_and_totals_hooks import calculate_panel_qty
+from textile.utils import is_row_return_fabric
 
 
 class PackingSlipDP(PackingSlip):
+	def validate(self):
+		super().validate()
+		self.validate_return_fabric()
+
+	def validate_return_fabric(self):
+		for d in self.items:
+			d.is_return_fabric = is_row_return_fabric(d)
+
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
 
@@ -50,6 +59,7 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 				"uom": print_order_details.default_length_uom,
 				"source_warehouse": print_order_details.wip_warehouse,
 				"print_order": name,
+				"is_return_fabric": 1,
 			})
 
 		if print_orders and not target.package_type:

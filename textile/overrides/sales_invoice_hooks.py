@@ -2,12 +2,18 @@ import frappe
 from frappe import _
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import SalesInvoice
 from textile.digital_printing.doctype.print_order.print_order import check_print_order_is_closed
+from textile.utils import is_row_return_fabric
 
 
 class SalesInvoiceDP(SalesInvoice):
 	def validate(self):
 		super().validate()
 		check_print_order_is_closed(self)
+		self.validate_return_fabric()
+
+	def validate_return_fabric(self):
+		for d in self.items:
+			d.is_return_fabric = is_row_return_fabric(d)
 
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
