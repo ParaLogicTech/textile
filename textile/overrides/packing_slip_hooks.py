@@ -8,9 +8,9 @@ from textile.utils import is_row_return_fabric
 class PackingSlipDP(PackingSlip):
 	def validate(self):
 		super().validate()
-		self.validate_return_fabric()
+		self.set_is_return_fabric()
 
-	def validate_return_fabric(self):
+	def set_is_return_fabric(self):
 		for d in self.items:
 			d.is_return_fabric = is_row_return_fabric(d)
 

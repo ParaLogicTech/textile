@@ -55,14 +55,29 @@ class PrintPackingList:
 			conditions.append("ps.customer = %(customer)s")
 
 		if self.filters.print_order:
-			if type(self.filters.print_order) == str:
+			if isinstance(self.filters.print_order, str):
 				self.filters.print_order = cstr(self.filters.print_order).strip()
 				self.filters.print_order = [d.strip() for d in self.filters.print_order.split(',') if d]
 
 			conditions.append("psi.print_order in %(print_order)s")
 
+		if self.filters.packing_slip:
+			conditions.append("ps.name = %(packing_slip)s")
+
+		if self.filters.package_type:
+			conditions.append("ps.package_type = %(package_type)s")
+
+		if self.filters.process_item:
+			conditions.append("pro.process_item = %(process_item)s")
+
 		if self.filters.fabric_item:
 			conditions.append("(item.fabric_item = %(fabric_item)s or (item.item_code = %(fabric_item)s))")
+
+		if self.filters.fabric_material:
+			conditions.append("item.fabric_material = %(fabric_material)s")
+
+		if self.filters.fabric_type:
+			conditions.append("item.fabric_type = %(fabric_type)s")
 
 		self.filters.delivery_status = ['In Stock']
 		if self.filters.show_delivered:

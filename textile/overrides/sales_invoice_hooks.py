@@ -9,9 +9,9 @@ class SalesInvoiceDP(SalesInvoice):
 	def validate(self):
 		super().validate()
 		check_print_order_is_closed(self)
-		self.validate_return_fabric()
+		self.set_is_return_fabric()
 
-	def validate_return_fabric(self):
+	def set_is_return_fabric(self):
 		for d in self.items:
 			d.is_return_fabric = is_row_return_fabric(d)
 

@@ -43,6 +43,8 @@ class PrintProductionRegister:
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo
 				ON wo.name = se.work_order
+			LEFT JOIN `tabItem` item
+				ON item.name = wo.fabric_item
 			WHERE se.docstatus = 1
 				AND se.posting_date between %(from_date)s AND %(to_date)s
 				{conditions}
@@ -61,15 +63,21 @@ class PrintProductionRegister:
 		if self.filters.fabric_item:
 			conditions.append("wo.fabric_item = %(fabric_item)s")
 
+		if self.filters.fabric_material:
+			conditions.append("item.fabric_material = %(fabric_material)s")
+
+		if self.filters.fabric_type:
+			conditions.append("item.fabric_type = %(fabric_type)s")
+
 		if self.filters.print_order:
-			if type(self.filters.print_order) == str:
+			if isinstance(self.filters.print_order, str):
 				self.filters.print_order = cstr(self.filters.print_order).strip()
 				self.filters.print_order = [d.strip() for d in self.filters.print_order.split(',') if d]
 
 			conditions.append("wo.print_order in %(print_order)s")
 
-		if self.filters.print_process:
-			conditions.append("wo.process_item = %(print_process)s")
+		if self.filters.process_item:
+			conditions.append("wo.process_item = %(process_item)s")
 
 		if self.filters.fabric_printer:
 			conditions.append("se.fabric_printer = %(fabric_printer)s")

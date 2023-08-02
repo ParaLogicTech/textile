@@ -47,6 +47,18 @@ frappe.query_reports["Print Production Register"] = {
 			},
 		},
 		{
+			fieldname: "fabric_material",
+			label: __("Fabric Material"),
+			fieldtype: "Link",
+			options: "Fabric Material",
+		},
+		{
+			fieldname: "fabric_type",
+			label: __("Fabric Type"),
+			fieldtype: "Link",
+			options: "Fabric Type",
+		},
+		{
 			"fieldname":"print_order",
 			"label": __("Print Order"),
 			"fieldtype": "MultiSelectList",
@@ -62,7 +74,7 @@ frappe.query_reports["Print Production Register"] = {
 			}
 		},
 		{
-			fieldname: "print_process",
+			fieldname: "process_item",
 			label: __("Print Process"),
 			fieldtype: "Link",
 			options: "Item",
@@ -81,8 +93,8 @@ frappe.query_reports["Print Production Register"] = {
 			"fieldtype": "Link",
 			"options": "Fabric Printer",
 			get_query: function() {
-				let print_process = frappe.query_report.get_filter_value("print_process");
-				let filters = print_process ? {process_item: print_process} : {}
+				let process_item = frappe.query_report.get_filter_value("process_item");
+				let filters = process_item ? {process_item: process_item} : {}
 				return {
 					filters: filters
 				}
