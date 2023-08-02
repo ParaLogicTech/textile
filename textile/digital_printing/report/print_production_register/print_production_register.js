@@ -27,12 +27,6 @@ frappe.query_reports["Print Production Register"] = {
 			reqd: 1
 		},
 		{
-			fieldname: "customer",
-			label: __("Customer"),
-			fieldtype: "Link",
-			options: "Customer",
-		},
-		{
 			fieldname: "fabric_item",
 			label: __("Fabric Item"),
 			fieldtype: "Link",
@@ -57,6 +51,12 @@ frappe.query_reports["Print Production Register"] = {
 			label: __("Fabric Type"),
 			fieldtype: "Link",
 			options: "Fabric Type",
+		},
+		{
+			fieldname: "customer",
+			label: __("Customer"),
+			fieldtype: "Link",
+			options: "Customer",
 		},
 		{
 			"fieldname":"print_order",
