@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Print Production"] = {
+frappe.query_reports["Print Production Register"] = {
 	"filters": [
 		{
 			fieldname: "company",

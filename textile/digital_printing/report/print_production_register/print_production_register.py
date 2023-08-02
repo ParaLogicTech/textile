@@ -7,10 +7,10 @@ from frappe.utils import cstr, getdate
 
 
 def execute(filters=None):
-	return PrintPackingList(filters).run()
+	return PrintProductionRegister(filters).run()
 
 
-class PrintPackingList:
+class PrintProductionRegister:
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
 		self.filters.from_date = getdate(filters.from_date)
