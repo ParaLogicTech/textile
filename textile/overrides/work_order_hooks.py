@@ -71,9 +71,7 @@ def update_print_order_status(self, hook, status=None):
 	doc = frappe.get_doc("Print Order", self.print_order)
 	doc.set_production_packing_status(update=True)
 
-	if hook == 'update_status':
-		doc.validate_produced_qty(from_doctype=self.doctype, row_names=[self.print_order_item])
-	else:
+	if hook != 'update_status':
 		doc.validate_work_order_qty(from_doctype=self.doctype, row_names=[self.print_order_item])
 
 	doc.set_status(update=True)
