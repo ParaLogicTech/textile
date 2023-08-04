@@ -2,6 +2,16 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
+
+let group_field_opts = [
+	"",
+	"Group by Customer",
+	"Group by Fabric Item",
+	"Group by Print Order",
+	"Group by Process Item",
+	"Group by Fabric Printer",
+]
+
 frappe.query_reports["Print Production Register"] = {
 	"filters": [
 		{
@@ -100,5 +110,32 @@ frappe.query_reports["Print Production Register"] = {
 				}
 			},
 		},
-	]
+		{
+			fieldname: "group_by_1",
+			label: __("Group By Level 1"),
+			fieldtype: "Select",
+			options: group_field_opts,
+			default: "Group by Process Item"
+		},
+		{
+			fieldname: "group_by_2",
+			label: __("Group By Level 2"),
+			fieldtype: "Select",
+			options: group_field_opts,
+			default: "Group by Fabric Printer"
+		},
+		{
+			fieldname: "group_by_3",
+			label: __("Group By Level 3"),
+			fieldtype: "Select",
+			options: group_field_opts,
+			default: ""
+		},
+		{
+			fieldname: "totals_only",
+			label: __("Group Totals Only"),
+			fieldtype: "Check",
+		},
+	],
+	initial_depth: 2
 };
