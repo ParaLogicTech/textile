@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _, scrub, unscrub
-from frappe.utils import cint, cstr, flt, getdate
+from frappe.utils import cint, cstr, flt, getdate, add_days
 from frappe.desk.query_report import group_report_data
 
 
@@ -26,10 +26,11 @@ class PrintProductionRegister:
 	def run(self):
 		self.get_data()
 		self.prepare_data()
+		self.get_chart_data()
 		self.data = self.get_grouped_data()
 		self.get_columns()
 
-		return self.columns, self.data
+		return self.columns, self.data, None, self.chart_data
 
 	def get_data(self):
 		conditions = self.get_conditions()
@@ -160,6 +161,49 @@ class PrintProductionRegister:
 			totals['customer_name'] = data[0].customer_name
 
 		return totals
+
+	def get_chart_data(self):
+		dates = []
+		current_date = self.filters.from_date
+		while current_date <= self.filters.to_date:
+			dates.append(current_date)
+			current_date = add_days(current_date, 1)
+
+		grand_totals = {}
+		process_totals = {}
+
+		for d in self.data:
+			grand_totals.setdefault(d.posting_date, 0)
+			grand_totals[d.posting_date] += d.qty
+
+			process_totals.setdefault(d.process_item, {}).setdefault(d.posting_date, 0)
+			process_totals[d.process_item][d.posting_date] += d.qty
+
+		labels = [frappe.format(d) for d in dates]
+
+		total_dataset = {"name": _("Total Production"), "values": []}
+		for current_date in dates:
+			total_dataset["values"].append(flt(grand_totals.get(current_date)))
+
+		process_datasets = {}
+		for process_item, process_total_dict in process_totals.items():
+			process_datasets.setdefault(process_item, {
+				"name": frappe.get_cached_value("Item", process_item, "item_name"), "values": []
+			})
+			for current_date in dates:
+				process_datasets[process_item]["values"].append(flt(process_total_dict.get(current_date)))
+
+		self.chart_data = {
+			"data": {
+				"labels": labels,
+				'datasets': [total_dataset] + list(process_datasets.values())
+			},
+			"colors": ['purple', 'light-blue', 'light-pink'],
+			"type": "line",
+			"fieldtype": "Float",
+		}
+
+		return self.chart_data
 
 	def get_columns(self):
 		columns = [
