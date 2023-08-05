@@ -43,8 +43,8 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 				<div class="clearfix" style="width: 100%">
 					<div class="pull-left design-details">
 						${this.get_subject_html(doc)}
-						${this.get_progress_html(doc)}
 						${this.get_details_html(doc)}
+						${this.get_progress_html(doc)}
 					</div>
 					<div class="pull-right design-image">
 						${this.get_image_html(doc)}
@@ -63,8 +63,8 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		let escaped_subject = frappe.utils.escape_html(subject);
 
 		return `
-			<div class="clearfix" title="${escaped_subject}">
-				<div class="pull-left">
+			<div class="d-flex justify-content-between align-items-center flex-wrap" title="${escaped_subject}">
+				<div class="d-flex">
 					<a class="design-name"
 						href="${this.get_form_link(doc)}"
 						title="${escaped_subject}"
@@ -73,8 +73,13 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 						${subject}
 					</a>
 				</div>
-				<div class="pull-right text-right">
-					${this.get_indicator_html(doc)}
+				<div class="d-flex">
+					<div>
+						${this.get_indicator_html(doc)}
+					</div>
+					<div class="ml-2">
+						${this.get_button_html(doc)}
+					</div>
 				</div>
 			</div>
 		`;
@@ -112,7 +117,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		let settings_button = "";
 		if (this.settings.button && this.settings.button.show(doc)) {
 			settings_button = `
-				<button class="btn btn-action btn-md ${this.settings.button?.get_class(doc) || "btn-default"}"
+				<button class="btn btn-action btn-sm ${this.settings.button?.get_class(doc) || "btn-default"}"
 					data-name="${doc.name}" data-idx="${doc._idx}"
 					title="${this.settings.button.get_description(doc)}">
 					${this.settings.button.get_label(doc)}
@@ -179,9 +184,6 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 							</td>
 						</tr>
 					</table>
-				</div>
-				<div class="pull-right text-right">
-					${this.get_button_html(doc)}
 				</div>
 			</div>
 		`;

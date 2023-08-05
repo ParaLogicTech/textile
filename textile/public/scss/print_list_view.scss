@@ -15,12 +15,8 @@
 			margin-top: 5px;
 		}
 
-		.design-properties {
-			margin-top: 5px;
-
-			table th {
-				padding-right: 4px;
-			}
+		.design-properties table th {
+			padding-right: 4px;
 		}
 	}
 
@@ -31,5 +27,13 @@
 		img {
 			max-height: 123px;
 		}
+	}
+
+	.indicator-pill {
+		padding: 15px 10px;
+	}
+
+	button {
+		min-width: 70px;
 	}
 }
