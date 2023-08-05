@@ -4,6 +4,32 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	hide_row_button = true;
 	image_fieldname = "image"
 
+	setup_defaults() {
+		let out = super.setup_defaults();
+
+		this.sort_by = "print_order";
+		this.sort_order = "desc";
+
+		return out;
+	}
+
+	setup_sort_selector() {
+		super.setup_sort_selector();
+		if (this.sort_selector) {
+			this.sort_selector.get_sql_string = function() {
+				var sql = '`tab' + this.doctype + '`.`' + this.sort_by + '` ' +  this.sort_order
+
+				if (this.sort_by !== 'print_order') {
+					sql += ', `tab' + this.doctype + '`.`print_order` ' +  this.sort_order
+				}
+
+				sql += ', `tab' + this.doctype + '`.`order_line_no` asc'
+
+				return sql;
+			}
+		}
+	}
+
 	get_header_html() {
 		let subject_html = `
 			<input class="level-item list-check-all" type="checkbox"
@@ -110,7 +136,7 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_image_html(doc) {
-		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc[this.image_fieldname])}" alt="">`
+		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc[this.image_fieldname])}" alt="${escape(doc.item_name)}">`
 	}
 
 	get_button_html(doc) {
