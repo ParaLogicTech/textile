@@ -700,7 +700,11 @@ class PrintOrder(StatusUpdater):
 		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
-	def _start_print_order(self, fabric_transfer_qty, publish_progress=False):
+	def _background_start_print_order(self, fabric_transfer_qty, publish_progress=True):
+		self._start_print_order.catch(self, fabric_transfer_qty=fabric_transfer_qty, publish_progress=publish_progress)
+
+	@frappe.catch_realtime_msgprint()
+	def _start_print_order(self, fabric_transfer_qty, publish_progress=True):
 		frappe.flags.skip_print_order_status_update = True
 
 		# Design Items
@@ -768,7 +772,7 @@ class PrintOrder(StatusUpdater):
 
 		self.notify_update()
 
-	def _create_design_items_and_boms(self, publish_progress=False, ignore_version=True, ignore_feed=True):
+	def _create_design_items_and_boms(self, publish_progress=True, ignore_version=True, ignore_feed=True):
 		for i, d in enumerate(self.items):
 			if not d.item_code:
 				item_doc = make_design_item(d, self.fabric_item, self.customer)
@@ -925,10 +929,10 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 		))
 
 	if len(doc.items) > 5:
-		doc.queue_action("_start_print_order", fabric_transfer_qty=fabric_transfer_qty, publish_progress=True, timeout=1800)
+		doc.queue_action("_background_start_print_order", fabric_transfer_qty=fabric_transfer_qty, timeout=1800)
 		frappe.msgprint(_("Starting Print Order in background..."), alert=True)
 	else:
-		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty, publish_progress=True)
+		doc._start_print_order(fabric_transfer_qty=fabric_transfer_qty)
 
 
 @frappe.whitelist()
@@ -945,10 +949,10 @@ def create_design_items_and_boms(print_order):
 		frappe.throw(_("Printed Design Items and BOMs already created."))
 
 	if len(doc.items) > 5:
-		doc.queue_action("_create_design_items_and_boms", publish_progress=True, timeout=600)
+		doc.queue_action("_create_design_items_and_boms", timeout=600)
 		frappe.msgprint(_("Creating Design Items and BOMs..."), alert=True)
 	else:
-		doc._create_design_items_and_boms(publish_progress=True)
+		doc._create_design_items_and_boms()
 
 
 def make_design_item(design_item_row, fabric_item, customer):
@@ -1101,7 +1105,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 
 @frappe.whitelist()
-def create_work_orders(print_order, publish_progress=False, ignore_version=True, ignore_feed=True):
+def create_work_orders(print_order, publish_progress=True, ignore_version=True, ignore_feed=True):
 	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
 
 	if isinstance(print_order, str):
