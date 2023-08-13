@@ -102,5 +102,5 @@ textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fiel
 	});
 }
 
-erpnext.manufacturing.finish_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);
+erpnext.manufacturing.multiple_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);
 erpnext.manufacturing.work_order_qty_prompt_hooks.push(textile.add_print_order_fields_in_work_order_prompt);
