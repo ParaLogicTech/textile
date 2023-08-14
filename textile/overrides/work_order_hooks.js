@@ -47,8 +47,7 @@ textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fiel
 	}
 
 	let process_item = [...new Set(doc.work_orders.map(d => d.process_item))];
-
-	if (process_item.length > 1) {
+	if (process_item.length && process_item.length > 1) {
 		frappe.throw(__("All Work Orders must have same Process Item"));
 	}
 
@@ -90,16 +89,23 @@ textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fiel
 
 	fields.unshift(...additional_fields);
 
-	let work_order_df = fields.find(d => d.fieldname == "work_orders");
-	let work_order_index = work_order_df.fields.findIndex(d => d.fieldname == "work_order");
-	work_order_df.fields.splice(work_order_index+1, 0, {
+	let work_orders_table = fields.find(d => d.fieldname == "work_orders");
+
+	let work_order_idx = work_orders_table.fields.findIndex(d => d.fieldname == "work_order");
+	let work_order_df = work_orders_table.fields.find(d => d.fieldname == "work_order");
+
+	work_orders_table.fields.splice(work_order_idx+1, 0, {
 		label: __("Print Order"),
 		fieldname: "print_order",
 		fieldtype: "Link",
 		options: "Print Order",
 		read_only: 1,
 		in_list_view: 1,
+		columns: 2,
+		reqd: 1,
 	});
+
+	work_order_df.in_list_view = 0;
 }
 
 erpnext.manufacturing.multiple_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);
