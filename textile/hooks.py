@@ -63,6 +63,10 @@ doctype_js = {
 	"Sales Invoice": "overrides/sales_invoice_hooks.js",
 }
 
+doctype_list_js = {
+	"Work Order": "overrides/work_order_list_hooks.js"
+}
+
 update_item_override_fields = [
 	"textile.overrides.item_hooks.update_item_override_fields",
 ]
