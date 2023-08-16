@@ -82,9 +82,9 @@ class FabricPrintingSummary:
 			INNER JOIN `tabItem` item ON item.name = dni.item_code
 			WHERE dn.docstatus = 1
 				AND dn.posting_date BETWEEN %(from_date)s AND %(to_date)s
-				AND dn.is_return != 1
+				AND dn.is_return = 0
 				AND ifnull(dni.print_order, '') != ''
-				AND ifnull(dni.is_return_fabric, 0) = 0
+				AND dni.is_return_fabric = 0
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
