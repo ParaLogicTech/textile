@@ -84,6 +84,7 @@ class FabricPrintingSummary:
 				AND dn.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND dn.is_return != 1
 				AND ifnull(dni.print_order, '') != ''
+				AND ifnull(dni.is_return_fabric, 0) = 0
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
