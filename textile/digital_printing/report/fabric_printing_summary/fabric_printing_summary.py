@@ -46,6 +46,7 @@ class FabricPrintingSummary:
 			WHERE se.docstatus = 1
 				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND se.stock_entry_type = 'Customer Fabric Receipt'
+				AND item.textile_item_type IN ('Greige Fabric', 'Ready Fabric')
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
