@@ -120,6 +120,10 @@ class FabricPrintingSummary:
 			if self.most_produced_items.get(fabric_material):
 				group_data.update(self.most_produced_items.get(fabric_material))
 
+		if not grouped_result:
+			self.data = []
+			return
+
 		self.data = sorted(list(grouped_result.values()), key=lambda d: d.get('fabric_material'))
 
 		totals_row = zero_fields.copy()
