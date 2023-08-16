@@ -638,6 +638,9 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				d.fabric_length = waste < 1 ? d.print_length / (1 - waste) : 0;
 			}
 
+			d.print_length = flt(d.print_length, precision("print_length", d));
+			d.fabric_length = flt(d.fabric_length, precision("fabric_length", d));
+
 			d.stock_print_length = d.print_length * conversion_factor;
 			d.stock_fabric_length = d.fabric_length * conversion_factor;
 
