@@ -2,8 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe import _, scrub, unscrub
-from frappe.utils import cint, cstr, flt, getdate, add_days
+from frappe import _
+from frappe.utils import getdate
 
 
 def execute(filters=None):
@@ -28,14 +28,15 @@ class FabricPrintingSummary:
 
 	def get_data(self):
 		self.order_data = frappe.db.sql("""
-			SELECT pro.fabric_material,
+			SELECT item.fabric_material,
 				COUNT(distinct pro.name) AS no_of_orders,
 				SUM(poi.stock_print_length) AS ordered_qty
 			FROM `tabPrint Order Item` poi
 			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
+			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
 			WHERE pro.docstatus = 1
 				AND pro.transaction_date BETWEEN %(from_date)s AND %(to_date)s
-			GROUP BY pro.fabric_material
+			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
 		self.fabric_received_data = frappe.db.sql("""
@@ -45,7 +46,7 @@ class FabricPrintingSummary:
 			LEFT JOIN `tabItem` item ON item.name = sed.item_code
 			WHERE se.docstatus = 1
 				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
-				AND se.stock_entry_type = 'Customer Fabric Receipt'
+				AND se.customer_provided = 1
 				AND item.textile_item_type IN ('Greige Fabric', 'Ready Fabric')
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
@@ -57,8 +58,8 @@ class FabricPrintingSummary:
 			LEFT JOIN `tabItem` item ON item.name = wo.fabric_item
 			WHERE se.docstatus = 1
 				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
-				AND ifnull(se.print_order, '') != ''
-				AND se.stock_entry_type = 'Manufacture'
+				AND se.purpose = 'Manufacture'
+				AND ifnull(wo.print_order, '') != ''
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
@@ -68,10 +69,8 @@ class FabricPrintingSummary:
 			INNER JOIN `tabPacking Slip` ps ON ps.name = psi.parent
 			INNER JOIN `tabItem` item ON item.name = psi.item_code
 			WHERE ps.docstatus = 1
-				AND ps.posting_date BETWEEN '2023-08-01' AND '2023-08-31'
-				AND ps.status != 'Unpacked'
+				AND ps.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND ifnull(psi.print_order, '') != ''
-				AND ifnull(psi.is_return_fabric, 0) = 0
 				AND ifnull(psi.source_packing_slip, '') = ''
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
@@ -83,9 +82,8 @@ class FabricPrintingSummary:
 			INNER JOIN `tabItem` item ON item.name = dni.item_code
 			WHERE dn.docstatus = 1
 				AND dn.posting_date BETWEEN %(from_date)s AND %(to_date)s
-				AND dn.status != 'Return'
+				AND dn.is_return != 1
 				AND ifnull(dni.print_order, '') != ''
-				AND ifnull(dni.is_return_fabric, 0) = 0
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
@@ -101,9 +99,16 @@ class FabricPrintingSummary:
 		result = {}
 		for data_list in data_bank:
 			for d in data_list:
-				result.setdefault(d.fabric_material, {}).update(d)
+				result.setdefault(d.fabric_material, {
+					"no_of_orders": 0,
+					"ordered_qty": 0,
+					"received_qty": 0,
+					"produced_qty": 0,
+					"packed_qty": 0,
+					"delivered_qty": 0
+				}).update(d)
 
-		self.data = list(result.values())
+		self.data = sorted(list(result.values()), key=lambda d: d['fabric_material'])
 
 	def get_columns(self):
 		self.columns = [
@@ -127,13 +132,7 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
-				"label": _("Ordered Qty"),
-				"fieldname": "ordered_qty",
-				"fieldtype": "Float",
-				"width": 120
-			},
-			{
-				"label": _("Received Qty"),
+				"label": _("Fabric Received"),
 				"fieldname": "received_qty",
 				"fieldtype": "Float",
 				"width": 120

@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2023-08-15 19:27:51.714706",
+ "modified": "2023-08-16 16:52:20.858812",
  "modified_by": "Administrator",
  "module": "Digital Printing",
  "name": "Fabric Printing Summary",
@@ -19,6 +19,12 @@
  "report_name": "Fabric Printing Summary",
  "report_type": "Script Report",
  "roles": [
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Manufacturing Manager"
+  },
   {
    "role": "Manufacturing User"
   },
