@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import getdate
+from frappe.utils import getdate, cstr
 
 
 def execute(filters=None):
@@ -43,7 +43,7 @@ class FabricPrintingSummary:
 			SELECT item.fabric_material, SUM(sed.transfer_qty) AS received_qty
 			FROM `tabStock Entry Detail` sed
 			INNER JOIN `tabStock Entry` se ON se.name = sed.parent
-			LEFT JOIN `tabItem` item ON item.name = sed.item_code
+			INNER JOIN `tabItem` item ON item.name = sed.item_code
 			WHERE se.docstatus = 1
 				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND se.customer_provided = 1
@@ -55,7 +55,7 @@ class FabricPrintingSummary:
 			SELECT item.fabric_material, SUM(se.fg_completed_qty) AS produced_qty
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo ON wo.name = se.work_order
-			LEFT JOIN `tabItem` item ON item.name = wo.fabric_item
+			INNER JOIN `tabItem` item ON item.name = wo.fabric_item
 			WHERE se.docstatus = 1
 				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND se.purpose = 'Manufacture'
@@ -97,19 +97,58 @@ class FabricPrintingSummary:
 			self.delivery_data
 		]
 
-		result = {}
+		sum_fields = [
+			"no_of_orders",
+			"ordered_qty",
+			"received_qty",
+			"produced_qty",
+			"packed_qty",
+			"delivered_qty",
+		]
+
+		zero_fields = frappe._dict({field: 0 for field in sum_fields})
+
+		grouped_result = {}
 		for data_list in data_bank:
 			for d in data_list:
-				result.setdefault(d.fabric_material, {
-					"no_of_orders": 0,
-					"ordered_qty": 0,
-					"received_qty": 0,
-					"produced_qty": 0,
-					"packed_qty": 0,
-					"delivered_qty": 0
-				}).update(d)
+				grouped_result.setdefault(cstr(d.fabric_material), zero_fields.copy()).update(d)
 
-		self.data = sorted(list(result.values()), key=lambda d: d['fabric_material'])
+		self.fabric_materials = list(grouped_result.keys())
+		self.get_most_produced_items()
+
+		for fabric_material, group_data in grouped_result.items():
+			if self.most_produced_items.get(fabric_material):
+				group_data.update(self.most_produced_items.get(fabric_material))
+
+		self.data = sorted(list(grouped_result.values()), key=lambda d: d.get('fabric_material'))
+
+		totals_row = zero_fields.copy()
+		totals_row.fabric_material = "'Total'"
+		totals_row._bold = 1
+
+		for d in self.data:
+			for f in sum_fields:
+				totals_row[f] += d[f]
+
+		if self.most_produced_items.get(None):
+			totals_row.update(self.most_produced_items.get(None))
+
+		self.data.append(totals_row)
+
+	def get_most_produced_items(self):
+		self.most_produced_items = {}
+
+		for fabric_material in self.fabric_materials:
+			filters = self.filters.copy()
+			filters['fabric_material'] = fabric_material
+			self.most_produced_items[fabric_material] = get_most_produced_item(filters)
+
+		# For Total Row
+		filters = self.filters.copy()
+		filters.pop("fabric_material", None)
+		self.most_produced_items[None] = get_most_produced_item(filters)
+
+		return self.most_produced_items
 
 	def get_columns(self):
 		self.columns = [
@@ -156,4 +195,58 @@ class FabricPrintingSummary:
 				"fieldtype": "Float",
 				"width": 120
 			},
+			{
+				"label": _("Top Item Code"),
+				"fieldname": "most_produced_item",
+				"fieldtype": "Link",
+				"options": "Item",
+				"width": 100,
+			},
+			{
+				"label": _("Top Item Name"),
+				"fieldname": "most_produced_item_name",
+				"fieldtype": "Data",
+				"width": 200,
+			},
+			{
+				"label": _("Top Item Produced Qty"),
+				"fieldname": "most_produced_qty",
+				"fieldtype": "Float",
+				"width": 140,
+			},
 		]
+
+
+def get_most_produced_item(filters):
+	if not filters:
+		filters = {}
+
+	conditions = []
+
+	if filters.get("from_date"):
+		conditions.append("se.posting_date >= %(from_date)s")
+	if filters.get("to_date"):
+		conditions.append("se.posting_date <= %(to_date)s")
+	if filters.get("fabric_material"):
+		conditions.append("item.fabric_material = %(fabric_material)s")
+
+	conditions = " and {0}".format(" and ".join(conditions)) if conditions else ""
+
+	most_produced = frappe.db.sql(f"""
+		SELECT SUM(se.fg_completed_qty) AS most_produced_qty,
+			wo.production_item as most_produced_item,
+			wo.item_name as most_produced_item_name,
+			item.customer as most_produced_item_customer
+		FROM `tabStock Entry` se
+		INNER JOIN `tabWork Order` wo ON wo.name = se.work_order
+		INNER JOIN `tabItem` item ON item.name = wo.fabric_item
+		WHERE se.docstatus = 1
+			AND se.purpose = 'Manufacture'
+			AND ifnull(wo.print_order, '') != ''
+			{conditions}
+		GROUP BY most_produced_item
+		ORDER BY most_produced_qty DESC
+		LIMIT 1
+	""", filters, as_dict=1)
+
+	return most_produced[0] if most_produced else None
