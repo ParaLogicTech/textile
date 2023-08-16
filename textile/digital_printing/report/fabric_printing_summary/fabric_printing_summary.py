@@ -121,10 +121,10 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
-				"label": _("No of Orders"),
+				"label": _("Orders Received"),
 				"fieldname": "no_of_orders",
 				"fieldtype": "Int",
-				"width": 120
+				"width": 110
 			},
 			{
 				"label": _("Ordered Qty"),
@@ -133,10 +133,10 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
-				"label": _("Fabric Received"),
+				"label": _("Fabric Received Qty"),
 				"fieldname": "received_qty",
 				"fieldtype": "Float",
-				"width": 120
+				"width": 125
 			},
 			{
 				"label": _("Produced Qty"),
