@@ -157,9 +157,16 @@ def delete_file_data_content(doc, only_thumbnail=False):
 		delete_file(doc.rotated_image)
 
 
-def is_row_return_fabric(row):
-	if not row.get("print_order"):
+def is_row_return_fabric(doc, row):
+	if row.get("print_order"):
+		print_order_fabric = frappe.db.get_value("Print Order", row.print_order, "fabric_item", cache=1)
+		return cint(row.item_code == print_order_fabric)
+	elif row.item_code:
+		item_details = frappe.get_cached_value("Item", row.item_code, ["textile_item_type", "is_customer_provided_item", "customer"], as_dict=1)
+		return cint(
+			item_details.textile_item_type in ("Greige Fabric", "Ready Fabric")
+			and item_details.is_customer_provided_item
+			and doc.customer == item_details.customer
+		)
+	else:
 		return 0
-
-	print_order_fabric = frappe.db.get_value("Print Order", row.print_order, "fabric_item", cache=1)
-	return cint(row.item_code == print_order_fabric)

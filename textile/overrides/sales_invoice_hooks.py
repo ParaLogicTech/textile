@@ -13,7 +13,7 @@ class SalesInvoiceDP(SalesInvoice):
 
 	def set_is_return_fabric(self):
 		for d in self.items:
-			d.is_return_fabric = is_row_return_fabric(d)
+			d.is_return_fabric = is_row_return_fabric(self, d)
 
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()
