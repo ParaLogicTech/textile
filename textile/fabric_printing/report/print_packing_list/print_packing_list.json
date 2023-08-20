@@ -1,0 +1,38 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2023-07-31 18:24:30.260386",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2023-08-21 02:52:07.763050",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "Print Packing List",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Packing Slip",
+ "report_name": "Print Packing List",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales User (Read Only)"
+  },
+  {
+   "role": "Delivery User"
+  }
+ ]
+}

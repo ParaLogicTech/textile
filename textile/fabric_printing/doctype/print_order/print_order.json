@@ -1,0 +1,783 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2023-02-10 18:18:25.401901",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "customer",
+  "customer_name",
+  "po_no",
+  "po_date",
+  "is_fabric_provided_by_customer",
+  "column_break_mb5rm",
+  "notes",
+  "packing_slip_required",
+  "column_break_kji8i",
+  "naming_series",
+  "company",
+  "transaction_date",
+  "delivery_date",
+  "amended_from",
+  "section_break_rdsdl",
+  "fabric_item",
+  "fabric_item_name",
+  "column_break_eeftz",
+  "fabric_material",
+  "fabric_width",
+  "column_break_ymmyn",
+  "fabric_gsm",
+  "fabric_stock_qty",
+  "process_details_section",
+  "process_item",
+  "process_item_name",
+  "coating_item_required",
+  "softener_item_required",
+  "sublimation_paper_item_required",
+  "protection_paper_item_required",
+  "column_break_o7rkb",
+  "coating_item",
+  "coating_item_name",
+  "sublimation_paper_item",
+  "sublimation_paper_item_name",
+  "column_break_nzetq",
+  "softener_item",
+  "softener_item_name",
+  "protection_paper_item",
+  "protection_paper_item_name",
+  "warehouse_section",
+  "source_warehouse",
+  "column_break_6wauy",
+  "wip_warehouse",
+  "column_break_2iwkk",
+  "fg_warehouse",
+  "order_defaults_section",
+  "default_uom",
+  "column_break_zafpu",
+  "default_qty_type",
+  "column_break_vz52p",
+  "default_length_uom",
+  "column_break_kcopf",
+  "default_gap",
+  "column_break_uobyf",
+  "default_wastage",
+  "column_break_fozde",
+  "default_qty",
+  "items_section",
+  "items",
+  "totals_section",
+  "total_print_length",
+  "column_break_tll13",
+  "total_fabric_length",
+  "column_break_ufxoo",
+  "total_panel_qty",
+  "tab_status",
+  "status",
+  "items_created",
+  "column_break_zltke",
+  "per_ordered",
+  "column_break_3qzv3",
+  "per_work_ordered",
+  "section_break_2pbh5",
+  "fabric_transfer_status",
+  "fabric_transfer_qty",
+  "column_break_rwkru",
+  "production_status",
+  "per_produced",
+  "column_break_r0yyq",
+  "packing_status",
+  "per_packed",
+  "section_break_dtb5f",
+  "delivery_status",
+  "per_delivered",
+  "column_break_paad7",
+  "billing_status",
+  "per_billed"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:doc.customer && doc.customer_name != doc.customer",
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "label": "Planned Delivery Date",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "section_break_rdsdl",
+   "fieldtype": "Section Break",
+   "label": "Fabric Details"
+  },
+  {
+   "fieldname": "column_break_kji8i",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fabric_item",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Fabric Item",
+   "options": "Item",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:!doc.fabric_item || doc.fabric_item_name != doc.fabric_item",
+   "fetch_from": "fabric_item.item_name",
+   "fieldname": "fabric_item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Fabric Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "process_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Process Item",
+   "options": "Item",
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:doc.process_item && doc.process_item_name != doc.process_item",
+   "fetch_from": "process_item.item_name",
+   "fieldname": "process_item_name",
+   "fieldtype": "Data",
+   "label": "Process Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ymmyn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_mb5rm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_eeftz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "fabric_item.fabric_material",
+   "fieldname": "fabric_material",
+   "fieldtype": "Link",
+   "label": "Fabric Material",
+   "options": "Fabric Material",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "fabric_item.fabric_gsm",
+   "fieldname": "fabric_gsm",
+   "fieldtype": "Float",
+   "label": "Fabric GSM",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "fabric_item.fabric_width",
+   "fieldname": "fabric_width",
+   "fieldtype": "Float",
+   "label": "Fabric Width (Inch)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_vz52p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "default_wastage",
+   "fieldtype": "Percent",
+   "label": "Default Wastage (%)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "column_break_kcopf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "PRO-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "no_copy": 1,
+   "options": "PRO-",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Order Date",
+   "no_copy": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Print Order",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "process_details_section",
+   "fieldtype": "Section Break",
+   "label": "Process Details"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "print_hide": 1,
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Design Items",
+   "options": "Print Order Item"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_fabric_provided_by_customer",
+   "fieldtype": "Check",
+   "label": "Fabric Provided By Customer"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_o7rkb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Meter",
+   "fieldname": "default_uom",
+   "fieldtype": "Select",
+   "label": "Default Order UOM",
+   "options": "Meter\nYard\nPanel"
+  },
+  {
+   "fieldname": "column_break_zafpu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Print Qty",
+   "fieldname": "default_qty_type",
+   "fieldtype": "Select",
+   "label": "Default Qty Type",
+   "options": "Print Qty\nFabric Qty",
+   "read_only_depends_on": "eval:doc.default_uom == \"Panel\""
+  },
+  {
+   "fieldname": "column_break_uobyf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_qty",
+   "fieldtype": "Float",
+   "label": "Default Qty"
+  },
+  {
+   "fieldname": "column_break_fozde",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Meter",
+   "fieldname": "default_length_uom",
+   "fieldtype": "Select",
+   "label": "Default Length UOM",
+   "options": "Meter\nYard",
+   "read_only_depends_on": "eval:doc.default_uom != \"Panel\""
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "column_break_ufxoo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_tll13",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_panel_qty",
+   "fieldtype": "Float",
+   "label": "Total Panel Qty",
+   "non_negative": 1,
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_fabric_length",
+   "fieldtype": "Float",
+   "label": "Total Fabric Length (Meter)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_print_length",
+   "fieldtype": "Float",
+   "label": "Total Print Length (Meter)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "default_gap",
+   "fieldtype": "Float",
+   "label": "Default Gap (Inch)",
+   "precision": "1"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nNot Started\nTo Produce\nTo Deliver\nCompleted\nClosed\nCancelled",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "tab_status",
+   "fieldtype": "Tab Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "per_ordered",
+   "fieldtype": "Percent",
+   "label": "% Ordered",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "no_copy": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "order_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Order Defaults"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "no_copy": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "per_work_ordered",
+   "fieldtype": "Percent",
+   "label": "% Work Ordered",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "per_produced",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Produced",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "per_delivered",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Delivered",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "per_billed",
+   "fieldtype": "Percent",
+   "label": "% Billed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rwkru",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "per_packed",
+   "fieldtype": "Percent",
+   "label": "% Packed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "packing_slip_required",
+   "fieldtype": "Check",
+   "label": "Packing Slip Required for Delivery"
+  },
+  {
+   "fieldname": "column_break_6wauy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "wip_warehouse",
+   "fieldtype": "Link",
+   "label": "Work In Progress Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2iwkk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Raw Material Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.fabric_item && doc.source_warehouse",
+   "fieldname": "fabric_stock_qty",
+   "fieldtype": "Float",
+   "label": "Fabric Stock Qty",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Finished Goods Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "po_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Customer's Purchase Order Reference"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "po_no",
+   "fieldname": "po_date",
+   "fieldtype": "Date",
+   "label": "Customer's Purchase Order Date"
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.coating_item_required",
+   "fieldname": "coating_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Coating Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.softener_item_required",
+   "fieldname": "softener_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Softener Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.sublimation_paper_item_required",
+   "fieldname": "sublimation_paper_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Sublimation Paper Selection",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.protection_paper_item_required",
+   "fieldname": "protection_paper_item_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Require Protection Paper Selection",
+   "read_only": 1
+  },
+  {
+   "depends_on": "coating_item_required",
+   "fieldname": "coating_item",
+   "fieldtype": "Link",
+   "label": "Coating Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "softener_item_required",
+   "fieldname": "softener_item",
+   "fieldtype": "Link",
+   "label": "Softener Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_nzetq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "sublimation_paper_item_required",
+   "fieldname": "sublimation_paper_item",
+   "fieldtype": "Link",
+   "label": "Sublimation Paper Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "protection_paper_item_required",
+   "fieldname": "protection_paper_item",
+   "fieldtype": "Link",
+   "label": "Protection Paper Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "eval:doc.coating_item_required && doc.coating_item && doc.coating_item_name != doc.coating_item",
+   "fetch_from": "coating_item.item_name",
+   "fieldname": "coating_item_name",
+   "fieldtype": "Data",
+   "label": "Coating Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.sublimation_paper_item_required && doc.sublimation_paper_item && doc.sublimation_paper_item_name != doc.sublimation_paper_item",
+   "fetch_from": "sublimation_paper_item.item_name",
+   "fieldname": "sublimation_paper_item_name",
+   "fieldtype": "Data",
+   "label": "Sublimation Paper Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.softener_item_required && doc.softener_item && doc.softener_item_name != doc.softener_item",
+   "fetch_from": "softener_item.item_name",
+   "fieldname": "softener_item_name",
+   "fieldtype": "Data",
+   "label": "Softener Item Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.protection_paper_item_required && doc.protection_paper_item && doc.protection_paper_item_name != doc.protection_paper_item",
+   "fetch_from": "protection_paper_item.item_name",
+   "fieldname": "protection_paper_item_name",
+   "fieldtype": "Data",
+   "label": "Protection Paper Item Name",
+   "read_only": 1
+  },
+  {
+   "default": "To Produce",
+   "fieldname": "production_status",
+   "fieldtype": "Select",
+   "label": "Production Status",
+   "no_copy": 1,
+   "options": "To Produce\nProduced\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Pack",
+   "fieldname": "packing_status",
+   "fieldtype": "Select",
+   "label": "Packing Status",
+   "no_copy": 1,
+   "options": "To Pack\nPacked\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Deliver",
+   "fieldname": "delivery_status",
+   "fieldtype": "Select",
+   "label": "Delivery Status",
+   "no_copy": 1,
+   "options": "To Deliver\nDelivered\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Bill",
+   "fieldname": "billing_status",
+   "fieldtype": "Select",
+   "label": "Billing Status",
+   "no_copy": 1,
+   "options": "To Bill\nBilled\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zltke",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_3qzv3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_2pbh5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_r0yyq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_paad7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_dtb5f",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "fabric_transfer_qty",
+   "fieldtype": "Float",
+   "label": "Fabric Transferred (Meter)",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "To Transfer",
+   "fieldname": "fabric_transfer_status",
+   "fieldtype": "Select",
+   "label": "Fabric Transfer Status",
+   "no_copy": 1,
+   "options": "To Transfer\nTransferred\nNot Applicable",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "items_created",
+   "fieldtype": "Check",
+   "label": "Items Created",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2023-08-21 02:52:07.763050",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "Print Order",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User (Read Only)",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1
+  }
+ ],
+ "search_fields": "customer, customer_name, transaction_date, fabric_item_name, process_item_name",
+ "sort_field": "transaction_date",
+ "sort_order": "DESC",
+ "states": [],
+ "timeline_field": "customer",
+ "title_field": "title",
+ "track_changes": 1,
+ "track_seen": 1
+}

@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
-from textile.digital_printing.doctype.print_order.print_order import check_print_order_is_closed
+from textile.fabric_printing.doctype.print_order.print_order import check_print_order_is_closed
 from textile.utils import is_row_return_fabric
 
 

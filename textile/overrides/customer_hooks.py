@@ -1,6 +1,6 @@
 # import frappe
 from frappe import _
-from textile.digital_printing.doctype.print_order.print_order import validate_uom_and_qty_type
+from textile.fabric_printing.doctype.print_order.print_order import validate_uom_and_qty_type
 
 
 def customer_order_default_validate(self, hook):

@@ -1,0 +1,417 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-02-14 14:14:28.357058",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "design_name",
+  "column_break_n1q1d",
+  "design_width",
+  "column_break_bmwnq",
+  "design_height",
+  "column_break_kldhi",
+  "design_gap",
+  "order_qty_section",
+  "qty",
+  "column_break_cfson",
+  "uom",
+  "column_break_qt6lz",
+  "qty_type",
+  "column_break_jfyam",
+  "per_wastage",
+  "notes_section",
+  "design_notes",
+  "section_break_umaop",
+  "item_code",
+  "item_name",
+  "column_break_plofg",
+  "design_bom",
+  "section_break_dgei8",
+  "panel_length_inch",
+  "column_break_fakwf",
+  "panel_length_meter",
+  "column_break_kgepc",
+  "panel_length_yard",
+  "column_break_4mo28",
+  "panel_qty",
+  "panel_based_qty",
+  "order_unit_section",
+  "print_length",
+  "stock_print_length",
+  "column_break_2s3fw",
+  "fabric_length",
+  "stock_fabric_length",
+  "column_break_yelas",
+  "length_uom",
+  "stock_uom",
+  "conversion_factor",
+  "status_section",
+  "ordered_qty",
+  "work_order_qty",
+  "column_break_7pjlp",
+  "produced_qty",
+  "packed_qty",
+  "column_break_djowp",
+  "delivered_qty",
+  "billed_qty",
+  "image_section",
+  "design_image",
+  "design_image_view"
+ ],
+ "fields": [
+  {
+   "fieldname": "design_image",
+   "fieldtype": "Attach Image",
+   "label": "Design Image"
+  },
+  {
+   "fieldname": "design_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Design Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "design_notes",
+   "fieldtype": "Small Text",
+   "label": "Design Notes"
+  },
+  {
+   "fieldname": "column_break_n1q1d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "design_gap",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Gap (Inch)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "section_break_umaop",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Design Item Code",
+   "no_copy": 1,
+   "options": "Item",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:doc.item_code && doc.item_name != doc.item_code",
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Design Item Name",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "design_image_view",
+   "fieldtype": "Image",
+   "label": "Design Image View",
+   "max_height": "300px",
+   "options": "design_image"
+  },
+  {
+   "fieldname": "column_break_plofg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "design_width",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Width (Inch)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "design_height",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Height (Inch)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "design_bom",
+   "fieldtype": "Link",
+   "label": "Design BOM",
+   "no_copy": 1,
+   "options": "BOM",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "design_notes",
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "image_section",
+   "fieldtype": "Section Break",
+   "label": "Image"
+  },
+  {
+   "columns": 1,
+   "default": "Print Qty",
+   "fieldname": "qty_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Qty Type",
+   "options": "Print Qty\nFabric Qty",
+   "read_only_depends_on": "eval:doc.uom == \"Panel\""
+  },
+  {
+   "fieldname": "section_break_dgei8",
+   "fieldtype": "Section Break",
+   "label": "Panel Length"
+  },
+  {
+   "fieldname": "panel_qty",
+   "fieldtype": "Float",
+   "label": "Panel Qty",
+   "non_negative": 1,
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "order_unit_section",
+   "fieldtype": "Section Break",
+   "label": "Length"
+  },
+  {
+   "fieldname": "column_break_2s3fw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_fakwf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_kgepc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_4mo28",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "per_wastage",
+   "fieldtype": "Percent",
+   "label": "Wastage (%)",
+   "precision": "1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "Meter",
+   "fieldname": "uom",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "Meter\nYard\nPanel"
+  },
+  {
+   "fieldname": "column_break_yelas",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Meter",
+   "depends_on": "eval:doc.length_uom != doc.stock_uom",
+   "fieldname": "stock_uom",
+   "fieldtype": "Select",
+   "label": "Stock UOM",
+   "options": "Meter\nYard",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.length_uom != doc.stock_uom",
+   "fieldname": "conversion_factor",
+   "fieldtype": "Float",
+   "label": "Conversion Factor",
+   "non_negative": 1,
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_kldhi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "order_qty_section",
+   "fieldtype": "Section Break",
+   "label": "Order Qty"
+  },
+  {
+   "fieldname": "column_break_cfson",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_qt6lz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jfyam",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_bmwnq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "panel_length_inch",
+   "fieldtype": "Float",
+   "label": "Panel Length (Inch)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "panel_length_meter",
+   "fieldtype": "Float",
+   "label": "Panel Length (Meter)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "panel_length_yard",
+   "fieldtype": "Float",
+   "label": "Panel Length (Yard)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "print_length",
+   "fieldtype": "Float",
+   "label": "Print Length",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.length_uom != doc.stock_uom",
+   "fieldname": "stock_print_length",
+   "fieldtype": "Float",
+   "label": "Stock Print Length",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "fabric_length",
+   "fieldtype": "Float",
+   "label": "Fabric Length",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.length_uom != doc.stock_uom",
+   "fieldname": "stock_fabric_length",
+   "fieldtype": "Float",
+   "label": "Stock Fabric Length",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "default": "Meter",
+   "fieldname": "length_uom",
+   "fieldtype": "Select",
+   "label": "Length UOM",
+   "options": "Meter\nYard",
+   "read_only": 1,
+   "read_only_depends_on": "eval:doc.uom != \"Panel\""
+  },
+  {
+   "fieldname": "ordered_qty",
+   "fieldtype": "Float",
+   "label": "Ordered Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "column_break_7pjlp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_djowp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "produced_qty",
+   "fieldtype": "Float",
+   "label": "Produced Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "work_order_qty",
+   "fieldtype": "Float",
+   "label": "Work Order Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivered_qty",
+   "fieldtype": "Float",
+   "label": "Delivered Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "billed_qty",
+   "fieldtype": "Float",
+   "label": "Billed Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "packed_qty",
+   "fieldtype": "Float",
+   "label": "Packed Qty",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "panel_based_qty",
+   "fieldtype": "Check",
+   "label": "Show Panels",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-08-21 02:52:07.763050",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "Print Order Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

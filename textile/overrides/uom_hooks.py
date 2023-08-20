@@ -3,7 +3,7 @@ from frappe import _
 
 
 def on_uom_conversion_factor_update(doc, method):
-	from textile.digital_printing.doctype.print_order.print_order import update_conversion_factor_global_defaults
+	from textile.fabric_printing.doctype.print_order.print_order import update_conversion_factor_global_defaults
 
 	uoms = [doc.from_uom, doc.to_uom]
 	if "Meter" in uoms or "Yard" in uoms or "Inch" in uoms:

@@ -63,7 +63,7 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 			})
 
 		if print_orders and not target.package_type:
-			target.package_type = frappe.db.get_single_value("Digital Printing Settings", "default_package_type_for_printed_fabrics")
+			target.package_type = frappe.db.get_single_value("Fabric Printing Settings", "default_package_type_for_printed_fabrics")
 
 		if base_postprocess:
 			base_postprocess(source, target)

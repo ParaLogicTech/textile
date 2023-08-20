@@ -95,7 +95,7 @@ class ItemDP(Item):
 			self.fabric_item = None
 
 	def validate_process_properties(self):
-		from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components
+		from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components
 		if self.textile_item_type != "Print Process":
 			for component_item_field in print_process_components:
 				self.set(f"{component_item_field}_required", 0)
@@ -108,7 +108,7 @@ class ItemDP(Item):
 			self.paper_gsm = None
 
 	def validate_fabric_uoms(self):
-		from textile.digital_printing.doctype.print_order.print_order import get_yard_to_meter
+		from textile.fabric_printing.doctype.print_order.print_order import get_yard_to_meter
 
 		if self.textile_item_type not in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			return
