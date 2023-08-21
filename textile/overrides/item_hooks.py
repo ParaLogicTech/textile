@@ -40,35 +40,44 @@ class ItemDP(Item):
 			doc.notify_update()
 
 	def validate_textile_item_type(self):
-		match self.textile_item_type:
-			case "Ready Fabric" | "Greige Fabric":
-				if not self.is_stock_item:
-					frappe.throw(_("Fabric Item must be a Stock Item"))
+		if self.textile_item_type in ("Ready Fabric", "Greige Fabric", "Printed Design"):
+			if not self.is_stock_item:
+				frappe.throw(_("Fabric Item must be a Stock Item"))
 
-			case "Print Process":
-				if self.is_stock_item:
-					frappe.throw(_("Print Process Item must not be a Stock Item"))
-				if self.is_fixed_asset:
-					frappe.throw(_("Print Process Item must not be a Fixed Asset"))
+		if self.textile_item_type == "Ready Fabric":
+			greige_fabric_details = frappe.get_cached_value("Item", self.fabric_item,
+				["textile_item_type", "fabric_material", "fabric_type"], as_dict=1)
 
-			case "Printed Design":
-				if not self.is_stock_item:
-					frappe.throw(_("Printed Design Item must be a Stock Item"))
-				if not self.is_sales_item:
-					frappe.throw(_("Printed Design Item must be a Sales Item"))
+			if self.fabric_item and greige_fabric_details.textile_item_type != "Greige Fabric":
+				frappe.throw(_("Item {0} is not a Greige Fabric Item").format(self.fabric_item))
 
-				if not self.fabric_item:
-					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
+			if self.fabric_material and self.fabric_material != greige_fabric_details.fabric_material:
+				frappe.throw(_("Fabric Material does not match with Greige Fabric Item's Fabric Material {0}").format(
+					frappe.bold(greige_fabric_details.fabric_material)
+				))
+			if self.fabric_type and self.fabric_type != greige_fabric_details.fabric_type:
+				frappe.throw(_("Fabric Type does not match with Greige Fabric Item's Fabric Type {0}").format(
+					frappe.bold(greige_fabric_details.fabric_material)
+				))
 
-				if frappe.get_cached_value("Item", self.fabric_item, "textile_item_type") != "Ready Fabric":
-					frappe.throw(_("Item {0} is not a Ready Fabric Item").format(self.fabric_item))
+		if self.textile_item_type == "Printed Design":
+			if not self.fabric_item:
+				frappe.throw(_("Ready Fabric Item is mandatory for Printed Design Item"))
+			if frappe.get_cached_value("Item", self.fabric_item, "textile_item_type") != "Ready Fabric":
+				frappe.throw(_("Item {0} is not a Ready Fabric Item").format(self.fabric_item))
 
-			case "Process Component":
-				if not self.print_process_component:
-					frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
+		elif self.textile_item_type == "Print Process":
+			if self.is_stock_item:
+				frappe.throw(_("Print Process Item must not be a Stock Item"))
+			if self.is_fixed_asset:
+				frappe.throw(_("Print Process Item must not be a Fixed Asset"))
+
+		elif self.textile_item_type == "Process Component":
+			if not self.print_process_component:
+				frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
 
 	def validate_fabric_properties(self):
-		if self.textile_item_type != "Printed Design":
+		if self.textile_item_type not in ("Printed Design", "Ready Fabric"):
 			self.fabric_item = None
 
 		if self.textile_item_type in ("Ready Fabric", "Greige Fabric"):
@@ -77,12 +86,7 @@ class ItemDP(Item):
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required for Fabric Item."))
 		else:
-			fabric_doc = frappe.get_cached_doc("Item", self.fabric_item) if self.fabric_item else frappe._dict()
-			self.fabric_material = fabric_doc.fabric_material
-			self.fabric_type = fabric_doc.fabric_type
-			self.fabric_width = fabric_doc.fabric_width
-			self.fabric_gsm = fabric_doc.fabric_gsm
-			self.fabric_construction = fabric_doc.fabric_construction
+			self.update(get_fabric_item_details(self.fabric_item))
 
 	def validate_design_properties(self):
 		if self.textile_item_type != "Printed Design":
@@ -92,7 +96,6 @@ class ItemDP(Item):
 			self.design_gap = None
 			self.per_wastage = None
 			self.design_notes = None
-			self.fabric_item = None
 
 	def validate_process_properties(self):
 		from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components
@@ -159,3 +162,17 @@ def override_item_dashboard(data):
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Manufacture")][0]
 	ref_section["items"].insert(0, "Print Order")
 	return data
+
+
+@frappe.whitelist()
+def get_fabric_item_details(fabric_item):
+	out = frappe._dict()
+
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
+	out.fabric_material = fabric_doc.fabric_material
+	out.fabric_type = fabric_doc.fabric_type
+	out.fabric_width = fabric_doc.fabric_width
+	out.fabric_gsm = fabric_doc.fabric_gsm
+	out.fabric_construction = fabric_doc.fabric_construction
+
+	return out
