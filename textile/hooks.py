@@ -104,7 +104,7 @@ update_delivery_note_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.map_print_order_reference_in_delivery_note_item",
 ]
 
-delete_file_data_content = "textile.utils.delete_file_data_content"
+delete_file_data_content = "textile.rotated_image.delete_file_data_content"
 
 fixtures = [
 	{
@@ -121,6 +121,7 @@ fixtures = [
 
 				'Item-textile_item_type',
 				'Item-print_process_component',
+				'Item-consumption_by_fabric_weight',
 
 				'Item-print_process_properties',
 				'Item-softener_item_required',
@@ -148,6 +149,8 @@ fixtures = [
 				'Item-fabric_gsm',
 				'Item-column_break_vknw6',
 				'Item-fabric_construction',
+				'Item-fabric_per_pickup',
+				'Item-column_break_zr6ct',
 				'Item-fabric_item',
 				'Item-fabric_item_name',
 

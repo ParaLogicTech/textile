@@ -48,7 +48,7 @@ frappe.ui.form.on('Item', {
 
 	get_fabric_item_details(frm) {
 		return frappe.call({
-			method: "textile.overrides.item_hooks.get_fabric_item_details",
+			method: "textile.utils.get_fabric_item_details",
 			args: {
 				fabric_item: frm.doc.fabric_item || "",
 			},

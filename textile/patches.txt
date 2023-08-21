@@ -18,3 +18,4 @@ textile.patches.update_print_order_production_packing_status
 textile.patches.set_work_order_process_details
 textile.patches.rename_textile_item_type
 textile.patches.update_is_return_fabric_field
+textile.patches.set_default_fabric_pickup

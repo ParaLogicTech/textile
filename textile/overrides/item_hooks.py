@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
 from frappe.utils import flt
+from textile.utils import gsm_to_grams, get_fabric_item_details
 
 
 class ItemDP(Item):
@@ -105,6 +106,7 @@ class ItemDP(Item):
 
 		if self.textile_item_type != "Process Component":
 			self.print_process_component = None
+			self.consumption_by_fabric_weight = 0
 
 		if self.print_process_component not in ("Sublimation Paper", "Protection Paper"):
 			self.paper_width = None
@@ -145,7 +147,7 @@ class ItemDP(Item):
 
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.textile_item_type in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
-			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
+			self.net_weight_per_unit = gsm_to_grams(self.fabric_gsm, self.fabric_width)
 			self.net_weight_per_unit = flt(self.net_weight_per_unit, self.precision("net_weight_per_unit"))
 
 			self.gross_weight_per_unit = 0
@@ -162,17 +164,3 @@ def override_item_dashboard(data):
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Manufacture")][0]
 	ref_section["items"].insert(0, "Print Order")
 	return data
-
-
-@frappe.whitelist()
-def get_fabric_item_details(fabric_item):
-	out = frappe._dict()
-
-	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
-	out.fabric_material = fabric_doc.fabric_material
-	out.fabric_type = fabric_doc.fabric_type
-	out.fabric_width = fabric_doc.fabric_width
-	out.fabric_gsm = fabric_doc.fabric_gsm
-	out.fabric_construction = fabric_doc.fabric_construction
-
-	return out

@@ -10,7 +10,7 @@ from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components,\
 	get_print_process_values, get_applicable_papers
-from textile.utils import validate_textile_item
+from textile.utils import validate_textile_item, gsm_to_grams
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -24,10 +24,14 @@ default_fields_map = {
 }
 
 force_customer_fields = ["customer_name"]
-force_fabric_fields = ["fabric_item_name", "fabric_material", "fabric_type", "fabric_width", "fabric_gsm"]
+force_fabric_fields = ["fabric_item_name", "fabric_material", "fabric_type", "fabric_width", "fabric_gsm", "fabric_per_pickup"]
 force_process_fields = ["process_item_name"] + [f"{component_item_field}_required" for component_item_field in print_process_components]
+force_process_component_fields = (
+	[f"{component_item_field}_name" for component_item_field in print_process_components]
+	+ [f"{component_item_field}_by_fabric_weight" for component_item_field in print_process_components]
+)
 
-force_fields = force_customer_fields + force_fabric_fields + force_process_fields
+force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
 
 
 class PrintOrder(StatusUpdater):
@@ -93,6 +97,7 @@ class PrintOrder(StatusUpdater):
 		self.set_design_details_from_image()
 		self.set_fabric_item_details()
 		self.set_process_item_details()
+		self.set_process_component_details()
 
 	def attach_unlinked_item_images(self):
 		filters = {
@@ -138,6 +143,17 @@ class PrintOrder(StatusUpdater):
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
+
+	def set_process_component_details(self):
+		for component_item_field in print_process_components:
+			if not self.get(f"{component_item_field}_required"):
+				self.set(component_item_field, None)
+
+			component_item_code = self.get(component_item_field)
+			details = get_process_component_details(component_item_code, component_item_field)
+			for k, v in details.items():
+				if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
+					self.set(k, v)
 
 	def set_order_defaults_for_customer(self):
 		customer_defaults = frappe.db.get_value("Customer", self.customer, default_fields_map.keys(), as_dict=1)
@@ -260,22 +276,34 @@ class PrintOrder(StatusUpdater):
 			validate_textile_item(self.process_item, "Print Process")
 
 		for component_item_field, component_type in print_process_components.items():
-			if self.get(f"{component_item_field}_required"):
-				if self.get(component_item_field):
-					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
-			else:
-				self.set(component_item_field, None)
-				self.set(f"{component_item_field}_name", None)
+			if self.get(component_item_field):
+				validate_textile_item(self.get(component_item_field), "Process Component", component_type)
 
 		if self.docstatus == 1:
 			if not self.get("process_item"):
 				frappe.throw(_("Process Item is mandatory for submission"))
 
-			process_doc = frappe.get_cached_doc("Item", self.process_item)
 			for component_item_field in print_process_components:
-				if process_doc.get(f"{component_item_field}_required") and not self.get(component_item_field):
+				if self.get(f"{component_item_field}_required"):
 					field_label = self.meta.get_label(component_item_field)
-					frappe.throw(_("{0} is mandatory for submission").format(frappe.bold(field_label)))
+
+					if not self.get(component_item_field):
+						frappe.throw(_("{0} is mandatory for submission").format(frappe.bold(field_label)))
+
+					component_item_name = self.get(f"{component_item_field}_name") or self.get(component_item_field)
+					if self.get(f"{component_item_field}_by_fabric_weight"):
+						if not self.fabric_gsm:
+							frappe.throw(_("Fabric GSM is mandatory for {0} {1}. Please set Fabric GSM in {2}").format(
+								field_label,
+								frappe.bold(component_item_name),
+								frappe.get_desk_link("Item", self.fabric_item)
+							))
+						if not self.fabric_per_pickup:
+							frappe.throw(_("Fabric Pickup % is mandatory for {0} {1}. Please set Fabric Pickup % in {2}").format(
+								field_label,
+								frappe.bold(component_item_name),
+								frappe.get_desk_link("Item", self.fabric_item)
+							))
 
 	def validate_design_items(self):
 		if self.docstatus == 1 and not self.items:
@@ -384,17 +412,30 @@ class PrintOrder(StatusUpdater):
 			"name": self.name,
 			"item_code": item_code,
 			"process_item": self.process_item,
+			"fabric_gsm": self.fabric_gsm,
+			"fabric_width": self.fabric_width,
+			"fabric_per_pickup": self.fabric_per_pickup,
 		})
 
 		process_conditions = ["p.process_item = %(process_item)s"]
+
 		for component_item_field in print_process_components:
 			if self.get(f"{component_item_field}_required"):
 				process_conditions.append(f"p.{component_item_field}_required = 1")
 				process_conditions.append(f"p.{component_item_field} = %({component_item_field})s")
+
+				if self.meta.has_field(f"{component_item_field}_by_fabric_weight"):
+					process_conditions.append(f"{component_item_field}_by_fabric_weight = %({component_item_field}_by_fabric_weight)s")
+
+					if self.get(f"{component_item_field}_by_fabric_weight"):
+						process_conditions.append("p.fabric_gsm = %(fabric_gsm)s")
+						process_conditions.append("p.fabric_per_pickup = %(fabric_per_pickup)s")
+						process_conditions.append("p.fabric_width = %(fabric_width)s")
 			else:
 				process_conditions.append(f"p.{component_item_field}_required = 0")
 
 			filters[component_item_field] = self.get(component_item_field)
+			filters[f"{component_item_field}_by_fabric_weight"] = cint(self.get(f"{component_item_field}_by_fabric_weight"))
 
 		process_conditions = f" AND {' AND '.join(process_conditions)}"
 
@@ -778,7 +819,7 @@ class PrintOrder(StatusUpdater):
 	def _create_design_items_and_boms(self, publish_progress=True, ignore_version=True, ignore_feed=True):
 		for i, d in enumerate(self.items):
 			if not d.item_code:
-				item_doc = make_design_item(d, self.fabric_item, self.customer)
+				item_doc = self.make_design_item(d)
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
 				item_doc.flags.ignore_permissions = True
@@ -790,12 +831,7 @@ class PrintOrder(StatusUpdater):
 				})
 
 			if not d.design_bom:
-				components = []
-				for component_item_field in print_process_components:
-					if self.get(f"{component_item_field}_required"):
-						components.append(self.get(component_item_field))
-
-				bom_doc = make_design_bom(d.item_code, self.fabric_item, self.process_item, components=components)
+				bom_doc = self.make_design_bom(d)
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
 				bom_doc.flags.ignore_permissions = True
@@ -812,6 +848,118 @@ class PrintOrder(StatusUpdater):
 			self.notify_update()
 
 		frappe.msgprint(_("Design Items and BOMs created successfully."))
+
+	def make_design_item(self, design_item_row):
+		if not design_item_row:
+			frappe.throw(_('Print Order Row is mandatory.'))
+		if not self.fabric_item:
+			frappe.throw(_('Fabric Item is mandatory.'))
+
+		default_item_group = frappe.db.get_single_value("Fabric Printing Settings",
+			"default_item_group_for_printed_design_item")
+
+		if not default_item_group:
+			frappe.throw(_("Select Default Item Group for Printed Design Item in Fabric Printing Settings."))
+
+		item_doc = frappe.new_doc("Item")
+		if item_doc.item_naming_by == "Item Code":
+			item_doc.item_naming_by = "Naming Series"
+
+		item_doc.update({
+			"item_group": default_item_group,
+			"textile_item_type": "Printed Design",
+			"item_name": design_item_row.design_name,
+			"stock_uom": design_item_row.stock_uom,
+			"sales_uom": design_item_row.uom,
+			"fabric_item": self.fabric_item,
+			"image": design_item_row.design_image,
+			"design_width": design_item_row.design_width,
+			"design_height": design_item_row.design_height,
+			"design_gap": design_item_row.design_gap,
+			"per_wastage": design_item_row.per_wastage,
+			"design_notes": design_item_row.design_notes,
+			"customer": self.customer,
+		})
+
+		item_doc.append("uom_conversion_graph", {
+			"from_uom": "Panel",
+			"from_qty": 1,
+			"to_uom": "Meter",
+			"to_qty": design_item_row.panel_length_meter
+		})
+
+		return item_doc
+
+	def make_design_bom(self, design_item_row):
+		def validate_convertible_to_uom(item_code, uom):
+			conversion = get_conversion_factor(item_code, uom)
+			if conversion.get("not_convertible"):
+				frappe.throw(_("Could not create Design Item BOM because {0} is not convertible to {1}").format(
+					frappe.get_desk_link("Item", item_code), uom
+				))
+
+		if not design_item_row.item_code:
+			frappe.throw(_('Design Item is mandatory.'))
+		if not self.fabric_item:
+			frappe.throw(_('Fabric Item is mandatory.'))
+		if not self.process_item:
+			frappe.throw(_('Process Item is mandatory.'))
+
+		bom_doc = frappe.new_doc("BOM")
+		bom_doc.update({
+			"item": design_item_row.item_code,
+			"quantity": 1,
+		})
+
+		validate_convertible_to_uom(self.fabric_item, "Meter")
+		bom_doc.append("items", {
+			"item_code": self.fabric_item,
+			"qty": 1,
+			"uom": "Meter",
+			"skip_transfer_for_manufacture": 0,
+		})
+
+		validate_convertible_to_uom(self.process_item, "Meter")
+		bom_doc.append("items", {
+			"item_code": self.process_item,
+			"qty": 1,
+			"uom": "Meter",
+			"skip_transfer_for_manufacture": 1,
+		})
+
+		components = []
+		for component_item_field in print_process_components:
+			if self.get(f"{component_item_field}_required"):
+				component = frappe._dict({
+					"item_code": self.get(component_item_field),
+					"consumption_by_fabric_weight": cint(self.get(f"{component_item_field}_by_fabric_weight"))
+				})
+
+				components.append(component)
+
+		for component in components:
+			if component.consumption_by_fabric_weight:
+				bom_qty_precision = frappe.get_precision("BOM Item", "qty")
+
+				fabric_grams_per_meter = gsm_to_grams(self.fabric_gsm, self.fabric_width)
+				consumption_grams_per_meter = fabric_grams_per_meter * flt(self.fabric_per_pickup) / 100
+
+				qty = flt(consumption_grams_per_meter, bom_qty_precision)
+				uom = "Gram"
+			else:
+				qty = 1
+				uom = "Meter"
+
+			validate_convertible_to_uom(component.item_code, uom)
+
+			bom_doc.append("items", {
+				"item_code": component.item_code,
+				"qty": qty,
+				"uom": uom,
+				"skip_transfer_for_manufacture": 1,
+			})
+
+		return bom_doc
 
 
 def update_conversion_factor_global_defaults():
@@ -956,100 +1104,6 @@ def create_design_items_and_boms(print_order):
 		frappe.msgprint(_("Creating Design Items and BOMs..."), alert=True)
 	else:
 		doc._create_design_items_and_boms()
-
-
-def make_design_item(design_item_row, fabric_item, customer):
-	if not design_item_row:
-		frappe.throw(_('Print Order Row is mandatory.'))
-	if not fabric_item:
-		frappe.throw(_('Fabric Item is mandatory.'))
-
-	default_item_group = frappe.db.get_single_value("Fabric Printing Settings", "default_item_group_for_printed_design_item")
-
-	if not default_item_group:
-		frappe.throw(_("Select Default Item Group for Printed Design Item in Fabric Printing Settings."))
-
-	item_doc = frappe.new_doc("Item")
-	if item_doc.item_naming_by == "Item Code":
-		item_doc.item_naming_by = "Naming Series"
-
-	item_doc.update({
-		"item_group": default_item_group,
-		"textile_item_type": "Printed Design",
-		"item_name": design_item_row.design_name,
-		"stock_uom": design_item_row.stock_uom,
-		"sales_uom": design_item_row.uom,
-		"fabric_item": fabric_item,
-		"image": design_item_row.design_image,
-		"design_width": design_item_row.design_width,
-		"design_height": design_item_row.design_height,
-		"design_gap": design_item_row.design_gap,
-		"per_wastage": design_item_row.per_wastage,
-		"design_notes": design_item_row.design_notes,
-		"customer": customer,
-	})
-
-	item_doc.append("uom_conversion_graph", {
-		"from_uom": "Panel",
-		"from_qty": 1,
-		"to_uom": "Meter",
-		"to_qty": design_item_row.panel_length_meter
-	})
-
-	return item_doc
-
-
-def make_design_bom(design_item, fabric_item, process_item, components=None):
-	def validate_convertible_to_meter(item_code):
-		conversion = get_conversion_factor(item_code, "Meter")
-		if conversion.get("not_convertible"):
-			frappe.throw(_("Could not create BOM for Design Item {0} because {1} is not convertible to Meter").format(
-				frappe.bold(design_item), frappe.get_desk_link("Item", item_code)
-			))
-
-	if not design_item:
-		frappe.throw(_('Design Item is mandatory.'))
-	if not fabric_item:
-		frappe.throw(_('Fabric Item is mandatory.'))
-	if not process_item:
-		frappe.throw(_('Process Item is mandatory.'))
-
-	if not components:
-		components = []
-
-	bom_doc = frappe.new_doc("BOM")
-	bom_doc.update({
-		"item": design_item,
-		"quantity": 1,
-	})
-
-	validate_convertible_to_meter(fabric_item)
-	validate_convertible_to_meter(process_item)
-
-	bom_doc.append("items", {
-		"item_code": fabric_item,
-		"qty": 1,
-		"uom": "Meter",
-		"skip_transfer_for_manufacture": 0,
-	})
-	bom_doc.append("items", {
-		"item_code": process_item,
-		"qty": 1,
-		"uom": "Meter",
-		"skip_transfer_for_manufacture": 1,
-	})
-
-	for component_item in components:
-		validate_convertible_to_meter(component_item)
-
-		bom_doc.append("items", {
-			"item_code": component_item,
-			"qty": 1,
-			"uom": "Meter",
-			"skip_transfer_for_manufacture": 1,
-		})
-
-	return bom_doc
 
 
 @frappe.whitelist()
@@ -1336,14 +1390,9 @@ def get_image_details(image_url, throw_not_found=True):
 
 @frappe.whitelist()
 def get_fabric_item_details(fabric_item, get_default_process=True):
-	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
+	from textile.utils import get_fabric_item_details
 
-	out = frappe._dict()
-	out.fabric_item_name = fabric_doc.item_name
-	out.fabric_material = fabric_doc.fabric_material
-	out.fabric_type = fabric_doc.fabric_type
-	out.fabric_width = fabric_doc.fabric_width
-	out.fabric_gsm = fabric_doc.fabric_gsm
+	out = get_fabric_item_details(fabric_item)
 
 	if fabric_item and cint(get_default_process):
 		process_details = get_default_fabric_process(fabric_item)
@@ -1386,7 +1435,7 @@ def get_process_item_details(process_item, fabric_item=None, get_default_paper=T
 	for component_item_field in print_process_components:
 		out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
 
-	if fabric_item and process_item and get_default_paper:
+	if fabric_item and process_item and cint(get_default_paper):
 		out.update(get_default_paper_items(fabric_item, process_item))
 
 	return out
@@ -1417,6 +1466,17 @@ def get_default_paper_items(fabric_item, process_item):
 		if len(protection_papers) == 1:
 			out.protection_paper_item = protection_papers[0].name
 			out.protection_paper_item_name = protection_papers[0].item_name
+
+	return out
+
+
+@frappe.whitelist()
+def get_process_component_details(component_item_code, component_item_field):
+	component_item_doc = frappe.get_cached_doc("Item", component_item_code) if component_item_code else frappe._dict()
+
+	out = frappe._dict()
+	out[f"{component_item_field}_name"] = component_item_doc.item_name
+	out[f"{component_item_field}_by_fabric_weight"] = component_item_doc.consumption_by_fabric_weight
 
 	return out
 
