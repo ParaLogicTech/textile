@@ -106,6 +106,13 @@ update_delivery_note_from_packing_slip_mapper = [
 
 delete_file_data_content = "textile.utils.delete_file_data_content"
 
+
+scheduler_events = {
+	"daily_long": [
+		"textile.textile.doctype.textile_email_digest.textile_email_digest.send_textile_email_digest",
+	],
+}
+
 fixtures = [
 	{
 		"doctype": "Custom Field",
