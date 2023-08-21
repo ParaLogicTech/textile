@@ -60,4 +60,12 @@ $.extend(textile, {
 			},
 		});
 	},
+
+	get_textile_conversion_factors: function () {
+		return {
+			inch_to_meter: flt(frappe.defaults.get_global_default("inch_to_meter")) || 0.0254,
+			yard_to_meter: flt(frappe.defaults.get_global_default("yard_to_meter")) || 0.9144,
+			meter_to_meter: 1
+		}
+	}
 });

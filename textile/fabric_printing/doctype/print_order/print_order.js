@@ -611,7 +611,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		this.frm.doc.total_fabric_length = 0;
 		this.frm.doc.total_panel_qty = 0;
 
-		let conversion_factors = textile.get_dp_conversion_factors();
+		let conversion_factors = textile.get_textile_conversion_factors();
 
 		this.frm.doc.items.forEach(d => {
 			frappe.model.round_floats_in(d);
@@ -975,13 +975,5 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		});
 	}
 };
-
-textile.get_dp_conversion_factors = function () {
-	return {
-		inch_to_meter: flt(frappe.defaults.get_global_default("inch_to_meter")) || 0.0254,
-		yard_to_meter: flt(frappe.defaults.get_global_default("yard_to_meter")) || 0.9144,
-		meter_to_meter: 1
-	}
-}
 
 extend_cscript(cur_frm.cscript, new textile.PrintOrder({frm: cur_frm}));

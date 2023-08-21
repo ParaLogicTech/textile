@@ -58,7 +58,7 @@ fabric_types = [
 
 
 def after_install():
-	from textile.fabric_printing.doctype.print_order.print_order import update_conversion_factor_global_defaults
+	from textile.utils import update_conversion_factor_global_defaults
 
 	populate_fabric_material()
 	populate_fabric_type()

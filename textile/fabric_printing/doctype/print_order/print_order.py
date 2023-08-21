@@ -10,7 +10,7 @@ from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components,\
 	get_print_process_values, get_applicable_papers
-from textile.utils import validate_textile_item, gsm_to_grams
+from textile.utils import validate_textile_item, gsm_to_grams, get_textile_conversion_factors
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -325,7 +325,7 @@ class PrintOrder(StatusUpdater):
 		self.total_fabric_length = 0
 		self.total_panel_qty = 0
 
-		conversion_factors = get_dp_conversion_factors()
+		conversion_factors = get_textile_conversion_factors()
 
 		for d in self.items:
 			validate_uom_and_qty_type(d)
@@ -960,27 +960,6 @@ class PrintOrder(StatusUpdater):
 			})
 
 		return bom_doc
-
-
-def update_conversion_factor_global_defaults():
-	from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import get_uom_conv_factor
-	inch_to_meter = get_uom_conv_factor("Inch", "Meter")
-	yard_to_meter = get_uom_conv_factor("Yard", "Meter")
-
-	frappe.db.set_default("inch_to_meter", inch_to_meter)
-	frappe.db.set_default("yard_to_meter", yard_to_meter)
-
-
-def get_yard_to_meter():
-	return get_dp_conversion_factors()["yard_to_meter"]
-
-
-def get_dp_conversion_factors():
-	return {
-		"inch_to_meter": flt(frappe.db.get_default("inch_to_meter")) or 0.0254,
-		"yard_to_meter": flt(frappe.db.get_default("yard_to_meter")) or 0.9144,
-		"meter_to_meter": 1
-	}
 
 
 def validate_uom_and_qty_type(doc):

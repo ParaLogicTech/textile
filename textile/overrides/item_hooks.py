@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
 from frappe.utils import flt
-from textile.utils import gsm_to_grams, get_fabric_item_details
+from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter
 
 
 class ItemDP(Item):
@@ -113,7 +113,6 @@ class ItemDP(Item):
 			self.paper_gsm = None
 
 	def validate_fabric_uoms(self):
-		from textile.fabric_printing.doctype.print_order.print_order import get_yard_to_meter
 
 		if self.textile_item_type not in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			return

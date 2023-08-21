@@ -58,3 +58,24 @@ def get_fabric_item_details(fabric_item):
 def get_rotated_image(file):
 	from textile.rotated_image import get_rotated_image
 	return get_rotated_image(file)
+
+
+def get_yard_to_meter():
+	return get_textile_conversion_factors()["yard_to_meter"]
+
+
+def get_textile_conversion_factors():
+	return {
+		"inch_to_meter": flt(frappe.db.get_default("inch_to_meter")) or 0.0254,
+		"yard_to_meter": flt(frappe.db.get_default("yard_to_meter")) or 0.9144,
+		"meter_to_meter": 1
+	}
+
+
+def update_conversion_factor_global_defaults():
+	from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import get_uom_conv_factor
+	inch_to_meter = get_uom_conv_factor("Inch", "Meter")
+	yard_to_meter = get_uom_conv_factor("Yard", "Meter")
+
+	frappe.db.set_default("inch_to_meter", inch_to_meter)
+	frappe.db.set_default("yard_to_meter", yard_to_meter)
