@@ -263,6 +263,7 @@ def get_most_produced_item(filters):
 			AND ifnull(wo.print_order, '') != ''
 			{conditions}
 		GROUP BY most_produced_item
+		HAVING most_produced_qty > 0
 		ORDER BY most_produced_qty DESC
 		LIMIT 1
 	""", filters, as_dict=1)

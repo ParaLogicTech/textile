@@ -70,8 +70,8 @@ class TextileEmailDigest(Document):
 		yesterday = add_days(getdate(), -1)
 
 		filters = {
-			"from_date": yesterday,
-			"to_date": yesterday.replace(day=1),
+			"from_date": yesterday.replace(day=1),
+			"to_date": yesterday,
 		}
 		context.update(filters)
 
