@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
 from frappe.utils import flt
-from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter
+from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter, process_components
 
 
 class ItemDP(Item):
@@ -75,8 +75,8 @@ class ItemDP(Item):
 				frappe.throw(_("Print Process Item must not be a Fixed Asset"))
 
 		elif self.textile_item_type == "Process Component":
-			if not self.print_process_component:
-				frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
+			if not self.process_component:
+				frappe.throw(_("Process Component is mandatory for Process Component Item"))
 
 	def validate_fabric_properties(self):
 		if self.textile_item_type not in ("Printed Design", "Ready Fabric"):
@@ -100,16 +100,15 @@ class ItemDP(Item):
 			self.design_notes = None
 
 	def validate_process_properties(self):
-		from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components
 		if self.textile_item_type != "Print Process":
-			for component_item_field in print_process_components:
+			for component_item_field in process_components:
 				self.set(f"{component_item_field}_required", 0)
 
 		if self.textile_item_type != "Process Component":
-			self.print_process_component = None
+			self.process_component = None
 			self.consumption_by_fabric_weight = 0
 
-		if self.print_process_component not in ("Sublimation Paper", "Protection Paper"):
+		if self.process_component not in ("Sublimation Paper", "Protection Paper"):
 			self.paper_width = None
 			self.paper_gsm = None
 

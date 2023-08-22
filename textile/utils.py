@@ -3,17 +3,24 @@ from frappe import _
 from frappe.utils import cint, flt
 from textile.rotated_image import get_rotated_image  # do not remove import
 
+process_components = {
+	"coating_item": "Coating",
+	"softener_item": "Softener",
+	"sublimation_paper_item": "Sublimation Paper",
+	"protection_paper_item": "Protection Paper",
+}
 
-def validate_textile_item(item_code, textile_item_type, print_process_component=None):
+
+def validate_textile_item(item_code, textile_item_type, process_component=None):
 	item = frappe.get_cached_doc("Item", item_code)
 
 	if textile_item_type:
 		if item.textile_item_type != textile_item_type:
 			frappe.throw(_("{0} is not a {1} Item").format(frappe.bold(item_code), textile_item_type))
 
-		if textile_item_type == "Process Component" and print_process_component:
-			if item.print_process_component != print_process_component:
-				frappe.throw(_("{0} is not a {1} Component Item").format(frappe.bold(item_code), print_process_component))
+		if textile_item_type == "Process Component" and process_component:
+			if item.process_component != process_component:
+				frappe.throw(_("{0} is not a {1} Component Item").format(frappe.bold(item_code), process_component))
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)

@@ -1,6 +1,6 @@
 frappe.provide("textile");
 
-textile.print_process_components = {
+textile.process_components = {
 	"coating_item": "Coating",
 	"softener_item": "Softener",
 	"sublimation_paper_item": "Sublimation Paper",

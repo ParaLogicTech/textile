@@ -127,7 +127,7 @@ fixtures = [
 				'Customer-default_printing_length_uom',
 
 				'Item-textile_item_type',
-				'Item-print_process_component',
+				'Item-process_component',
 				'Item-consumption_by_fabric_weight',
 
 				'Item-print_process_properties',

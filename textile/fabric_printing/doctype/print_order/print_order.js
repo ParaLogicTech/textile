@@ -60,11 +60,11 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			return erpnext.queries.item({ textile_item_type: 'Print Process' });
 		});
 
-		for (let [component_item_field, component_type] of Object.entries(textile.print_process_components)) {
+		for (let [component_item_field, component_type] of Object.entries(textile.process_components)) {
 			this.frm.set_query(component_item_field, () => {
 				let filters = {
 					textile_item_type: 'Process Component',
-					print_process_component: component_type
+					process_component: component_type
 				};
 
 				if (["Sublimation Paper", "Protection Paper"].includes(component_type) && this.frm.doc.fabric_item) {

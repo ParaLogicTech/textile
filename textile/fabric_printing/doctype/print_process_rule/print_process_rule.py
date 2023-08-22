@@ -5,17 +5,9 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint
 from frappe.model.document import Document
-from textile.utils import validate_textile_item
-
+from textile.utils import validate_textile_item, process_components
 
 filter_fields = ['fabric_material', 'fabric_type']
-
-print_process_components = {
-	"coating_item": "Coating",
-	"softener_item": "Softener",
-	"sublimation_paper_item": "Sublimation Paper",
-	"protection_paper_item": "Protection Paper",
-}
 
 
 class PrintProcessRule(Document):
@@ -33,7 +25,7 @@ class PrintProcessRule(Document):
 		if self.get("process_item"):
 			validate_textile_item(self.process_item, "Print Process")
 
-		for component_item_field, component_type in print_process_components.items():
+		for component_item_field, component_type in process_components.items():
 			if self.get(f"{component_item_field}_required"):
 				if self.get(component_item_field):
 					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
@@ -125,7 +117,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	applicable_rules = sorted(applicable_rules, key=lambda d: sorting_function(d))
 
-	component_required_fields = [f"{component_item_field}_required" for component_item_field in print_process_components]
+	component_required_fields = [f"{component_item_field}_required" for component_item_field in process_components]
 
 	rule_meta = frappe.get_meta("Print Process Rule")
 	values = frappe._dict()
@@ -142,7 +134,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	if values.get("process_item"):
 		process_item_doc = frappe.get_cached_doc("Item", values.process_item)
-		for component_item_field in print_process_components:
+		for component_item_field in process_components:
 			if not process_item_doc.get(f"{component_item_field}_required"):
 				values.pop(component_item_field, None)
 				values.pop(f"{component_item_field}_name", None)
@@ -213,17 +205,17 @@ def paper_item_query(doctype, txt, searchfield, start, page_len, filters, as_dic
 
 	filters["textile_item_type"] = "Process Component"
 
-	print_process_component = filters.pop("print_process_component", None)
+	process_component = filters.pop("process_component", None)
 	fabric_item = filters.pop("fabric_item", None)
 
-	if not print_process_component:
-		frappe.throw(_("Print Process Component not provided"))
+	if not process_component:
+		frappe.throw(_("Process Component not provided"))
 	if not fabric_item:
 		frappe.throw(_("Fabric Item not provided"))
 
 	fabric_width = frappe.get_cached_value("Item", fabric_item, "fabric_width")
 
-	papers = get_applicable_papers(print_process_component, fabric_width)
+	papers = get_applicable_papers(process_component, fabric_width)
 	paper_item_codes = [d.name for d in papers]
 
 	if paper_item_codes:
@@ -232,12 +224,12 @@ def paper_item_query(doctype, txt, searchfield, start, page_len, filters, as_dic
 	return item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=as_dict)
 
 
-def get_applicable_papers(print_process_component, fabric_width):
+def get_applicable_papers(process_component, fabric_width):
 	fabric_width = flt(fabric_width)
 
 	items = frappe.get_all("Item", fields=["name", "item_name", "paper_width"], filters={
 		"textile_item_type": "Process Component",
-		"print_process_component": print_process_component,
+		"process_component": process_component,
 		"paper_width": [">", fabric_width],
 		"disabled": 0,
 	}, order_by="paper_width")
