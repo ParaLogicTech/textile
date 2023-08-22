@@ -11,7 +11,7 @@ import mimetypes
 
 
 @frappe.whitelist()
-def get_rotated_image(file):
+def get_rotated_image(file, get_path=False):
 	if not file:
 		frappe.throw(_("File URL not provided"))
 
@@ -30,14 +30,17 @@ def get_rotated_image(file):
 		rotated_filename = os.path.basename(rotated_file_path)
 		output = open(rotated_file_path, "rb")
 	else:
-		rotated_filename, output = save_rotated_image_file(file, file_doc)
+		rotated_filename, rotated_image_url, output = save_rotated_image_file(file, file_doc)
 
-	return send_file(
-		output,
-		environ=frappe.local.request.environ,
-		mimetype=mimetypes.guess_type(rotated_filename)[0] or "image/jpeg",
-		download_name=rotated_filename,
-	)
+	if cint(get_path):
+		return rotated_image_url
+	else:
+		return send_file(
+			output,
+			environ=frappe.local.request.environ,
+			mimetype=mimetypes.guess_type(rotated_filename)[0] or "image/jpeg",
+			download_name=rotated_filename,
+		)
 
 
 def get_file_id(file_url):
@@ -92,7 +95,7 @@ def save_rotated_image_file(file, file_doc):
 	file_doc.db_set("rotated_image", rotated_image_url)
 	frappe.db.commit()
 
-	return rotated_filename, output
+	return rotated_filename, rotated_image_url, output
 
 
 def make_rotated_image(file):

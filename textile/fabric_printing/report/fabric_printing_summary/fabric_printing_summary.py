@@ -11,20 +11,41 @@ def execute(filters=None):
 
 
 class FabricPrintingSummary:
+	sum_fields = [
+			"no_of_orders",
+			"ordered_qty",
+			"received_qty",
+			"produced_qty",
+			"packed_qty",
+			"delivered_qty",
+		]
+
+	zero_fields = frappe._dict({field: 0 for field in sum_fields})
+
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
-		self.filters.from_date = getdate(filters.from_date)
-		self.filters.to_date = getdate(filters.to_date)
+		self.filters.from_date = getdate(self.filters.from_date)
+		self.filters.to_date = getdate(self.filters.to_date)
 
 		if self.filters.from_date > self.filters.to_date:
 			frappe.throw(_("Date Range is incorrect"))
 
 	def run(self):
 		self.get_data()
+		self.get_grouped_data()
+		self.get_most_produced_items()
 		self.prepare_data()
 		self.get_columns()
 
 		return self.columns, self.data
+
+	def get_data_for_digest(self):
+		self.get_data()
+		self.get_grouped_data()
+		self.get_most_produced_items()
+		totals_row = self.get_totals_row()
+
+		return self.grouped_data, totals_row
 
 	def get_data(self):
 		self.order_data = frappe.db.sql("""
@@ -88,7 +109,7 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
-	def prepare_data(self):
+	def get_grouped_data(self):
 		data_bank = [
 			self.order_data,
 			self.fabric_received_data,
@@ -97,47 +118,36 @@ class FabricPrintingSummary:
 			self.delivery_data
 		]
 
-		sum_fields = [
-			"no_of_orders",
-			"ordered_qty",
-			"received_qty",
-			"produced_qty",
-			"packed_qty",
-			"delivered_qty",
-		]
-
-		zero_fields = frappe._dict({field: 0 for field in sum_fields})
-
-		grouped_result = {}
+		self.grouped_data = {}
 		for data_list in data_bank:
 			for d in data_list:
-				grouped_result.setdefault(cstr(d.fabric_material), zero_fields.copy()).update(d)
+				self.grouped_data.setdefault(cstr(d.fabric_material), self.zero_fields.copy()).update(d)
 
-		self.fabric_materials = list(grouped_result.keys())
-		self.get_most_produced_items()
+		self.fabric_materials = list(self.grouped_data.keys())
 
-		for fabric_material, group_data in grouped_result.items():
-			if self.most_produced_items.get(fabric_material):
-				group_data.update(self.most_produced_items.get(fabric_material))
-
-		if not grouped_result:
+	def prepare_data(self):
+		if not self.grouped_data:
 			self.data = []
 			return
 
-		self.data = sorted(list(grouped_result.values()), key=lambda d: d.get('fabric_material'))
+		self.data = sorted(list(self.grouped_data.values()), key=lambda d: d.get('fabric_material'))
 
-		totals_row = zero_fields.copy()
+		totals_row = self.get_totals_row()
+		self.data.append(totals_row)
+
+	def get_totals_row(self):
+		totals_row = self.zero_fields.copy()
 		totals_row.fabric_material = "'Total'"
 		totals_row._bold = 1
 
-		for d in self.data:
-			for f in sum_fields:
+		for d in self.grouped_data.values():
+			for f in self.sum_fields:
 				totals_row[f] += d[f]
 
 		if self.most_produced_items.get(None):
 			totals_row.update(self.most_produced_items.get(None))
 
-		self.data.append(totals_row)
+		return totals_row
 
 	def get_most_produced_items(self):
 		self.most_produced_items = {}
@@ -151,6 +161,10 @@ class FabricPrintingSummary:
 		filters = self.filters.copy()
 		filters.pop("fabric_material", None)
 		self.most_produced_items[None] = get_most_produced_item(filters)
+
+		for fabric_material, group_data in self.grouped_data.items():
+			if self.most_produced_items.get(fabric_material):
+				group_data.update(self.most_produced_items.get(fabric_material))
 
 		return self.most_produced_items
 
