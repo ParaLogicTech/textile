@@ -10,7 +10,7 @@
   "email_template",
   "send_at_hour_of_the_day",
   "enabled",
-  "do_not_send_if_no_transactions",
+  "do_not_send_if_no_transaction",
   "column_break_db1dr",
   "recipient_list",
   "addremove_recipients"
@@ -28,12 +28,6 @@
    "label": "Email Template",
    "mandatory_depends_on": "enabled",
    "options": "Email Template"
-  },
-  {
-   "default": "1",
-   "fieldname": "do_not_send_if_no_transactions",
-   "fieldtype": "Check",
-   "label": "Do Not Send If No Transactions"
   },
   {
    "default": "0",
@@ -57,12 +51,18 @@
    "fieldname": "addremove_recipients",
    "fieldtype": "Button",
    "label": "Add/Remove Recipients"
+  },
+  {
+   "default": "1",
+   "fieldname": "do_not_send_if_no_transaction",
+   "fieldtype": "Check",
+   "label": "Do Not Send If No Transaction"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-21 14:18:51.521754",
+ "modified": "2023-08-21 20:22:39.508655",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Textile Email Digest",

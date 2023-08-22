@@ -2,6 +2,18 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Textile Email Digest', {
+	refresh: function(frm) {
+		me.frm.add_custom_button(__("Send Now"), () => frm.trigger('send_now'));
+	},
+
+	send_now: function(frm) {
+		frm.call({
+			method: "send",
+			doc: frm.doc,
+			freeze: 1,
+		});
+	},
+
 	addremove_recipients: function(frm) {
 		return frappe.call({
 			method: "get_users",

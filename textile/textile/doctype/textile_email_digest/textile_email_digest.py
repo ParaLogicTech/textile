@@ -61,9 +61,8 @@ class TextileEmailDigest(Document):
 			frappe.sendmail(
 				recipients=recipients,
 				subject=formatted_template['subject'],
-				message=formatted_template['message']
+				message=formatted_template['message'],
 			)
-
 
 	def get_context(self):
 		context = {}
