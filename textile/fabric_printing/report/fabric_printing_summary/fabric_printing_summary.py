@@ -45,12 +45,6 @@ class FabricPrintingSummary:
 		self.get_most_produced_items()
 		totals_row = self.get_totals_row()
 
-		if totals_row.most_produced_item:
-			item_details = frappe.db.get_value("Item", totals_row.most_produced_item, ["image", "fabric_item", "fabric_item_name"], as_dict=1)
-			totals_row["most_produced_item_fabric"] = item_details.fabric_item
-			totals_row["most_produced_item_fabric_name"] = item_details.fabric_item_name
-			totals_row["most_produced_item_image"] = item_details.image
-
 		return self.grouped_data, totals_row
 
 	def get_data(self):

@@ -5,7 +5,8 @@ import frappe
 from frappe.model.document import Document
 from frappe import _, STANDARD_USERS
 from frappe.utils import cint, cstr, getdate, get_datetime, add_days, validate_email_address
-from textile.digital_printing.report.fabric_printing_summary.fabric_printing_summary import FabricPrintingSummary
+from textile.fabric_printing.report.fabric_printing_summary.fabric_printing_summary import FabricPrintingSummary
+from textile.utils import get_rotated_image
 
 
 class TextileEmailDigest(Document):
@@ -65,7 +66,7 @@ class TextileEmailDigest(Document):
 			)
 
 	def get_context(self):
-		context = {}
+		context = frappe._dict({})
 
 		filters = {
 			"to_date": add_days(getdate('2023-08-04'), -1)
@@ -75,6 +76,13 @@ class TextileEmailDigest(Document):
 
 		filters["from_date"] = filters["to_date"]
 		context["daily_by_material"], context["daily_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
+
+		if context.daily_totals.most_produced_item:
+			item_details = frappe.db.get_value("Item", context.daily_totals.most_produced_item, ["image", "fabric_item", "fabric_item_name"], as_dict=1)
+			context.daily_totals["most_produced_item_fabric"] = item_details.fabric_item
+			context.daily_totals["most_produced_item_fabric_name"] = item_details.fabric_item_name
+			context.daily_totals["most_produced_item_image"] = item_details.image
+			context.daily_totals["most_produced_item_image_rotated"] = get_rotated_image(item_details.image, get_path=True) if item_details.image else None
 
 		return context
 

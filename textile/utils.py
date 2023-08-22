@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
+from textile.rotated_image import get_rotated_image  # do not remove import
 
 
 def validate_textile_item(item_code, textile_item_type, print_process_component=None):
@@ -52,12 +53,6 @@ def get_fabric_item_details(fabric_item):
 	out.fabric_per_pickup = fabric_doc.fabric_per_pickup
 
 	return out
-
-
-@frappe.whitelist()
-def get_rotated_image(file):
-	from textile.rotated_image import get_rotated_image
-	return get_rotated_image(file)
 
 
 def get_yard_to_meter():
