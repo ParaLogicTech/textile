@@ -108,7 +108,7 @@ delete_file_data_content = "textile.rotated_image.delete_file_data_content"
 
 
 scheduler_events = {
-	"daily_long": [
+	"hourly_long": [
 		"textile.textile.doctype.textile_email_digest.textile_email_digest.send_textile_email_digest",
 	],
 }

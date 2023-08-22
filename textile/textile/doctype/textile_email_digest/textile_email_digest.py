@@ -69,7 +69,7 @@ class TextileEmailDigest(Document):
 		context = frappe._dict({})
 
 		filters = {
-			"to_date": add_days(getdate('2023-08-04'), -1)
+			"to_date": add_days(getdate(), -1)
 		}
 		filters["from_date"] = filters["to_date"].replace(day=1)
 		context["monthly_by_material"], context["monthly_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
