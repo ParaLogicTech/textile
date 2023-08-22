@@ -12,9 +12,9 @@ def execute(filters=None):
 
 class FabricPrintingSummary:
 	sum_fields = [
+			"received_qty",
 			"no_of_orders",
 			"ordered_qty",
-			"received_qty",
 			"no_of_orders_produced",
 			"produced_qty",
 			"no_of_orders_packed",
@@ -65,14 +65,14 @@ class FabricPrintingSummary:
 
 		self.fabric_received_data = frappe.db.sql("""
 			SELECT item.fabric_material,
-				SUM(sed.transfer_qty) AS received_qty
-			FROM `tabStock Entry Detail` sed
-			INNER JOIN `tabStock Entry` se ON se.name = sed.parent
-			INNER JOIN `tabItem` item ON item.name = sed.item_code
-			WHERE se.docstatus = 1
-				AND se.posting_date BETWEEN %(from_date)s AND %(to_date)s
-				AND se.customer_provided = 1
+				SUM(sle.actual_qty) as received_qty
+			FROM `tabStock Ledger Entry` sle
+			INNER JOIN `tabItem` item on item.name = sle.item_code
+			LEFT JOIN `tabStock Entry` ste on sle.voucher_type = 'Stock Entry' and sle.voucher_no = ste.name
+			WHERE sle.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND item.textile_item_type IN ('Greige Fabric', 'Ready Fabric')
+				AND sle.voucher_type IN ('Purchase Receipt', 'Purchase Invoice', 'Stock Entry')
+				AND (sle.voucher_type != 'Stock Entry' OR ste.purpose = 'Material Receipt') 
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
