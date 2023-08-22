@@ -67,11 +67,14 @@ class TextileEmailDigest(Document):
 
 	def get_context(self):
 		context = frappe._dict({})
+		yesterday = add_days(getdate(), -1)
 
 		filters = {
-			"to_date": add_days(getdate(), -1)
+			"from_date": yesterday,
+			"to_date": yesterday.replace(day=1),
 		}
-		filters["from_date"] = filters["to_date"].replace(day=1)
+		context.update(filters)
+
 		context["monthly_by_material"], context["monthly_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
 
 		filters["from_date"] = filters["to_date"]
