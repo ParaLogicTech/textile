@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.selling.doctype.sales_order.sales_order import SalesOrder
-from textile.digital_printing.doctype.print_order.print_order import check_print_order_is_closed
+from textile.fabric_printing.doctype.print_order.print_order import check_print_order_is_closed
 
 
 class SalesOrderDP(SalesOrder):

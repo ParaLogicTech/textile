@@ -8,8 +8,8 @@ def get_data():
 			"label": _("Textile")
 		},
 		{
-			"module_name": "Digital Printing",
+			"module_name": "Fabric Printing",
 			"type": "module",
-			"label": _("Digital Printing")
+			"label": _("Fabric Printing")
 		},
 	]

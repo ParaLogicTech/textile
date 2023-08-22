@@ -2,19 +2,21 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
 from frappe.utils import flt
+from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter
 
 
 class ItemDP(Item):
-	def before_validate(self):
-		self.calculate_net_weight_per_unit()
-		self.validate_fabric_uoms()
+	def before_insert(self):
+		super().before_insert()
+		self.validate_fabric_properties()
 
-	def validate(self):
-		super().validate()
+	def before_validate(self):
 		self.validate_textile_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
 		self.validate_process_properties()
+		self.calculate_net_weight_per_unit()
+		self.validate_fabric_uoms()
 
 	def on_trash(self):
 		super().on_trash()
@@ -40,35 +42,44 @@ class ItemDP(Item):
 			doc.notify_update()
 
 	def validate_textile_item_type(self):
-		match self.textile_item_type:
-			case "Ready Fabric" | "Greige Fabric":
-				if not self.is_stock_item:
-					frappe.throw(_("Fabric Item must be a Stock Item"))
+		if self.textile_item_type in ("Ready Fabric", "Greige Fabric", "Printed Design"):
+			if not self.is_stock_item:
+				frappe.throw(_("Fabric Item must be a Stock Item"))
 
-			case "Print Process":
-				if self.is_stock_item:
-					frappe.throw(_("Print Process Item must not be a Stock Item"))
-				if self.is_fixed_asset:
-					frappe.throw(_("Print Process Item must not be a Fixed Asset"))
+		if self.textile_item_type == "Ready Fabric":
+			greige_fabric_details = frappe.get_cached_value("Item", self.fabric_item,
+				["textile_item_type", "fabric_material", "fabric_type"], as_dict=1)
 
-			case "Printed Design":
-				if not self.is_stock_item:
-					frappe.throw(_("Printed Design Item must be a Stock Item"))
-				if not self.is_sales_item:
-					frappe.throw(_("Printed Design Item must be a Sales Item"))
+			if self.fabric_item and greige_fabric_details.textile_item_type != "Greige Fabric":
+				frappe.throw(_("Item {0} is not a Greige Fabric Item").format(self.fabric_item))
 
-				if not self.fabric_item:
-					frappe.throw(_("Fabric Item is mandatory for Printed Design Item"))
+			if self.fabric_material and self.fabric_material != greige_fabric_details.fabric_material:
+				frappe.throw(_("Fabric Material does not match with Greige Fabric Item's Fabric Material {0}").format(
+					frappe.bold(greige_fabric_details.fabric_material)
+				))
+			if self.fabric_type and self.fabric_type != greige_fabric_details.fabric_type:
+				frappe.throw(_("Fabric Type does not match with Greige Fabric Item's Fabric Type {0}").format(
+					frappe.bold(greige_fabric_details.fabric_material)
+				))
 
-				if frappe.get_cached_value("Item", self.fabric_item, "textile_item_type") != "Ready Fabric":
-					frappe.throw(_("Item {0} is not a Ready Fabric Item").format(self.fabric_item))
+		if self.textile_item_type == "Printed Design":
+			if not self.fabric_item:
+				frappe.throw(_("Ready Fabric Item is mandatory for Printed Design Item"))
+			if frappe.get_cached_value("Item", self.fabric_item, "textile_item_type") != "Ready Fabric":
+				frappe.throw(_("Item {0} is not a Ready Fabric Item").format(self.fabric_item))
 
-			case "Process Component":
-				if not self.print_process_component:
-					frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
+		elif self.textile_item_type == "Print Process":
+			if self.is_stock_item:
+				frappe.throw(_("Print Process Item must not be a Stock Item"))
+			if self.is_fixed_asset:
+				frappe.throw(_("Print Process Item must not be a Fixed Asset"))
+
+		elif self.textile_item_type == "Process Component":
+			if not self.print_process_component:
+				frappe.throw(_("Print Process Component is mandatory for Process Component Item"))
 
 	def validate_fabric_properties(self):
-		if self.textile_item_type != "Printed Design":
+		if self.textile_item_type not in ("Printed Design", "Ready Fabric"):
 			self.fabric_item = None
 
 		if self.textile_item_type in ("Ready Fabric", "Greige Fabric"):
@@ -77,12 +88,7 @@ class ItemDP(Item):
 			if not self.fabric_material:
 				frappe.throw(_("Fabric Material is required for Fabric Item."))
 		else:
-			fabric_doc = frappe.get_cached_doc("Item", self.fabric_item) if self.fabric_item else frappe._dict()
-			self.fabric_material = fabric_doc.fabric_material
-			self.fabric_type = fabric_doc.fabric_type
-			self.fabric_width = fabric_doc.fabric_width
-			self.fabric_gsm = fabric_doc.fabric_gsm
-			self.fabric_construction = fabric_doc.fabric_construction
+			self.update(get_fabric_item_details(self.fabric_item))
 
 	def validate_design_properties(self):
 		if self.textile_item_type != "Printed Design":
@@ -92,24 +98,22 @@ class ItemDP(Item):
 			self.design_gap = None
 			self.per_wastage = None
 			self.design_notes = None
-			self.fabric_item = None
 
 	def validate_process_properties(self):
-		from textile.digital_printing.doctype.print_process_rule.print_process_rule import print_process_components
+		from textile.fabric_printing.doctype.print_process_rule.print_process_rule import print_process_components
 		if self.textile_item_type != "Print Process":
 			for component_item_field in print_process_components:
 				self.set(f"{component_item_field}_required", 0)
 
 		if self.textile_item_type != "Process Component":
 			self.print_process_component = None
+			self.consumption_by_fabric_weight = 0
 
 		if self.print_process_component not in ("Sublimation Paper", "Protection Paper"):
 			self.paper_width = None
 			self.paper_gsm = None
 
 	def validate_fabric_uoms(self):
-		from textile.digital_printing.doctype.print_order.print_order import get_yard_to_meter
-
 		if self.textile_item_type not in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			return
 
@@ -142,7 +146,7 @@ class ItemDP(Item):
 
 	def calculate_net_weight_per_unit(self):
 		if flt(self.fabric_gsm) and self.textile_item_type in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
-			self.net_weight_per_unit = flt(self.fabric_gsm) * flt(self.fabric_width) * 0.0254
+			self.net_weight_per_unit = gsm_to_grams(self.fabric_gsm, self.fabric_width)
 			self.net_weight_per_unit = flt(self.net_weight_per_unit, self.precision("net_weight_per_unit"))
 
 			self.gross_weight_per_unit = 0

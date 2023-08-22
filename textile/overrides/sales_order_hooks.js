@@ -6,7 +6,7 @@ frappe.ui.form.on("Sales Order", {
 			frm.add_custom_button(__('Print Order'), function() {
 				textile.get_items_from_print_order(
 					frm,
-					"textile.digital_printing.doctype.print_order.print_order.make_sales_order",
+					"textile.fabric_printing.doctype.print_order.print_order.make_sales_order",
 					{per_ordered: ["<", 100]}
 				);
 			}, __("Get Items From"));

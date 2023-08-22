@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-08-21 02:28:41.811718",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "default_package_type_for_ready_fabrics",
+  "column_break_yc3wg",
+  "default_pretreatment_source_warehouse",
+  "default_pretreatment_wip_warehouse",
+  "default_pretreatment_fg_warehouse"
+ ],
+ "fields": [
+  {
+   "fieldname": "default_pretreatment_source_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Raw Material Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_pretreatment_wip_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Work In Progress Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_pretreatment_fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Finished Goods Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_package_type_for_ready_fabrics",
+   "fieldtype": "Link",
+   "label": "Default Package Type for Ready Fabrics",
+   "options": "Package Type"
+  },
+  {
+   "fieldname": "column_break_yc3wg",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2023-08-21 02:30:39.916497",
+ "modified_by": "Administrator",
+ "module": "Fabric Pretreatment",
+ "name": "Fabric Pretreatment Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

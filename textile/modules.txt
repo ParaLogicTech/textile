@@ -1,2 +1,3 @@
 Textile
-Digital Printing
+Fabric Printing
+Fabric Pretreatment

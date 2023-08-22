@@ -9,7 +9,7 @@ frappe.ui.form.on('Stock Entry', {
 
 	get_items_from_print_order(frm) {
 		erpnext.utils.map_current_doc({
-			method: "textile.digital_printing.doctype.print_order.print_order.make_customer_fabric_stock_entry",
+			method: "textile.fabric_printing.doctype.print_order.print_order.make_customer_fabric_stock_entry",
 			source_doctype: "Print Order",
 			target: frm,
 			setters: [

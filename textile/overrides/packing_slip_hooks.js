@@ -10,7 +10,7 @@ frappe.ui.form.on("Packing Slip", {
 			frm.add_custom_button(__('Print Order'), function() {
 				textile.get_items_from_print_order(
 					frm,
-					"textile.digital_printing.doctype.print_order.print_order.make_packing_slip",
+					"textile.fabric_printing.doctype.print_order.print_order.make_packing_slip",
 					{packing_status: "To Pack"}
 				);
 			}, __("Get Items From"));

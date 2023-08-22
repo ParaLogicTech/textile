@@ -5,6 +5,7 @@ execute:frappe.delete_doc_if_exists("Custom Field", "Item-process_item")
 textile.patches.update_fabric_items_conversions
 textile.patches.set_work_order_packing_slip_required
 textile.patches.change_print_order_status_not_started
+textile.patches.refactor_fabric_printing
 
 [post_model_sync]
 textile.patches.set_panel_based_qty
@@ -17,3 +18,4 @@ textile.patches.update_print_order_production_packing_status
 textile.patches.set_work_order_process_details
 textile.patches.rename_textile_item_type
 textile.patches.update_is_return_fabric_field
+textile.patches.set_default_fabric_pickup
