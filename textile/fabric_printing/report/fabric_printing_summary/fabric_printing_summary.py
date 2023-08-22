@@ -15,8 +15,11 @@ class FabricPrintingSummary:
 			"no_of_orders",
 			"ordered_qty",
 			"received_qty",
+			"no_of_orders_produced",
 			"produced_qty",
+			"no_of_orders_packed",
 			"packed_qty",
+			"no_of_orders_delivered",
 			"delivered_qty",
 		]
 
@@ -50,8 +53,8 @@ class FabricPrintingSummary:
 	def get_data(self):
 		self.order_data = frappe.db.sql("""
 			SELECT item.fabric_material,
-				COUNT(distinct pro.name) AS no_of_orders,
-				SUM(poi.stock_print_length) AS ordered_qty
+				SUM(poi.stock_print_length) AS ordered_qty,
+				COUNT(distinct pro.name) AS no_of_orders
 			FROM `tabPrint Order Item` poi
 			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
 			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
@@ -61,7 +64,8 @@ class FabricPrintingSummary:
 		""", self.filters, as_dict=1)
 
 		self.fabric_received_data = frappe.db.sql("""
-			SELECT item.fabric_material, SUM(sed.transfer_qty) AS received_qty
+			SELECT item.fabric_material,
+				SUM(sed.transfer_qty) AS received_qty
 			FROM `tabStock Entry Detail` sed
 			INNER JOIN `tabStock Entry` se ON se.name = sed.parent
 			INNER JOIN `tabItem` item ON item.name = sed.item_code
@@ -73,7 +77,9 @@ class FabricPrintingSummary:
 		""", self.filters, as_dict=1)
 
 		self.production_data = frappe.db.sql("""
-			SELECT item.fabric_material, SUM(se.fg_completed_qty) AS produced_qty
+			SELECT item.fabric_material,
+				SUM(se.fg_completed_qty) AS produced_qty,
+				COUNT(distinct wo.print_order) AS no_of_orders_produced
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo ON wo.name = se.work_order
 			INNER JOIN `tabItem` item ON item.name = wo.fabric_item
@@ -85,7 +91,9 @@ class FabricPrintingSummary:
 		""", self.filters, as_dict=1)
 
 		self.packing_data = frappe.db.sql("""
-			SELECT item.fabric_material, SUM(psi.stock_qty) AS packed_qty
+			SELECT item.fabric_material,
+				SUM(psi.stock_qty) AS packed_qty,
+				COUNT(distinct psi.print_order) AS no_of_orders_packed
 			FROM `tabPacking Slip Item` psi
 			INNER JOIN `tabPacking Slip` ps ON ps.name = psi.parent
 			INNER JOIN `tabItem` item ON item.name = psi.item_code
@@ -97,7 +105,9 @@ class FabricPrintingSummary:
 		""", self.filters, as_dict=1)
 
 		self.delivery_data = frappe.db.sql("""
-			SELECT item.fabric_material, SUM(dni.stock_qty) AS delivered_qty
+			SELECT item.fabric_material,
+				SUM(dni.stock_qty) AS delivered_qty,
+				COUNT(distinct dni.print_order) AS no_of_orders_delivered
 			FROM `tabDelivery Note Item` dni
 			INNER JOIN `tabDelivery Note` dn ON dn.name = dni.parent
 			INNER JOIN `tabItem` item ON item.name = dni.item_code
@@ -178,6 +188,12 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
+				"label": _("Fabric Received Qty"),
+				"fieldname": "received_qty",
+				"fieldtype": "Float",
+				"width": 125
+			},
+			{
 				"label": _("Orders Received"),
 				"fieldname": "no_of_orders",
 				"fieldtype": "Int",
@@ -190,10 +206,10 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
-				"label": _("Fabric Received Qty"),
-				"fieldname": "received_qty",
-				"fieldtype": "Float",
-				"width": 125
+				"label": _("Orders Produced"),
+				"fieldname": "no_of_orders_produced",
+				"fieldtype": "Int",
+				"width": 110
 			},
 			{
 				"label": _("Produced Qty"),
@@ -202,10 +218,22 @@ class FabricPrintingSummary:
 				"width": 120
 			},
 			{
+				"label": _("Orders Packed"),
+				"fieldname": "no_of_orders_produced",
+				"fieldtype": "Int",
+				"width": 110
+			},
+			{
 				"label": _("Packed Qty"),
 				"fieldname": "packed_qty",
 				"fieldtype": "Float",
 				"width": 120
+			},
+			{
+				"label": _("Orders Delivered"),
+				"fieldname": "no_of_orders_delivered",
+				"fieldtype": "Int",
+				"width": 110
 			},
 			{
 				"label": _("Delivered Qty"),
