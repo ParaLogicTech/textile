@@ -7,15 +7,12 @@ from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_met
 
 class ItemDP(Item):
 	def before_validate(self):
-		self.calculate_net_weight_per_unit()
-		self.validate_fabric_uoms()
-
-	def validate(self):
-		super().validate()
 		self.validate_textile_item_type()
 		self.validate_fabric_properties()
 		self.validate_design_properties()
 		self.validate_process_properties()
+		self.calculate_net_weight_per_unit()
+		self.validate_fabric_uoms()
 
 	def on_trash(self):
 		super().on_trash()
@@ -113,7 +110,6 @@ class ItemDP(Item):
 			self.paper_gsm = None
 
 	def validate_fabric_uoms(self):
-
 		if self.textile_item_type not in ["Ready Fabric", "Greige Fabric", "Printed Design"]:
 			return
 
