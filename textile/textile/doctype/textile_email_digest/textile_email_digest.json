@@ -62,7 +62,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-21 20:22:39.508655",
+ "modified": "2023-08-22 18:03:47.049942",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Textile Email Digest",
@@ -81,5 +81,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }
