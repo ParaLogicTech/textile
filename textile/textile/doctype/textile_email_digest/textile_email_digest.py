@@ -17,7 +17,7 @@ class TextileEmailDigest(Document):
 		if not cint(self.enabled):
 			return
 
-		if not self.recipient_list:
+		if not cstr(self.recipient_list).strip():
 			frappe.throw(_("Recipient is mandatory"))
 		if not self.email_template:
 			frappe.throw(_("Email Template is mandatory"))
@@ -28,10 +28,10 @@ class TextileEmailDigest(Document):
 	@frappe.whitelist()
 	def get_users(self):
 		user_list = frappe.db.sql("""
-			SELECT name, enabled FROM `tabUser`
+			SELECT email, enabled FROM `tabUser`
 			WHERE name NOT IN ({standard_users})
-			and user_type != "Website User"
-			order by enabled desc, name asc
+			and user_type != 'Website User'
+			order by enabled desc, email asc
 		""".format(
 			standard_users=", ".join(frappe.db.escape(user) for user in STANDARD_USERS)
 		), as_dict=1)
@@ -39,31 +39,40 @@ class TextileEmailDigest(Document):
 		recipient_list = [rec for rec in cstr(self.recipient_list).split() if rec]
 
 		for d in user_list:
-			d["checked"] = d["name"] in recipient_list
+			d["checked"] = d["email"] in recipient_list
 
 		return user_list
 
 	@frappe.whitelist()
 	def send(self, is_background=False):
-		context = self.get_context()
-
 		if not self.email_template:
-			frappe.throw(_("Email Template is not set."))
+			if not is_background:
+				frappe.throw(_("Please set Email Template first"))
+			return
+
+		recipients = self.get_recipients()
+		if not recipients:
+			if not is_background:
+				frappe.throw(_("No receipents to send to"))
+			return
+
+		context = self.get_context()
 
 		if is_background and self.do_not_send_if_no_transaction and not context.get("daily_by_material"):
 			return
 
-		recipients = self.get_recipients()
-
 		email_template = frappe.get_cached_doc("Email Template", self.email_template)
 		formatted_template = email_template.get_formatted_email(context)
 
-		if recipients:
-			frappe.sendmail(
-				recipients=recipients,
-				subject=formatted_template['subject'],
-				message=formatted_template['message'],
-			)
+		frappe.sendmail(
+			recipients=recipients,
+			subject=formatted_template['subject'],
+			message=formatted_template['message'],
+			reference_doctype=self.doctype,
+			reference_name=self.name,
+			unsubscribe_message=_("Unsubscribe from this Email Digest"),
+			now=not is_background
+		)
 
 	def get_context(self):
 		context = frappe._dict({})
@@ -81,7 +90,8 @@ class TextileEmailDigest(Document):
 		context["daily_by_material"], context["daily_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
 
 		if context.daily_totals.most_produced_item:
-			item_details = frappe.db.get_value("Item", context.daily_totals.most_produced_item, ["image", "fabric_item", "fabric_item_name"], as_dict=1)
+			item_details = frappe.get_cached_value("Item", context.daily_totals.most_produced_item,
+				["image", "fabric_item", "fabric_item_name"], as_dict=1)
 			context.daily_totals["most_produced_item_fabric"] = item_details.fabric_item
 			context.daily_totals["most_produced_item_fabric_name"] = item_details.fabric_item_name
 			context.daily_totals["most_produced_item_image"] = item_details.image
@@ -90,7 +100,17 @@ class TextileEmailDigest(Document):
 		return context
 
 	def get_recipients(self):
-		return [rec.strip() for rec in cstr(self.recipient_list).split() if rec]
+		recipients = [rec.strip() for rec in cstr(self.recipient_list).split() if rec]
+		if not recipients:
+			return []
+
+		valid_users = frappe.db.sql_list("""
+			select email
+			from `tabUser`
+			where enabled = 1 and email in %s
+		""", [recipients])
+
+		return valid_users
 
 
 @frappe.whitelist()

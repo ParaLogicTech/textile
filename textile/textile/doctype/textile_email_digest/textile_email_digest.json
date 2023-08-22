@@ -7,13 +7,14 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "enabled",
+  "section_break_gep5c",
+  "recipient_list",
+  "addremove_recipients",
+  "column_break_db1dr",
   "email_template",
   "send_at_hour_of_the_day",
-  "enabled",
-  "do_not_send_if_no_transaction",
-  "column_break_db1dr",
-  "recipient_list",
-  "addremove_recipients"
+  "do_not_send_if_no_transaction"
  ],
  "fields": [
   {
@@ -56,13 +57,17 @@
    "default": "1",
    "fieldname": "do_not_send_if_no_transaction",
    "fieldtype": "Check",
-   "label": "Do Not Send If No Transaction"
+   "label": "Do Not Send If No Transactions"
+  },
+  {
+   "fieldname": "section_break_gep5c",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-22 18:03:47.049942",
+ "modified": "2023-08-22 23:07:11.193395",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Textile Email Digest",

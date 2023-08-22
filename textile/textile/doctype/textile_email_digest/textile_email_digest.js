@@ -24,8 +24,8 @@ frappe.ui.form.on('Textile Email Digest', {
 					for (let user of r.message) {
 						dialog_html += `
 							<div class="checkbox"><label>
-								<input type="checkbox" data-id="${user.name}" ${user.checked ? 'checked' : ''}>
-								<span style='${user.enabled ? '' : 'color: red'}'>${user.name} ${user.enabled ? '' : '(Disabled User)'}</span>
+								<input type="checkbox" data-id="${user.email}" ${user.checked ? 'checked' : ''}>
+								<span style='${user.enabled ? '' : 'color: red'}'>${user.email} ${user.enabled ? '' : '(Disabled User)'}</span>
 							</label></div>
 						`;
 					}
