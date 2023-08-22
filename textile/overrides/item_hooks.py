@@ -6,6 +6,10 @@ from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_met
 
 
 class ItemDP(Item):
+	def before_insert(self):
+		super().before_insert()
+		self.validate_fabric_properties()
+
 	def before_validate(self):
 		self.validate_textile_item_type()
 		self.validate_fabric_properties()
