@@ -47,20 +47,21 @@ class ItemDP(Item):
 				frappe.throw(_("Fabric Item must be a Stock Item"))
 
 		if self.textile_item_type == "Ready Fabric":
-			greige_fabric_details = frappe.get_cached_value("Item", self.fabric_item,
-				["textile_item_type", "fabric_material", "fabric_type"], as_dict=1)
+			if self.fabric_item:
+				greige_fabric_details = frappe.get_cached_value("Item", self.fabric_item,
+					["textile_item_type", "fabric_material", "fabric_type"], as_dict=1)
 
-			if self.fabric_item and greige_fabric_details.textile_item_type != "Greige Fabric":
-				frappe.throw(_("Item {0} is not a Greige Fabric Item").format(self.fabric_item))
+				if self.fabric_item and greige_fabric_details.textile_item_type != "Greige Fabric":
+					frappe.throw(_("Item {0} is not a Greige Fabric Item").format(self.fabric_item))
 
-			if self.fabric_material and self.fabric_material != greige_fabric_details.fabric_material:
-				frappe.throw(_("Fabric Material does not match with Greige Fabric Item's Fabric Material {0}").format(
-					frappe.bold(greige_fabric_details.fabric_material)
-				))
-			if self.fabric_type and self.fabric_type != greige_fabric_details.fabric_type:
-				frappe.throw(_("Fabric Type does not match with Greige Fabric Item's Fabric Type {0}").format(
-					frappe.bold(greige_fabric_details.fabric_material)
-				))
+				if self.fabric_material and self.fabric_material != greige_fabric_details.fabric_material:
+					frappe.throw(_("Fabric Material does not match with Greige Fabric Item's Fabric Material {0}").format(
+						frappe.bold(greige_fabric_details.fabric_material)
+					))
+				if self.fabric_type and self.fabric_type != greige_fabric_details.fabric_type:
+					frappe.throw(_("Fabric Type does not match with Greige Fabric Item's Fabric Type {0}").format(
+						frappe.bold(greige_fabric_details.fabric_material)
+					))
 
 		if self.textile_item_type == "Printed Design":
 			if not self.fabric_item:
