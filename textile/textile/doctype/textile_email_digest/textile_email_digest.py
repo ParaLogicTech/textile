@@ -70,9 +70,8 @@ class TextileEmailDigest(Document):
 			message=formatted_template['message'],
 			reference_doctype=self.doctype,
 			reference_name=self.name,
-			unsubscribe_message=_("Unsubscribe from this Email Digest"),
 			now=not is_background,
-			with_container=True,
+			with_container=self.with_container,
 		)
 
 	def get_context(self):
