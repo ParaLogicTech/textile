@@ -91,12 +91,8 @@ class TextileEmailDigest(Document):
 		context["daily_by_material"], context["daily_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
 
 		if context.daily_totals.most_produced_item:
-			item_details = frappe.get_cached_value("Item", context.daily_totals.most_produced_item,
-				["image", "fabric_item", "fabric_item_name"], as_dict=1)
-			context.daily_totals["most_produced_item_fabric"] = item_details.fabric_item
-			context.daily_totals["most_produced_item_fabric_name"] = item_details.fabric_item_name
-			context.daily_totals["most_produced_item_image"] = item_details.image
-			context.daily_totals["most_produced_item_image_rotated"] = get_rotated_image(item_details.image, get_path=True) if item_details.image else None
+			context.daily_totals["most_produced_item_image_rotated"] = get_rotated_image(
+				context.daily_totals.most_produced_item_image, get_path=True) if context.daily_totals.most_produced_item_image else None
 
 		return context
 

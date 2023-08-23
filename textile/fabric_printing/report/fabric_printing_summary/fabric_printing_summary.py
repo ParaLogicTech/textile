@@ -260,6 +260,13 @@ class FabricPrintingSummary:
 				"fieldtype": "Float",
 				"width": 140,
 			},
+			{
+				"label": _("Top Item's Customer"),
+				"fieldname": "most_produced_item_customer",
+				"fieldtype": "Link",
+				"options": "Customer",
+				"width": 200,
+			},
 		]
 
 
@@ -281,11 +288,14 @@ def get_most_produced_item(filters):
 	most_produced = frappe.db.sql(f"""
 		SELECT SUM(se.fg_completed_qty) AS most_produced_qty,
 			wo.production_item as most_produced_item,
-			wo.item_name as most_produced_item_name,
+			item.item_name as most_produced_item_name,
+			item.fabric_item as most_produced_item_fabric,
+			item.fabric_item_name as most_produced_item_fabric_name,
+			item.image as most_produced_item_image,
 			item.customer as most_produced_item_customer
 		FROM `tabStock Entry` se
 		INNER JOIN `tabWork Order` wo ON wo.name = se.work_order
-		INNER JOIN `tabItem` item ON item.name = wo.fabric_item
+		INNER JOIN `tabItem` item ON item.name = wo.production_item
 		WHERE se.docstatus = 1
 			AND se.purpose = 'Manufacture'
 			AND ifnull(wo.print_order, '') != ''
