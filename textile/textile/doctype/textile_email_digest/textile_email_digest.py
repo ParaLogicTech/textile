@@ -72,6 +72,7 @@ class TextileEmailDigest(Document):
 			reference_name=self.name,
 			now=not is_background,
 			with_container=self.with_container,
+			unsubscribe_message=_("Unsubscribe"),
 		)
 
 	def get_context(self):
