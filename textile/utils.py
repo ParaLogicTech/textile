@@ -3,12 +3,20 @@ from frappe import _
 from frappe.utils import cint, flt
 from textile.rotated_image import get_rotated_image  # do not remove import
 
-process_components = {
+printing_components = {
 	"coating_item": "Coating",
 	"softener_item": "Softener",
 	"sublimation_paper_item": "Sublimation Paper",
 	"protection_paper_item": "Protection Paper",
 }
+
+pretreatment_components = {
+	"singeing_item": "Singeing",
+	"desizing_item": "Desizing",
+	"bleaching_item": "Bleaching",
+}
+
+process_components = {**printing_components, **pretreatment_components}
 
 
 def validate_textile_item(item_code, textile_item_type, process_component=None):

@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint
 from frappe.model.document import Document
-from textile.utils import validate_textile_item, process_components
+from textile.utils import validate_textile_item, printing_components
 
 filter_fields = ['fabric_material', 'fabric_type']
 
@@ -25,7 +25,7 @@ class PrintProcessRule(Document):
 		if self.get("process_item"):
 			validate_textile_item(self.process_item, "Print Process")
 
-		for component_item_field, component_type in process_components.items():
+		for component_item_field, component_type in printing_components.items():
 			if self.get(f"{component_item_field}_required"):
 				if self.get(component_item_field):
 					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
@@ -117,7 +117,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	applicable_rules = sorted(applicable_rules, key=lambda d: sorting_function(d))
 
-	component_required_fields = [f"{component_item_field}_required" for component_item_field in process_components]
+	component_required_fields = [f"{component_item_field}_required" for component_item_field in printing_components]
 
 	rule_meta = frappe.get_meta("Print Process Rule")
 	values = frappe._dict()
@@ -134,7 +134,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	if values.get("process_item"):
 		process_item_doc = frappe.get_cached_doc("Item", values.process_item)
-		for component_item_field in process_components:
+		for component_item_field in printing_components:
 			if not process_item_doc.get(f"{component_item_field}_required"):
 				values.pop(component_item_field, None)
 				values.pop(f"{component_item_field}_name", None)

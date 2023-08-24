@@ -9,7 +9,7 @@ from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.accounts.party import validate_party_frozen_disabled
 from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
-from textile.utils import validate_textile_item, gsm_to_grams, get_textile_conversion_factors, process_components
+from textile.utils import validate_textile_item, gsm_to_grams, get_textile_conversion_factors, printing_components
 from erpnext.controllers.status_updater import StatusUpdater
 from PIL import Image
 import json
@@ -24,10 +24,10 @@ default_fields_map = {
 
 force_customer_fields = ["customer_name"]
 force_fabric_fields = ["fabric_item_name", "fabric_material", "fabric_type", "fabric_width", "fabric_gsm", "fabric_per_pickup"]
-force_process_fields = ["process_item_name"] + [f"{component_item_field}_required" for component_item_field in process_components]
+force_process_fields = ["process_item_name"] + [f"{component_item_field}_required" for component_item_field in printing_components]
 force_process_component_fields = (
-	[f"{component_item_field}_name" for component_item_field in process_components]
-	+ [f"{component_item_field}_by_fabric_weight" for component_item_field in process_components]
+	[f"{component_item_field}_name" for component_item_field in printing_components]
+	+ [f"{component_item_field}_by_fabric_weight" for component_item_field in printing_components]
 )
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
@@ -144,7 +144,7 @@ class PrintOrder(StatusUpdater):
 				self.set(k, v)
 
 	def set_process_component_details(self):
-		for component_item_field in process_components:
+		for component_item_field in printing_components:
 			if not self.get(f"{component_item_field}_required"):
 				self.set(component_item_field, None)
 
@@ -274,7 +274,7 @@ class PrintOrder(StatusUpdater):
 		if self.get("process_item"):
 			validate_textile_item(self.process_item, "Print Process")
 
-		for component_item_field, component_type in process_components.items():
+		for component_item_field, component_type in printing_components.items():
 			if self.get(component_item_field):
 				validate_textile_item(self.get(component_item_field), "Process Component", component_type)
 
@@ -282,7 +282,7 @@ class PrintOrder(StatusUpdater):
 			if not self.get("process_item"):
 				frappe.throw(_("Process Item is mandatory for submission"))
 
-			for component_item_field in process_components:
+			for component_item_field in printing_components:
 				if self.get(f"{component_item_field}_required"):
 					field_label = self.meta.get_label(component_item_field)
 
@@ -418,7 +418,7 @@ class PrintOrder(StatusUpdater):
 
 		process_conditions = ["p.process_item = %(process_item)s"]
 
-		for component_item_field in process_components:
+		for component_item_field in printing_components:
 			if self.get(f"{component_item_field}_required"):
 				process_conditions.append(f"p.{component_item_field}_required = 1")
 				process_conditions.append(f"p.{component_item_field} = %({component_item_field})s")
@@ -927,7 +927,7 @@ class PrintOrder(StatusUpdater):
 		})
 
 		components = []
-		for component_item_field in process_components:
+		for component_item_field in printing_components:
 			if self.get(f"{component_item_field}_required"):
 				component = frappe._dict({
 					"item_code": self.get(component_item_field),
@@ -1388,7 +1388,7 @@ def get_default_fabric_process(fabric_item):
 	out.process_item = None
 	out.process_item_name = None
 
-	for component_item_field in process_components:
+	for component_item_field in printing_components:
 		out[component_item_field] = None
 		out[f"{component_item_field}_name"] = None
 		out[f"{component_item_field}_required"] = 0
@@ -1410,7 +1410,7 @@ def get_process_item_details(process_item, fabric_item=None, get_default_paper=T
 	out = frappe._dict()
 	out.process_item_name = process_doc.item_name
 
-	for component_item_field in process_components:
+	for component_item_field in printing_components:
 		out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
 
 	if fabric_item and process_item and cint(get_default_paper):

@@ -2687,7 +2687,7 @@
   "name": "Item-process_component",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "\nCoating\nSoftener\nSublimation Paper\nProtection Paper",
+  "options": "\nCoating\nSoftener\nSublimation Paper\nProtection Paper\nSingeing\nDesizing\nBleaching",
   "permlevel": 0,
   "precision": "",
   "print_hide": 0,

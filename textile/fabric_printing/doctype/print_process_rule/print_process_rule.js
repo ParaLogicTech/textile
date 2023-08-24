@@ -13,7 +13,7 @@ textile.PrintProcessRule = class PrintProcessRule extends frappe.ui.form.Control
 			return erpnext.queries.item({ textile_item_type: 'Print Process' });
 		});
 
-		for (let [component_item_field, component_type] of Object.entries(textile.process_components)) {
+		for (let [component_item_field, component_type] of Object.entries(textile.printing_components)) {
 			this.frm.set_query(component_item_field, () => {
 				return erpnext.queries.item({
 					textile_item_type: 'Process Component',

@@ -1,11 +1,19 @@
 frappe.provide("textile");
 
-textile.process_components = {
+textile.printing_components = {
 	"coating_item": "Coating",
 	"softener_item": "Softener",
 	"sublimation_paper_item": "Sublimation Paper",
 	"protection_paper_item": "Protection Paper",
 }
+
+textile.pretreatment_components = {
+	"singeing_item": "Singeing",
+	"desizing_item": "Desizing",
+	"bleaching_item": "Bleaching",
+}
+
+textile.process_components = Object.assign({}, textile.printing_components, textile.pretreatment_components);
 
 $.extend(textile, {
 	get_items_from_print_order: function (frm, method, filters, query) {

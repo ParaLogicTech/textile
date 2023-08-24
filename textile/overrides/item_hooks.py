@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from erpnext.stock.doctype.item.item import Item
 from frappe.utils import flt
-from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter, process_components
+from textile.utils import gsm_to_grams, get_fabric_item_details, get_yard_to_meter, printing_components
 
 
 class ItemDP(Item):
@@ -102,7 +102,7 @@ class ItemDP(Item):
 
 	def validate_process_properties(self):
 		if self.textile_item_type != "Print Process":
-			for component_item_field in process_components:
+			for component_item_field in printing_components:
 				self.set(f"{component_item_field}_required", 0)
 
 		if self.textile_item_type != "Process Component":
