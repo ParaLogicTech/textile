@@ -3,14 +3,12 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, cint, getdate, cstr
+from frappe.utils import flt, cint
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
-from erpnext.accounts.party import validate_party_frozen_disabled
-from erpnext.stock.get_item_details import get_bin_details, get_conversion_factor
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
-from textile.utils import validate_textile_item, gsm_to_grams, get_textile_conversion_factors, printing_components
-from erpnext.controllers.status_updater import StatusUpdater
+from textile.utils import validate_textile_item, get_textile_conversion_factors, printing_components
+from textile.controllers.textile_order import TextileOrder
 from PIL import Image
 import json
 
@@ -33,7 +31,7 @@ force_process_component_fields = (
 force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
 
 
-class PrintOrder(StatusUpdater):
+class PrintOrder(TextileOrder):
 	def get_feed(self):
 		if self.get("title"):
 			return self.title
@@ -54,8 +52,8 @@ class PrintOrder(StatusUpdater):
 		self.set_missing_values()
 		self.validate_dates()
 		self.validate_customer()
-		self.validate_fabric_item()
-		self.validate_process_item()
+		self.validate_fabric_item("Ready Fabric")
+		self.validate_process_items()
 		self.validate_design_items()
 		self.validate_order_defaults()
 		self.validate_wastage()
@@ -72,7 +70,7 @@ class PrintOrder(StatusUpdater):
 		self.set_billing_status()
 		self.set_status()
 
-		self.set_title()
+		self.set_title(self.fabric_material, self.total_print_length)
 
 	def on_submit(self):
 		self.set_order_defaults_for_customer()
@@ -82,14 +80,6 @@ class PrintOrder(StatusUpdater):
 			frappe.throw(_("Closed Order cannot be cancelled. Re-open to cancel."))
 
 		self.update_status_on_cancel()
-
-	def set_fabric_stock_qty(self):
-		if not (self.fabric_item and self.source_warehouse):
-			self.fabric_stock_qty = 0
-			return
-
-		bin_details = get_bin_details(self.fabric_item, self.source_warehouse)
-		self.fabric_stock_qty = flt(bin_details.get("actual_qty"))
 
 	def set_missing_values(self):
 		self.attach_unlinked_item_images()
@@ -217,20 +207,6 @@ class PrintOrder(StatusUpdater):
 		self.notify_update()
 		clear_doctype_notifications(self)
 
-	def set_title(self):
-		fabric_material_abbr = None
-		if self.fabric_material:
-			fabric_material_abbr = frappe.db.get_value("Fabric Material", self.fabric_material, "abbreviation")
-
-		customer_name = cstr(self.customer_name or self.customer)
-		customer_name = customer_name[:20]
-
-		self.title = "{0} {1} {2} m".format(
-			customer_name,
-			fabric_material_abbr or "Xx",
-			cint(flt(self.total_print_length, 0))
-		)
-
 	def validate_order_defaults(self):
 		validate_uom_and_qty_type(self)
 
@@ -242,35 +218,7 @@ class PrintOrder(StatusUpdater):
 					d.idx, frappe.bold(frappe.format(allowance, df=d.meta.get_field("per_wastage")))
 				))
 
-	def validate_dates(self):
-		if self.delivery_date:
-			if self.transaction_date and getdate(self.delivery_date) < getdate(self.transaction_date):
-				frappe.throw(_("Planned Delivery Date cannot be before Order Date"))
-
-			if self.po_date and getdate(self.delivery_date) < getdate(self.po_date):
-				frappe.throw(_("Planned Delivery Date cannot be before Customer's Purchase Order Date"))
-
-	def validate_customer(self):
-		if self.get("customer"):
-			validate_party_frozen_disabled("Customer", self.customer)
-
-	def validate_fabric_item(self):
-		if self.get("fabric_item"):
-			validate_textile_item(self.fabric_item, "Ready Fabric")
-
-			if not self.is_fabric_provided_by_customer:
-				return
-
-			item_details = frappe.get_cached_value("Item", self.fabric_item, ["is_customer_provided_item", "customer"], as_dict=1)
-
-			if not item_details.is_customer_provided_item:
-				frappe.throw(_("Fabric Item {0} is not a Customer Provided Item").format(frappe.bold(self.fabric_item)))
-
-			if item_details.customer != self.customer:
-				frappe.throw(_("Customer Provided Fabric Item {0} does not belong to Customer {1}").format(
-					frappe.bold(self.fabric_item), frappe.bold(self.customer)))
-
-	def validate_process_item(self):
+	def validate_process_items(self):
 		if self.get("process_item"):
 			validate_textile_item(self.process_item, "Print Process")
 
@@ -890,13 +838,6 @@ class PrintOrder(StatusUpdater):
 		return item_doc
 
 	def make_design_bom(self, design_item_row):
-		def validate_convertible_to_uom(item_code, uom):
-			conversion = get_conversion_factor(item_code, uom)
-			if conversion.get("not_convertible"):
-				frappe.throw(_("Could not create Design Item BOM because {0} is not convertible to {1}").format(
-					frappe.get_desk_link("Item", item_code), uom
-				))
-
 		if not design_item_row.item_code:
 			frappe.throw(_('Design Item is mandatory.'))
 		if not self.fabric_item:
@@ -910,7 +851,7 @@ class PrintOrder(StatusUpdater):
 			"quantity": 1,
 		})
 
-		validate_convertible_to_uom(self.fabric_item, "Meter")
+		self.validate_item_convertible_to_uom(self.fabric_item, "Meter")
 		bom_doc.append("items", {
 			"item_code": self.fabric_item,
 			"qty": 1,
@@ -918,7 +859,8 @@ class PrintOrder(StatusUpdater):
 			"skip_transfer_for_manufacture": 0,
 		})
 
-		validate_convertible_to_uom(self.process_item, "Meter")
+		self.validate_item_has_bom(self.process_item)
+		self.validate_item_convertible_to_uom(self.process_item, "Meter")
 		bom_doc.append("items", {
 			"item_code": self.process_item,
 			"qty": 1,
@@ -936,27 +878,7 @@ class PrintOrder(StatusUpdater):
 
 				components.append(component)
 
-		for component in components:
-			if component.consumption_by_fabric_weight:
-				bom_qty_precision = frappe.get_precision("BOM Item", "qty")
-
-				fabric_grams_per_meter = gsm_to_grams(self.fabric_gsm, self.fabric_width)
-				consumption_grams_per_meter = fabric_grams_per_meter * flt(self.fabric_per_pickup) / 100
-
-				qty = flt(consumption_grams_per_meter, bom_qty_precision)
-				uom = "Gram"
-			else:
-				qty = 1
-				uom = "Meter"
-
-			validate_convertible_to_uom(component.item_code, uom)
-
-			bom_doc.append("items", {
-				"item_code": component.item_code,
-				"qty": qty,
-				"uom": uom,
-				"skip_transfer_for_manufacture": 1,
-			})
+		self.add_components_to_bom(bom_doc, components, self.fabric_gsm, self.fabric_width, self.fabric_per_pickup)
 
 		return bom_doc
 
