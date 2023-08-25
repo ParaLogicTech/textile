@@ -113,6 +113,9 @@ class TextileOrder(StatusUpdater):
 
 	@staticmethod
 	def validate_item_has_bom(item_code):
+		if frappe.db.get_value("Item", item_code, "is_stock_item", cache=1):
+			return
+
 		default_bom = frappe.db.get_value("Item", item_code, "default_bom", cache=1)
 		if not default_bom:
 			frappe.throw(_("Could not create BOM because {0} does not have a Default BOM").format(
