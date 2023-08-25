@@ -9,6 +9,7 @@
  "field_order": [
   "default_item_group_for_printed_design_item",
   "default_package_type_for_printed_fabrics",
+  "wastage_mandatory",
   "column_break_ao9pt",
   "default_printing_source_warehouse",
   "default_printing_wip_warehouse",
@@ -48,12 +49,18 @@
    "fieldtype": "Link",
    "label": "Default Package Type for Printed Fabrics",
    "options": "Package Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "wastage_mandatory",
+   "fieldtype": "Check",
+   "label": "Wastage Mandatory in Print Order"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-21 02:21:29.992092",
+ "modified": "2023-08-25 11:50:08.983879",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",
