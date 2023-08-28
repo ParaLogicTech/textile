@@ -44,7 +44,8 @@ def is_row_return_fabric(doc, row):
 		print_order_fabric = frappe.db.get_value("Print Order", row.print_order, "fabric_item", cache=1)
 		return cint(row.item_code == print_order_fabric)
 	elif row.get("pretreatment_order"):
-		return 0
+		greige_fabric_item = frappe.db.get_value("Pretreatment Order", row.pretreatment_order, "greige_fabric_item", cache=1)
+		return cint(row.item_code == greige_fabric_item)
 	elif row.get("item_code"):
 		item_details = frappe.get_cached_value("Item", row.item_code, ["textile_item_type", "is_customer_provided_item", "customer"], as_dict=1)
 		return cint(

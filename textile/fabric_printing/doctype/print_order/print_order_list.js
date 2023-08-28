@@ -28,12 +28,16 @@ frappe.listview_settings['Print Order'] = {
 			});
 		}
 
-		listview.page.fields_dict.fabric_item.get_query = () => {
-			return erpnext.queries.item({"textile_item_type": "Ready Fabric", "include_disabled": 1});
+		if (listview.page.fields_dict.fabric_item) {
+			listview.page.fields_dict.fabric_item.get_query = () => {
+				return erpnext.queries.item({"textile_item_type": "Ready Fabric", "include_disabled": 1});
+			}
 		}
 
-		listview.page.fields_dict.process_item.get_query = () => {
-			return erpnext.queries.item({"textile_item_type": "Print Process", "include_disabled": 1});
+		if (listview.page.fields_dict.process_item) {
+			listview.page.fields_dict.process_item.get_query = () => {
+				return erpnext.queries.item({"textile_item_type": "Print Process", "include_disabled": 1});
+			}
 		}
 	},
 };

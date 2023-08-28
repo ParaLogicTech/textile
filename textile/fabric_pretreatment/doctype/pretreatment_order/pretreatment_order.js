@@ -98,6 +98,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
 					__("Create"));
 			}
+
+			if (doc.status != "Closed") {
+				if (flt(doc.ordered_qty) < flt(doc.qty)) {
+					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
+						__("Create"));
+				}
+			}
 		}
 	}
 
@@ -211,6 +218,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 					this.frm.reload_doc();
 				}
 			}
+		});
+	}
+
+	make_sales_order() {
+		frappe.model.open_mapped_doc({
+			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_order",
+			frm: this.frm
 		});
 	}
 }

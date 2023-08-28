@@ -264,8 +264,8 @@ class PrintOrder(TextileOrder):
 			if d.design_image and not d.design_width or not d.design_height:
 				frappe.throw(_("Row #{0}: Image Dimensions cannot be empty").format(d.idx))
 
-			if not d.qty:
-				frappe.throw(_("Row #{0}: Qty cannot be 0").format(d.idx))
+			if flt(d.qty) <= 0:
+				frappe.throw(_("Row #{0}: Qty must be greater than 0").format(d.idx))
 
 			if d.design_width > self.fabric_width:
 				frappe.msgprint(_("Row #{0}: Design Width {1} is greater than Fabric Width {2}").format(
@@ -614,14 +614,16 @@ class PrintOrder(TextileOrder):
 			row_names = [d.name for d in self.items]
 			if row_names:
 				delivered_data = frappe.db.sql("""
-					SELECT print_order_item, stock_qty
-					FROM `tabDelivery Note Item`
-					WHERE docstatus = 1 AND print_order_item IN %s
+					select i.print_order_item, i.stock_qty, p.is_return, p.reopen_order
+					from `tabDelivery Note Item` i
+					inner join `tabDelivery Note` p on p.name = i.parent
+					where p.docstatus = 1 and i.print_order_item in %s
 				""", [row_names], as_dict=1)
 
 				for d in delivered_data:
-					out.delivered_qty_map.setdefault(d.print_order_item, 0)
-					out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
+					if not d.is_return or d.reopen_order:
+						out.delivered_qty_map.setdefault(d.print_order_item, 0)
+						out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
 
 			sales_orders_to_deliver = frappe.db.sql_list("""
 				select count(so.name)
@@ -911,6 +913,93 @@ def validate_uom_and_qty_type(doc):
 		doc.set(fn_map.length_uom_fn, doc.get(fn_map.uom_fn))
 
 
+def validate_transaction_against_print_order(doc):
+	def get_order_details(name):
+		if not order_map.get(name):
+			order_map[name] = frappe.db.get_value("Print Order", name,
+				["name", "docstatus", "status", "company", "customer", "fg_warehouse"], as_dict=1)
+
+		return order_map[name]
+
+	def get_line_details(name):
+		if not line_map.get(name):
+			line_map[name] = frappe.db.get_value("Print Order Item", name, ["item_code", "length_uom"], as_dict=1)
+
+		return line_map[name]
+
+	order_map = {}
+	line_map = {}
+	visited_lines = set()
+
+	for d in doc.get("items"):
+		if not d.get("print_order"):
+			continue
+
+		if d.get("print_order_item"):
+			if doc.doctype == "Sales Order" and d.print_order_item in visited_lines:
+				frappe.throw(_("Duplicate row {0} with same {1}").format(d.idx, _("Print Order")))
+			else:
+				visited_lines.add(d.print_order_item)
+
+		order_details = get_order_details(d.print_order)
+		if not order_details:
+			frappe.throw(_("Row #{0}: Print Order {1} does not exist").format(d.idx, d.print_order))
+
+		if order_details.docstatus == 0:
+			frappe.throw(_("Row #{0}: {1} is in draft").format(
+				d.idx, frappe.get_desk_link("Print Order", order_details.name)
+			))
+		if order_details.docstatus == 2:
+			frappe.throw(_("Row #{0}: {1} is cancelled").format(
+				d.idx, frappe.get_desk_link("Print Order", order_details.name)
+			))
+
+		if order_details.status == "Closed" and not doc.get("is_return"):
+			frappe.throw(_("Row #{0}: {1} is {2}").format(
+				d.idx,
+				frappe.get_desk_link("Print Order", order_details.name),
+				frappe.bold(order_details.status)
+			))
+
+		if doc.company != order_details.company:
+			frappe.throw(_("Row #{0}: Company does not match with {1}. Company must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Print Order", order_details.name),
+				order_details.company
+			))
+
+		if doc.customer != order_details.customer:
+			frappe.throw(_("Row #{0}: Customer does not match with {1}. Customer must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Print Order", order_details.name),
+				order_details.customer
+			))
+
+		if d.warehouse != order_details.fg_warehouse and doc.doctype == "Sales Order":
+			frappe.throw(_("Row #{0}: Warehouse does not match with {1}. Warehouse must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Print Order", order_details.name),
+				order_details.warehouse
+			))
+
+		if d.get("print_order_item"):
+			line_details = get_line_details(d.print_order_item)
+
+			if d.item_code != line_details.item_code:
+				frappe.throw(_("Row #{0}: Item Code does not match with {1}. Item Code must be {2}").format(
+					d.idx,
+					frappe.get_desk_link("Print Order", order_details.name),
+					line_details.item_code
+				))
+
+			if d.uom != line_details.length_uom:
+				frappe.throw(_("Row #{0}: UOM does not match with {1}. UOM must be {2}").format(
+					d.idx,
+					frappe.get_desk_link("Print Order", order_details.name),
+					line_details.length_uom
+				))
+
+
 @frappe.whitelist()
 def get_order_defaults_from_customer(customer):
 	customer_defaults = frappe.db.get_value("Customer", customer, default_fields_map.keys(), as_dict=1)
@@ -947,18 +1036,6 @@ def close_or_unclose_print_orders(names, status):
 
 	for name in names:
 		update_status(name, status)
-
-
-def check_print_order_is_closed(doc):
-	if cint(doc.get("is_return")):
-		return
-
-	for d in doc.get("items"):
-		if d.get("print_order"):
-			status = frappe.db.get_value("Print Order", d.print_order, "status", cache=True)
-			if status == "Closed":
-				frappe.throw(_("Row #{0}: {1} is {2}").format(
-					d.idx, frappe.get_desk_link("Print Order", d.print_order), status))
 
 
 @frappe.whitelist()

@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.stock.doctype.packing_slip.packing_slip import PackingSlip
+from textile.fabric_printing.doctype.print_order.print_order import validate_transaction_against_print_order
 from textile.overrides.taxes_and_totals_hooks import calculate_panel_qty
 from textile.utils import is_row_return_fabric
 
@@ -13,6 +14,10 @@ class PackingSlipDP(PackingSlip):
 	def set_is_return_fabric(self):
 		for d in self.items:
 			d.is_return_fabric = is_row_return_fabric(self, d)
+
+	def validate_with_previous_doc(self):
+		super().validate_with_previous_doc()
+		validate_transaction_against_print_order(self)
 
 	def update_previous_doc_status(self):
 		super().update_previous_doc_status()

@@ -4,8 +4,9 @@
 import frappe
 from frappe import _
 from textile.controllers.textile_order import TextileOrder
-from frappe.utils import cint, flt, cstr
+from frappe.utils import cint, flt
 from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item
+from frappe.model.mapper import get_mapped_doc
 
 
 force_customer_fields = ["customer_name"]
@@ -36,15 +37,26 @@ class PretreatmentOrder(TextileOrder):
 		self.validate_customer()
 		self.validate_fabric_items()
 		self.validate_process_items()
+		self.validate_qty()
 		self.calculate_totals()
 		self.set_existing_ready_fabric_bom()
 
+		self.set_sales_order_status()
+		self.set_production_packing_status()
+		self.set_delivery_status()
+		self.set_billing_status()
 		self.set_status()
 
 		self.set_title(self.greige_fabric_material, self.stock_qty)
 
 	def on_submit(self):
 		self.link_greige_fabric_in_ready_fabric()
+
+	def on_cancel(self):
+		if self.status == "Closed":
+			frappe.throw(_("Closed Order cannot be cancelled. Re-open to cancel."))
+
+		self.update_status_on_cancel()
 
 	def set_missing_values(self):
 		self.set_fabric_item_details()
@@ -119,6 +131,10 @@ class PretreatmentOrder(TextileOrder):
 							frappe.bold(component_item_name),
 							frappe.get_desk_link("Item", self.greige_fabric_item)
 						))
+
+	def validate_qty(self):
+		if flt(self.qty) <= 0:
+			frappe.throw(_("Qty must be greater than 0"))
 
 	def calculate_totals(self):
 		self.round_floats_in(self)
@@ -235,6 +251,219 @@ class PretreatmentOrder(TextileOrder):
 
 		return existing_bom[0] if existing_bom else None
 
+	def set_sales_order_status(self, update=False, update_modified=True):
+		sales_order_data = frappe.db.sql("""
+			select sum(stock_qty)
+			from `tabSales Order Item`
+			where docstatus = 1 and pretreatment_order = %s
+		""", self.name)
+
+		self.ordered_qty = flt(sales_order_data[0][0]) if sales_order_data else 0
+
+		ordered_qty = flt(self.ordered_qty, self.precision("qty"))
+		stock_qty = flt(self.stock_qty, self.precision("qty"))
+		self.per_ordered = flt(ordered_qty / stock_qty * 100 if stock_qty else 0, 3)
+
+		if update:
+			self.db_set({
+				'ordered_qty': self.ordered_qty,
+				'per_ordered': self.per_ordered,
+			}, update_modified=update_modified)
+
+	def validate_ordered_qty(self, from_doctype=None):
+		self.validate_completed_qty_for_row(self, 'ordered_qty', 'stock_qty',
+			from_doctype=from_doctype, item_field="ready_fabric_item")
+
+	def set_production_packing_status(self, update=False, update_modified=True):
+		data = self.get_production_packing_data()
+
+		self.work_order_qty = data.work_order_qty
+		self.produced_qty = data.produced_qty
+		self.packed_qty = data.packed_qty
+
+		stock_qty = flt(self.stock_qty, self.precision("qty"))
+		work_order_qty = flt(self.work_order_qty, self.precision("qty"))
+		produced_qty = flt(self.produced_qty, self.precision("qty"))
+		packed_qty = flt(self.packed_qty, self.precision("qty"))
+
+		self.per_work_ordered = flt(work_order_qty / stock_qty * 100 if stock_qty else 0, 3)
+		self.per_produced = flt(produced_qty / stock_qty * 100 if stock_qty else 0, 3)
+		self.per_packed = flt(packed_qty / stock_qty * 100 if stock_qty else 0, 3)
+
+		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_work_order_to_produce
+		self.production_status = self.get_completion_status('per_produced', 'Produce',
+			not_applicable=self.status == "Closed" or not self.per_ordered,
+			within_allowance=production_within_allowance)
+
+		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
+		self.packing_status = self.get_completion_status('per_packed', 'Pack',
+			not_applicable=self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
+			within_allowance=packing_within_allowance)
+
+		if update:
+			self.db_set({
+				'work_order_qty': self.work_order_qty,
+				'produced_qty': self.produced_qty,
+				'packed_qty': self.packed_qty,
+
+				'per_work_ordered': self.per_work_ordered,
+				'per_produced': self.per_produced,
+				'per_packed': self.per_packed,
+
+				'production_status': self.production_status,
+				'packing_status': self.packing_status,
+			}, update_modified=update_modified)
+
+	def get_production_packing_data(self):
+		out = frappe._dict()
+		out.work_order_qty = 0
+		out.produced_qty = 0
+		out.packed_qty = 0
+		out.has_work_order_to_pack = False
+		out.has_work_order_to_produce = False
+
+		if self.docstatus == 1:
+			# Work Order
+			work_order_data = frappe.db.sql("""
+				SELECT qty, produced_qty, production_status, packing_status
+				FROM `tabWork Order`
+				WHERE docstatus = 1 AND pretreatment_order = %s
+			""", self.name, as_dict=1)
+
+			for d in work_order_data:
+				out.work_order_qty += flt(d.qty)
+				out.produced_qty += flt(d.produced_qty)
+
+				if d.production_status != "Produced":
+					out.has_work_order_to_produce = True
+				if d.packing_status != "Packed":
+					out.has_work_order_to_pack = True
+
+			# Packing Slips
+			packed_data = frappe.db.sql("""
+				SELECT sum(stock_qty)
+				FROM `tabPacking Slip Item`
+				WHERE docstatus = 1 AND pretreatment_order = %s and item_code = %s
+			""", (self.name, self.ready_fabric_item))
+
+			if packed_data:
+				out.packed_qty = flt(packed_data[0][0])
+
+		return out
+
+	def set_delivery_status(self, update=False, update_modified=True):
+		pass
+
+	def set_billing_status(self, update=False, update_modified=True):
+		pass
+
+	def update_status_on_cancel(self):
+		self.db_set({
+			"status": "Cancelled",
+			"production_status": "Not Applicable",
+			"packing_status": "Not Applicable",
+			"delivery_status": "Not Applicable",
+			"billing_status": "Not Applicable",
+		})
+
+	def set_status(self, status=None, update=False, update_modified=True):
+		previous_status = self.status
+
+		if status:
+			self.status = status
+
+		if self.docstatus == 0:
+			self.status = "Draft"
+
+		elif self.docstatus == 1:
+			if self.status == "Closed":
+				self.status = "Closed"
+			elif self.per_ordered < 100:
+				self.status = "Not Started"
+			elif self.production_status == "To Produce":
+				self.status = "To Produce"
+			elif self.delivery_status == "To Deliver":
+				self.status = "To Deliver"
+			else:
+				self.status = "Completed"
+
+		else:
+			self.status = "Cancelled"
+
+		self.add_status_comment(previous_status)
+
+		if update:
+			self.db_set('status', self.status, update_modified=update_modified)
+
+
+def validate_transaction_against_pretreatment_order(doc):
+	def get_order_details(name):
+		if not order_map.get(name):
+			order_map[name] = frappe.db.get_value("Pretreatment Order", name,
+				["name", "docstatus", "status", "company", "customer", "fg_warehouse", "ready_fabric_item"], as_dict=1)
+
+		return order_map[name]
+
+	order_map = {}
+	visited_orders = set()
+
+	for d in doc.get("items"):
+		if not d.get("pretreatment_order"):
+			continue
+
+		if doc.doctype == "Sales Order" and d.pretreatment_order in visited_orders:
+			frappe.throw(_("Duplicate row {0} with same {1}").format(d.idx, _("Pretreatment Order")))
+		else:
+			visited_orders.add(d.pretreatment_order)
+
+		order_details = get_order_details(d.pretreatment_order)
+		if not order_details:
+			frappe.throw(_("Row #{0}: Pretreatment Order {1} does not exist").format(d.idx, d.pretreatment_order))
+
+		if order_details.docstatus == 0:
+			frappe.throw(_("Row #{0}: {1} is in draft").format(
+				d.idx, frappe.get_desk_link("Pretreatment Order", order_details.name)
+			))
+		if order_details.docstatus == 2:
+			frappe.throw(_("Row #{0}: {1} is cancelled").format(
+				d.idx, frappe.get_desk_link("Pretreatment Order", order_details.name)
+			))
+
+		if order_details.status == "Closed" and not doc.get("is_return"):
+			frappe.throw(_("Row #{0}: {1} is {2}").format(
+				d.idx,
+				frappe.get_desk_link("Pretreatment Order", order_details.name),
+				frappe.bold(order_details.status)
+			))
+
+		if doc.company != order_details.company:
+			frappe.throw(_("Row #{0}: Company does not match with {1}. Company must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Pretreatment Order", order_details.name),
+				order_details.company
+			))
+
+		if doc.customer != order_details.customer:
+			frappe.throw(_("Row #{0}: Customer does not match with {1}. Customer must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Pretreatment Order", order_details.name),
+				order_details.customer
+			))
+
+		if d.item_code != order_details.ready_fabric_item:
+			frappe.throw(_("Row #{0}: Item Code does not match with {1}. Item Code must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Pretreatment Order", order_details.name),
+				order_details.ready_fabric_item
+			))
+
+		if d.warehouse != order_details.fg_warehouse and doc.doctype == "Sales Order":
+			frappe.throw(_("Row #{0}: Warehouse does not match with {1}. Warehouse must be {2}").format(
+				d.idx,
+				frappe.get_desk_link("Pretreatment Order", order_details.name),
+				order_details.warehouse
+			))
+
 
 @frappe.whitelist()
 def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, get_greige_fabric=False):
@@ -285,3 +514,47 @@ def create_ready_fabric_bom(pretreatment_order):
 	frappe.msgprint(_("Ready Fabric {0} created successfully").format(
 		frappe.get_desk_link("BOM", bom_no))
 	)
+
+
+@frappe.whitelist()
+def make_sales_order(source_name, target_doc=None):
+	return _make_sales_order(source_name, target_doc)
+
+
+def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
+	def set_missing_values(source, target):
+		if item_condition(source, target):
+			row = frappe.new_doc("Sales Order Item")
+			update_item(row, source, target)
+			target.append("items", row)
+
+		target.run_method("set_missing_values")
+		target.run_method("calculate_taxes_and_totals")
+		target.run_method("set_payment_schedule")
+
+	def item_condition(source_parent, target_parent):
+		if source_parent.name in [d.pretreatment_order for d in target_parent.get('items') if d.pretreatment_order]:
+			return False
+
+		return abs(source_parent.ordered_qty) < abs(source_parent.qty)
+
+	def update_item(target, source_parent, target_parent):
+		target.pretreatment_order = source_parent.name
+		target.item_code = source_parent.ready_fabric_item
+		target.qty = flt(source_parent.qty) - flt(source_parent.ordered_qty)
+		target.uom = source_parent.uom
+
+	doc = get_mapped_doc("Pretreatment Order", source_name, {
+		"Pretreatment Order": {
+			"doctype": "Sales Order",
+			"field_map": {
+				"delivery_date": "delivery_date",
+				"fg_warehouse": "set_warehouse",
+			},
+			"validation": {
+				"docstatus": ["=", 1],
+			}
+		},
+	}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
+
+	return doc

@@ -84,16 +84,16 @@ update_stock_entry_from_work_order = [
 ]
 
 update_packing_slip_from_sales_order_mapper = [
-	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
+	"textile.overrides.sales_order_hooks.update_sales_order_mapper",
 	"textile.overrides.packing_slip_hooks.update_packing_slip_from_sales_order_mapper",
 ]
 
 update_delivery_note_from_sales_order_mapper = [
-	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
+	"textile.overrides.sales_order_hooks.update_sales_order_mapper",
 ]
 
 update_sales_invoice_from_sales_order_mapper = [
-	"textile.overrides.sales_order_hooks.map_print_order_reference_in_target_item",
+	"textile.overrides.sales_order_hooks.update_sales_order_mapper",
 ]
 
 update_sales_invoice_from_delivery_note_mapper = [
@@ -170,12 +170,14 @@ fixtures = [
 				'Item Source-textile_item_type',
 				'Brand-textile_item_type',
 
+				'Sales Order Item-pretreatment_order',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
 				'Sales Order Item-panel_length_meter',
 				'Sales Order Item-panel_qty',
 				'Sales Order Item-panel_based_qty',
 
+				'Delivery Note Item-pretreatment_order',
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
 				'Delivery Note Item-panel_length_meter',
@@ -183,6 +185,7 @@ fixtures = [
 				'Delivery Note Item-panel_based_qty',
 				'Delivery Note Item-is_return_fabric',
 
+				'Sales Invoice Item-pretreatment_order',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
 				'Sales Invoice Item-panel_length_meter',
@@ -190,6 +193,7 @@ fixtures = [
 				'Sales Invoice Item-panel_based_qty',
 				'Sales Invoice Item-is_return_fabric',
 
+				'Packing Slip Item-pretreatment_order',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
 				'Packing Slip Item-column_break_zytx5',
@@ -198,6 +202,7 @@ fixtures = [
 				'Packing Slip Item-panel_based_qty',
 				'Packing Slip Item-is_return_fabric',
 
+				'Work Order-pretreatment_order',
 				'Work Order-print_order',
 				'Work Order-print_order_item',
 
@@ -215,6 +220,7 @@ fixtures = [
 				'Work Order-column_break_4pknu',
 				'Work Order-process_item_name',
 
+				'Stock Entry-pretreatment_order',
 				'Stock Entry-print_order',
 				'Stock Entry-fabric_printer',
 			]]

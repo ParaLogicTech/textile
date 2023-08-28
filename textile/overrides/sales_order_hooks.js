@@ -3,6 +3,14 @@ frappe.provide("textile");
 frappe.ui.form.on("Sales Order", {
 	refresh: function(frm) {
 		if (frm.doc.docstatus === 0) {
+			frm.add_custom_button(__('Pretreatment Order'), function() {
+				textile.get_items_from_pretreatment_order(
+					frm,
+					"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_order",
+					{per_ordered: ["<", 100]}
+				);
+			}, __("Get Items From"));
+
 			frm.add_custom_button(__('Print Order'), function() {
 				textile.get_items_from_print_order(
 					frm,
