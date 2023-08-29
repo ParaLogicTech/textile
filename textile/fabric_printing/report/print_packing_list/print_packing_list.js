@@ -2,6 +2,14 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
+let group_field_opts = [
+	"",
+	"Group by Package",
+	"Group by Customer",
+	"Group by Fabric Item",
+	"Group by Print Order",
+]
+
 frappe.query_reports["Print Packing List"] = {
 	"filters": [
 		{
@@ -86,9 +94,38 @@ frappe.query_reports["Print Packing List"] = {
 			options: "Fabric Type",
 		},
 		{
-			"fieldname":"show_delivered",
-			"label": __("Show Delivered"),
-			"fieldtype": "Check"
+			fieldname: "group_by_1",
+			label: __("Group By Level 1"),
+			fieldtype: "Select",
+			options: group_field_opts,
+			default: ""
 		},
-	]
+		{
+			fieldname: "group_by_2",
+			label: __("Group By Level 2"),
+			fieldtype: "Select",
+			options: group_field_opts,
+			default: "Group by Package"
+		},
+		{
+			fieldname: "totals_only",
+			label: __("Group Totals Only"),
+			fieldtype: "Check",
+		},
+		{
+			fieldname: "show_delivered",
+			label: __("Show Delivered"),
+			fieldtype: "Check"
+		},
+	],
+	formatter: function(value, row, column, data, default_formatter) {
+		var style = {};
+
+		if (data.is_return_fabric) {
+			style['color'] = 'var(--alert-text-info)';
+		}
+
+		return default_formatter(value, row, column, data, {css: style});
+	},
+	initial_depth: 1
 };
