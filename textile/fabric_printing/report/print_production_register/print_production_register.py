@@ -37,12 +37,13 @@ class PrintProductionRegister:
 
 		self.data = frappe.db.sql("""
 			SELECT se.name as stock_entry, se.posting_date, se.posting_time,
-			    se.work_order, se.fabric_printer, se.fg_completed_qty as qty,
-			    wo.print_order, wo.stock_uom as uom,
-			    wo.customer, wo.customer_name,
-			    wo.production_item as design_item, wo.item_name as design_item_name,
-			    wo.process_item, wo.process_item_name,
-			    wo.fabric_item, wo.fabric_item_name
+				timestamp(se.posting_date, se.posting_time) as posting_dt,
+				se.work_order, se.fabric_printer, se.fg_completed_qty as qty,
+				wo.print_order, wo.stock_uom as uom,
+				wo.customer, wo.customer_name,
+				wo.production_item as design_item, wo.item_name as design_item_name,
+				wo.process_item, wo.process_item_name,
+				wo.fabric_item, wo.fabric_item_name
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo
 				ON wo.name = se.work_order
@@ -50,6 +51,7 @@ class PrintProductionRegister:
 				ON item.name = wo.fabric_item
 			WHERE se.docstatus = 1
 				AND se.posting_date between %(from_date)s AND %(to_date)s
+				AND ifnull(wo.print_order, '') != ''
 				{conditions}
 			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
 		""".format(conditions=conditions), self.filters, as_dict=1)
@@ -118,9 +120,16 @@ class PrintProductionRegister:
 			totals[f] = g
 
 		# Sum
+		uoms = set()
 		sum_fields = ['qty']
-		for f in sum_fields:
-			totals[f] = sum([flt(d.get(f)) for d in data])
+		for d in data:
+			for f in sum_fields:
+				totals[f] = flt(totals.get(f)) + flt(d.get(f))
+
+			uoms.add(d.uom)
+
+		if len(uoms) == 1:
+			totals.uom = list(uoms)[0]
 
 		group_reference_doctypes = {
 			"process_item": "Item",
@@ -141,13 +150,6 @@ class PrintProductionRegister:
 
 		if not group_field and self.group_by == [None]:
 			totals['reference'] = "'Total'"
-
-		# set item_code from model
-		if "item_code" in grouped_by:
-			totals['original_item_code'] = totals['item_code']
-		elif "variant_of" in grouped_by:
-			totals['item_code'] = totals['variant_of']
-			totals['original_item_code'] = totals['variant_of']
 
 		totals['disable_item_formatter'] = cint(self.show_item_name)
 
@@ -208,16 +210,36 @@ class PrintProductionRegister:
 	def get_columns(self):
 		columns = [
 			{
-				"label": _("Date"),
-				"fieldname": "posting_date",
-				"fieldtype": "Date",
-				"width": 85
+				"label": _("Date/Time"),
+				"fieldname": "posting_dt",
+				"fieldtype": "Datetime",
+				"width": 90
 			},
 			{
-				"label": _("Time"),
-				"fieldname": "posting_time",
-				"fieldtype": "Time",
-				"width": 85
+				"label": _("Printer"),
+				"fieldname": "fabric_printer",
+				"fieldtype": "Link",
+				"options": "Fabric Printer",
+				"width": 80
+			},
+			{
+				"label": _("Process"),
+				"fieldname": "process_item_name",
+				"fieldtype": "Data",
+				"width": 100
+			},
+			{
+				"label": _("Qty"),
+				"fieldname": "qty",
+				"fieldtype": "Float",
+				"width": 80
+			},
+			{
+				"label": _("UOM"),
+				"fieldname": "uom",
+				"fieldtype": "Link",
+				"options": "UOM",
+				"width": 60
 			},
 			{
 				"label": _("Print Order"),
@@ -239,19 +261,6 @@ class PrintProductionRegister:
 				"fieldtype": "Link",
 				"options": "Stock Entry",
 				"width": 120
-			},
-			{
-				"label": _("Printer"),
-				"fieldname": "fabric_printer",
-				"fieldtype": "Link",
-				"options": "Fabric Printer",
-				"width": 80
-			},
-			{
-				"label": _("Process"),
-				"fieldname": "process_item_name",
-				"fieldtype": "Data",
-				"width": 100
 			},
 			{
 				"label": _("Customer"),
@@ -291,19 +300,6 @@ class PrintProductionRegister:
 				"fieldname": "design_item_name",
 				"fieldtype": "Data",
 				"width": 160
-			},
-			{
-				"label": _("Qty"),
-				"fieldname": "qty",
-				"fieldtype": "Float",
-				"width": 80
-			},
-			{
-				"label": _("UOM"),
-				"fieldname": "uom",
-				"fieldtype": "Link",
-				"options": "UOM",
-				"width": 60
 			},
 		]
 
