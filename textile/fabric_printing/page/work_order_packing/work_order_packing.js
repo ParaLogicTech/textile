@@ -44,25 +44,6 @@ textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintL
 		return out;
 	}
 
-	async set_fields() {
-		await super.set_fields();
-		this._add_field("print_order");
-		this._add_field("customer");
-		this._add_field("customer_name");
-		this._add_field("fabric_item");
-		this._add_field("fabric_item_name");
-		this._add_field("qty");
-		this._add_field("produced_qty");
-		this._add_field("packed_qty");
-		this._add_field("stock_uom");
-		this._add_field("per_produced");
-		this._add_field("per_packed");
-		this._add_field("packing_slip_required");
-		this._add_field("production_status");
-		this._add_field("packing_status");
-		this._add_field("order_line_no");
-	}
-
 	get_args() {
 		const args = super.get_args();
 
@@ -78,11 +59,15 @@ textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintL
 	}
 
 	toggle_actions_menu_button() {
-
+		this.page.hide_actions_menu();
 	}
 
 	setup_view_menu() {
 
+	}
+
+	get_button_html() {
+		return "";
 	}
 
 	set_primary_action() {

@@ -17,3 +17,18 @@ frappe.listview_settings['Work Order'].onload = function(listview) {
 		}
 	}
 }
+
+frappe.listview_settings['Work Order'].add_fields_if_missing = function (fields) {
+	for (let fieldname of fields) {
+		if (!frappe.listview_settings['Work Order'].add_fields.includes(fieldname)) {
+			frappe.listview_settings['Work Order'].add_fields.push(fieldname);
+		}
+	}
+}
+
+frappe.listview_settings['Work Order'].add_fields_if_missing([
+	"print_order", "pretreatment_order",
+	"customer", "customer_name",
+	"fabric_item", "fabric_item_name",
+	"process_item", "process_item_name",
+]);

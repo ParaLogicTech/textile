@@ -1,0 +1,26 @@
+{
+ "content": null,
+ "creation": "2023-08-29 12:54:31.421691",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2023-08-29 12:54:31.421691",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "print-work-order",
+ "owner": "Administrator",
+ "page_name": "print-work-order",
+ "roles": [
+  {
+   "role": "Manufacturing User"
+  },
+  {
+   "role": "Stock User"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Print Work Order"
+}

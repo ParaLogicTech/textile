@@ -1,8 +1,13 @@
 frappe.provide("textile");
 
 textile.PrintListView = class PrintListView extends frappe.views.ListView {
+	page_title = "Print Work Order"
 	hide_row_button = true;
 	image_fieldname = "image"
+
+	set_breadcrumbs() {
+		frappe.breadcrumbs.add("Fabric Printing", this.doctype);
+	}
 
 	setup_defaults() {
 		let out = super.setup_defaults();
@@ -11,6 +16,12 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		this.sort_order = "desc";
 
 		return out;
+	}
+
+	get_args() {
+		const args = super.get_args();
+		args.filters.push(["Work Order", "print_order", "is", "set"]);
+		return args;
 	}
 
 	setup_sort_selector() {
@@ -136,7 +147,11 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 	}
 
 	get_image_html(doc) {
-		return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc[this.image_fieldname])}" alt="${escape(doc.item_name)}">`
+		if (doc[this.image_fieldname]) {
+			return `<img src="/api/method/textile.utils.get_rotated_image?file=${encodeURIComponent(doc[this.image_fieldname])}" alt="${escape(doc.item_name)}">`;
+		} else {
+			return "";
+		}
 	}
 
 	get_button_html(doc) {
@@ -159,62 +174,3 @@ textile.PrintListView = class PrintListView extends frappe.views.ListView {
 		return frappe.format(doc[fieldname], df, {'no_newlines': 1, 'inline': true}, doc);
 	}
 }
-
-textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListView {
-	async set_fields() {
-		await super.set_fields();
-		this._add_field("print_order");
-		this._add_field("customer");
-		this._add_field("customer_name");
-		this._add_field("fabric_item");
-		this._add_field("fabric_item_name");
-		this._add_field("process_item");
-		this._add_field("process_item_name");
-		this._add_field("qty");
-		this._add_field("produced_qty");
-		this._add_field("stock_uom");
-		this._add_field("per_produced");
-		this._add_field("production_status");
-		this._add_field("order_line_no");
-	}
-
-	get_progress_html(doc) {
-		return erpnext.manufacturing.show_progress_for_production(doc);
-	}
-
-	get_details_html(doc) {
-		return `
-			<div class="clearfix design-properties">
-				<div class="pull-left">
-					<table>
-						<tr>
-							<th>Print Order:</th>
-							<td>${doc.print_order || ""}</td>
-						</tr>
-						<tr>
-							<th>Customer:</th>
-							<td>${doc.customer_name || doc.customer || ""}</td>
-						</tr>
-						<tr>
-							<th>Fabric:</th>
-							<td>${doc.fabric_item_name || doc.fabric_item || ""}</td>
-						</tr>
-						<tr>
-							<th>Produced:</th>
-							<td>
-								${this.get_formatted("produced_qty", doc)}
-								/
-								${this.get_formatted("qty", doc)}
-								${doc.stock_uom}
-								(${this.get_formatted("per_produced", doc)})
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		`;
-	}
-}
-
-frappe.provide("frappe.views.custom_view_classes.Work Order");
-frappe.views.custom_view_classes["Work Order"]["List"] = textile.PrintWorkOrderList;

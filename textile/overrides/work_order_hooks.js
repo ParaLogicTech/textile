@@ -1,5 +1,29 @@
 frappe.provide("textile");
 
+frappe.ui.form.on("Work Order", {
+	refresh: function (frm) {
+		if (frm.doc.pretreatment_order) {
+			frm.trigger("set_fabric_pretreatment_breadcrumbs");
+		} else if (frm.doc.print_order) {
+			frm.trigger("set_fabric_printing_breadcrumbs");
+		}
+	},
+
+	set_fabric_pretreatment_breadcrumbs: function () {
+		frappe.breadcrumbs.clear();
+		frappe.breadcrumbs.set_workspace_breadcrumb({"workspace": "Fabric Pretreatment"});
+		frappe.breadcrumbs.set_list_breadcrumb({"doctype": "Work Order"})
+		frappe.breadcrumbs.set_form_breadcrumb({"doctype": "Work Order"}, "form");
+	},
+
+	set_fabric_printing_breadcrumbs: function () {
+		frappe.breadcrumbs.clear();
+		frappe.breadcrumbs.set_workspace_breadcrumb({"workspace": "Fabric Printing"});
+		frappe.breadcrumbs.set_custom_breadcrumbs({"label": "Print Work Order", "route": "/app/print-work-order"});
+		frappe.breadcrumbs.set_form_breadcrumb({"doctype": "Work Order"}, "form");
+	},
+});
+
 textile.add_print_order_fields_in_work_order_prompt = function (doc, purpose, fields) {
 	if (purpose != "Manufacture" || !doc.print_order) {
 		return;
