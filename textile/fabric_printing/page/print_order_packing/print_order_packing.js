@@ -1,22 +1,22 @@
 frappe.provide("textile");
 
-frappe.pages['work-order-packing'].on_page_show = function(wrapper) {
-	if (!textile.work_order_packing) {
-		textile.work_order_packing = new textile.WorkOrderPacking(wrapper);
-		window.cur_list = textile.work_order_packing.list_view;
+frappe.pages['print-order-packing'].on_page_show = function(wrapper) {
+	if (!textile.print_order_packing) {
+		textile.print_order_packing = new textile.PrintOrderPacking(wrapper);
+		window.cur_list = textile.print_order_packing.list_view;
 	} else {
-		if (textile.work_order_packing?.list_view) {
-			window.cur_list = textile.work_order_packing.list_view;
-			textile.work_order_packing.list_view.show();
+		if (textile.print_order_packing?.list_view) {
+			window.cur_list = textile.print_order_packing.list_view;
+			textile.print_order_packing.list_view.show();
 		}
 	}
 }
 
-textile.WorkOrderPacking = class WorkOrderPacking {
+textile.PrintOrderPacking = class PrintOrderPacking {
 	constructor(wrapper) {
 		this.page = frappe.ui.make_app_page({
 			parent: wrapper,
-			title: __("Work Order Packing"),
+			title: __("Print Order Packing"),
 			single_column: false
 		});
 		this.parent = wrapper;
@@ -25,15 +25,15 @@ textile.WorkOrderPacking = class WorkOrderPacking {
 	}
 
 	make() {
-		this.list_view = new textile.WorkOrderPackingList({
+		this.list_view = new textile.PrintOrderPackingList({
 			doctype: "Work Order",
 			parent: this.parent,
 		});
 	}
 }
 
-textile.WorkOrderPackingList = class WorkOrderPackingList extends textile.PrintListView {
-	page_title = "Work Order Packing"
+textile.PrintOrderPackingList = class PrintOrderPackingList extends textile.PrintListView {
+	page_title = __("Print Order Packing")
 	check_on_click = true
 
 	setup_defaults() {

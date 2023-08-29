@@ -1,7 +1,7 @@
 frappe.provide("textile");
 
 textile.PrintListView = class PrintListView extends frappe.views.ListView {
-	page_title = "Print Work Order"
+	page_title = __("Print Work Order")
 	hide_row_button = true;
 	image_fieldname = "image"
 

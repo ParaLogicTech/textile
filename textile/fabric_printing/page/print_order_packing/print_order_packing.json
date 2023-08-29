@@ -4,12 +4,12 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-08-21 02:52:07.763050",
+ "modified": "2023-08-29 16:01:56.527257",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
- "name": "work-order-packing",
+ "name": "print-order-packing",
  "owner": "Administrator",
- "page_name": "work-order-packing",
+ "page_name": "print-order-packing",
  "roles": [
   {
    "role": "Stock User"
@@ -28,5 +28,5 @@
  "standard": "Yes",
  "style": null,
  "system_page": 0,
- "title": "Work Order Packing"
+ "title": "Print Order Packing"
 }
