@@ -28,6 +28,8 @@ class PretreatmentOrder(TextileOrder):
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
+		elif self.docstatus == 1:
+			self.set_work_order_onload()
 
 		self.set_fabric_stock_qty("greige_")
 
@@ -57,6 +59,13 @@ class PretreatmentOrder(TextileOrder):
 			frappe.throw(_("Closed Order cannot be cancelled. Re-open to cancel."))
 
 		self.update_status_on_cancel()
+
+	def set_work_order_onload(self):
+		work_order = frappe.db.get_value("Work Order",
+			filters={"pretreatment_order": self.name, "docstatus": ["<", 2]},
+			order_by="docstatus desc"
+		)
+		self.set_onload("work_order", work_order)
 
 	def set_missing_values(self):
 		self.set_fabric_item_details()
@@ -351,6 +360,10 @@ class PretreatmentOrder(TextileOrder):
 
 		return out
 
+	def validate_work_order_qty(self, from_doctype=None):
+		self.validate_completed_qty_for_row(self, 'work_order_qty', 'stock_qty',
+			allowance_type="production", from_doctype=from_doctype, item_field="ready_fabric_item")
+
 	def set_delivery_status(self, update=False, update_modified=True):
 		pass
 
@@ -558,3 +571,41 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
 
 	return doc
+
+
+@frappe.whitelist()
+def create_work_order(pretreatment_order, ignore_version=True, ignore_feed=True):
+	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
+
+	if isinstance(pretreatment_order, str):
+		doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
+	else:
+		doc = pretreatment_order
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Pretreatment Order is not submitted"))
+
+	if not doc.ready_fabric_bom:
+		frappe.throw(_("Ready Fabric BOM not created"))
+
+	sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
+		'pretreatment_order': doc.name,
+		'docstatus': 1
+	}, pluck="sales_order")
+
+	wo_items = []
+	for so in sales_orders:
+		so_doc = frappe.get_doc('Sales Order', so)
+		wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.pretreatment_order == pretreatment_order)
+
+	wo_list = []
+	for i, d in enumerate(wo_items):
+		wo_list += make_work_orders([d], doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+
+	if wo_list:
+		wo_message = _("Work Order created: {0}").format(
+			", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+		)
+		frappe.msgprint(wo_message, indicator='green')
+	else:
+		frappe.msgprint(_("Work Orders already created"))

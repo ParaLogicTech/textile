@@ -333,11 +333,11 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 				if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
 					can_create_work_order = true;
-					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
+					this.frm.add_custom_button(__('Work Order'), () => this.create_work_orders(),
 						__("Create"));
 				}
 
-				if (flt(doc.fabric_transfer_qty) < flt(doc.total_fabric_length) || doc.delivery_status == "To Deliver") {
+				if (doc.delivery_status == "To Deliver") {
 					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
 						__("Create"));
 				}
@@ -735,7 +735,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		});
 	}
 
-	create_work_order() {
+	create_work_orders() {
 		return frappe.call({
 			method: "textile.fabric_printing.doctype.print_order.print_order.create_work_orders",
 			args: {

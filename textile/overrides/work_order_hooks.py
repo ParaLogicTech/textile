@@ -1,17 +1,12 @@
 import frappe
-from frappe import _
 from frappe.utils import flt
 from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 
 
-po_to_wo_warehouse_fn_map = {
-	'source_warehouse': 'source_warehouse',
-	'wip_warehouse': 'wip_warehouse',
-	'fg_warehouse': 'fg_warehouse',
-}
-
-fabric_copy_fields = ["fabric_item", "fabric_item_name", "fabric_material", "fabric_width", "fabric_gsm"]
-process_copy_fields = ["process_item", "process_item_name"]
+warehouse_fields = ['source_warehouse', 'wip_warehouse', 'fg_warehouse']
+print_process_fields = ["process_item", "process_item_name"]
+fabric_fields = ["fabric_item", "fabric_item_name", "fabric_material", "fabric_width", "fabric_gsm"]
+greige_fabric_fields = ["greige_" + f for f in fabric_fields]
 
 
 class WorkOrderDP(WorkOrder):
@@ -26,33 +21,54 @@ class WorkOrderDP(WorkOrder):
 
 
 def update_work_order_from_sales_order(work_order):
-	def cache_generator():
-		fields = ["packing_slip_required"] + fabric_copy_fields + process_copy_fields + list(po_to_wo_warehouse_fn_map.keys())
+	def get_pretreatment_order_details():
+		fields = ["packing_slip_required"] + greige_fabric_fields + warehouse_fields
+		return frappe.db.get_value("Pretreatment Order", work_order.pretreatment_order, fields, as_dict=1)
+
+	def get_print_order_details():
+		fields = ["packing_slip_required"] + fabric_fields + print_process_fields + warehouse_fields
 		return frappe.db.get_value("Print Order", work_order.print_order, fields, as_dict=1)
 
-	# Set Print Order Reference
+	# Set Order Reference
 	if work_order.get('sales_order_item'):
 		so_item = frappe.db.get_value("Sales Order Item", work_order.sales_order_item,
-			["print_order", "print_order_item"], as_dict=1)
-
+			["pretreatment_order", "print_order", "print_order_item"], as_dict=1)
 		if so_item:
+			work_order.pretreatment_order = so_item.pretreatment_order
 			work_order.print_order = so_item.print_order
 			work_order.print_order_item = so_item.print_order_item
 
+	# Set Preatreatment Order related values
+	if work_order.get('pretreatment_order'):
+		pretreatment_order_details = get_pretreatment_order_details()
+
+		work_order.skip_transfer = 0
+		work_order.from_wip_warehouse = 0
+		work_order.packing_slip_required = pretreatment_order_details.packing_slip_required
+
+		for warehouse_field in warehouse_fields:
+			warehouse = pretreatment_order_details.get(warehouse_field)
+			if warehouse:
+				work_order.set(warehouse_field, warehouse)
+
+		for field in fabric_fields:
+			work_order.set(field, pretreatment_order_details.get("greige_" + field))
+
 	# Set Print Order related values
 	if work_order.get('print_order'):
-		print_order_details = frappe.local_cache("print_order_details_wo_from_so", work_order.print_order, cache_generator)
+		print_order_details = frappe.local_cache("print_order_details_wo_from_so", work_order.print_order,
+			get_print_order_details)
 
 		work_order.skip_transfer = 1
 		work_order.from_wip_warehouse = 0
 		work_order.packing_slip_required = print_order_details.packing_slip_required
 
-		for po_warehouse_fn, wo_warehouse_fn in po_to_wo_warehouse_fn_map.items():
-			warehouse = print_order_details.get(po_warehouse_fn)
+		for warehouse_field in warehouse_fields:
+			warehouse = print_order_details.get(warehouse_field)
 			if warehouse:
-				work_order.set(wo_warehouse_fn, warehouse)
+				work_order.set(warehouse_field, warehouse)
 
-		for field in fabric_copy_fields + process_copy_fields:
+		for field in fabric_fields + print_process_fields:
 			work_order.set(field, print_order_details.get(field))
 
 	# Set max qty
@@ -61,18 +77,23 @@ def update_work_order_from_sales_order(work_order):
 			"stock_fabric_length", cache=1))
 
 
-def update_print_order_status(self, hook, status=None):
-	if not (self.get('print_order') and self.get('print_order_item')):
-		return
+def on_work_order_update_status(doc, hook, status=None):
+	if doc.get('pretreatment_order') and not frappe.flags.skip_print_order_status_update:
+		doc = frappe.get_doc("Pretreatment Order", doc.pretreatment_order)
+		doc.set_production_packing_status(update=True)
 
-	if frappe.flags.skip_print_order_status_update:
-		return
+		if hook != 'update_status':
+			doc.validate_work_order_qty(from_doctype=doc.doctype)
 
-	doc = frappe.get_doc("Print Order", self.print_order)
-	doc.set_production_packing_status(update=True)
+		doc.set_status(update=True)
+		doc.notify_update()
 
-	if hook != 'update_status':
-		doc.validate_work_order_qty(from_doctype=self.doctype, row_names=[self.print_order_item])
+	if doc.get('print_order') and doc.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
+		doc = frappe.get_doc("Print Order", doc.print_order)
+		doc.set_production_packing_status(update=True)
 
-	doc.set_status(update=True)
-	doc.notify_update()
+		if hook != 'update_status':
+			doc.validate_work_order_qty(from_doctype=doc.doctype, row_names=[doc.print_order_item])
+
+		doc.set_status(update=True)
+		doc.notify_update()

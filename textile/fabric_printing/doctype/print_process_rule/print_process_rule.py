@@ -220,6 +220,10 @@ def paper_item_query(doctype, txt, searchfield, start, page_len, filters, as_dic
 
 	if paper_item_codes:
 		filters["name"] = ("in", paper_item_codes)
+	else:
+		filters.update({
+			"process_component": process_component,
+		})
 
 	return item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=as_dict)
 

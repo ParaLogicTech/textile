@@ -41,6 +41,22 @@ textile.add_print_order_fields_in_work_order_prompt = function (doc, purpose, fi
 	});
 }
 
+textile.add_pretreatment_order_fields_in_work_order_prompt = function (doc, purpose, fields) {
+	if (!doc.pretreatment_order) {
+		return;
+	}
+
+	let work_order_index = fields.findIndex(d => d.fieldname == "work_order");
+	fields.splice(work_order_index, 0, {
+		label: __("Pretreatment Order"),
+		fieldname: "pretreatment_order",
+		fieldtype: "Link",
+		options: "Pretreatment Order",
+		read_only: 1,
+		default: doc.pretreatment_order,
+	});
+}
+
 textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fields) {
 	if (doc && doc.work_orders && !doc.work_orders.every(d => d.print_order)) {
 		return;
@@ -108,5 +124,6 @@ textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fiel
 	work_order_df.in_list_view = 0;
 }
 
-erpnext.manufacturing.multiple_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);
 erpnext.manufacturing.work_order_qty_prompt_hooks.push(textile.add_print_order_fields_in_work_order_prompt);
+erpnext.manufacturing.work_order_qty_prompt_hooks.push(textile.add_pretreatment_order_fields_in_work_order_prompt);
+erpnext.manufacturing.multiple_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);

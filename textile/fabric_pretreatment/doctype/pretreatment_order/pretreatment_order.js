@@ -93,6 +93,12 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		let doc = this.frm.doc;
 
 		if (doc.docstatus == 1) {
+			if (doc.__onload?.work_order) {
+				this.frm.add_custom_button(__('Open Work Order'), () => {
+					return frappe.set_route("Form", "Work Order", doc.__onload.work_order);
+				});
+			}
+
 			let bom_created = doc.ready_fabric_bom;
 			if (!bom_created) {
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
@@ -100,8 +106,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 			}
 
 			if (doc.status != "Closed") {
-				if (flt(doc.ordered_qty) < flt(doc.qty)) {
+				if (flt(doc.per_ordered) < 100) {
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
+						__("Create"));
+				}
+
+				if (bom_created && doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
+					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 						__("Create"));
 				}
 			}
@@ -225,6 +236,21 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		frappe.model.open_mapped_doc({
 			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_order",
 			frm: this.frm
+		});
+	}
+
+	create_work_order() {
+		return frappe.call({
+			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.create_work_order",
+			args: {
+				pretreatment_order: this.frm.doc.name
+			},
+			freeze: true,
+			callback: (r) => {
+				if (!r.exc) {
+					this.frm.reload_doc();
+				}
+			}
 		});
 	}
 }

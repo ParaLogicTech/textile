@@ -975,7 +975,7 @@ def validate_transaction_against_print_order(doc):
 				order_details.customer
 			))
 
-		if d.warehouse != order_details.fg_warehouse and doc.doctype == "Sales Order":
+		if doc.doctype == "Sales Order" and d.warehouse != order_details.fg_warehouse:
 			frappe.throw(_("Row #{0}: Warehouse does not match with {1}. Warehouse must be {2}").format(
 				d.idx,
 				frappe.get_desk_link("Print Order", order_details.name),
@@ -1152,7 +1152,7 @@ def create_work_orders(print_order, publish_progress=True, ignore_version=True, 
 		doc = print_order
 
 	if doc.docstatus != 1:
-		frappe.throw(_("Submit the Print Order first."))
+		frappe.throw(_("Print Order is not submitted"))
 
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Create Items and BOMs first"))
@@ -1163,14 +1163,13 @@ def create_work_orders(print_order, publish_progress=True, ignore_version=True, 
 	}, pluck="sales_order")
 
 	wo_items = []
-
 	for so in sales_orders:
 		so_doc = frappe.get_doc('Sales Order', so)
-		wo_items += so_doc.get_work_order_items()
+		wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.print_order == print_order)
 
 	wo_list = []
 	for i, d in enumerate(wo_items):
-		wo_list += make_work_orders([d], so_doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+		wo_list += make_work_orders([d], doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 		if publish_progress:
 			publish_print_order_progress(doc.name, "Creating Work Orders", i+1, len(wo_items))

@@ -56,4 +56,5 @@ class StockEntryDP(StockEntry):
 
 
 def update_stock_entry_from_work_order(stock_entry, work_order):
+	stock_entry.pretreatment_order = work_order.pretreatment_order
 	stock_entry.print_order = work_order.print_order
