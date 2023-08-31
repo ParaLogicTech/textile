@@ -6,8 +6,9 @@ let group_field_opts = [
 	"",
 	"Group by Package",
 	"Group by Customer",
-	"Group by Fabric Item",
 	"Group by Print Order",
+	"Group by Fabric Item",
+	"Group by Design Item",
 ]
 
 frappe.query_reports["Print Packing List"] = {

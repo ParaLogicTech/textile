@@ -118,6 +118,8 @@ class PrintPackingList:
 			if group_label:
 				if group_label == "Package":
 					self.group_by.append("packing_slip")
+				elif group_label == "Design Item":
+					self.group_by.append(("design_item", "is_return_fabric"))
 				else:
 					self.group_by.append(scrub(group_label))
 
@@ -148,6 +150,7 @@ class PrintPackingList:
 
 		group_reference_doctypes = {
 			"fabric_item": "Item",
+			"design_item": "Item",
 		}
 
 		# set reference field
@@ -184,6 +187,14 @@ class PrintPackingList:
 				totals['print_order'] = list(print_orders)[0]
 			if len(fabric_items) == 1:
 				totals['fabric_item'] = list(fabric_items)[0]
+
+		if totals.get("is_return_fabric") and not totals.get("design_item") and not totals.get("reference"):
+			totals['design_item_name'] = "Return Fabric"
+			totals['reference'] = "'Return Fabric'"
+
+		if totals.get("design_item"):
+			totals['design_item_name'] = data[0].design_item_name
+			totals['fabric_item'] = data[0].fabric_item
 
 		if totals.get('fabric_item'):
 			totals['fabric_item_name'] = data[0].fabric_item_name
@@ -327,6 +338,9 @@ class PrintPackingList:
 
 		if not self.show_item_name:
 			columns = [c for c in columns if c['fieldname'] != 'item_name']
+
+		if not self.filters.show_delivered:
+			columns = [c for c in columns if c['fieldname'] != 'status']
 
 		if len(self.group_by) > 1:
 			if "packing_slip" in self.group_by:
