@@ -744,7 +744,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-08-24 12:58:59.957718",
+ "modified": "2023-08-31 15:13:58.620377",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",
@@ -801,6 +801,10 @@
    "report": 1,
    "role": "Accounts User",
    "share": 1
+  },
+  {
+   "read": 1,
+   "role": "Packing User"
   }
  ],
  "search_fields": "customer, customer_name, transaction_date, fabric_item_name, process_item_name",

@@ -4,7 +4,7 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-08-29 12:54:31.421691",
+ "modified": "2023-08-31 16:04:30.484703",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "print-work-order",
@@ -16,6 +16,9 @@
   },
   {
    "role": "Stock User"
+  },
+  {
+   "role": "Packing User"
   }
  ],
  "script": null,
