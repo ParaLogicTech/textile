@@ -127,7 +127,7 @@ class PrintPackingList:
 			return self.data
 
 		return group_report_data(self.data, self.group_by, calculate_totals=self.calculate_group_totals,
-			totals_only=self.filters.totals_only)
+			totals_only=self.filters.totals_only, starting_level=0)
 
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
 		totals = frappe._dict()
