@@ -158,7 +158,7 @@ def update_item_override_fields(item_fields, args, validate=False):
 
 
 def override_item_dashboard(data):
-	data.setdefault("non_standard_fieldnames", {})["Print Order"] = "fabric_item"
+	data.setdefault("non_standard_fieldnames", {})["Print Order"] = "item_code"
 
 	ref_section = [d for d in data["transactions"] if d["label"] == _("Manufacture")][0]
 	ref_section["items"].insert(0, "Print Order")
