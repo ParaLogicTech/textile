@@ -26,6 +26,23 @@ frappe.query_reports["Print Packing List"] = {
 			label: __("Customer"),
 			fieldtype: "Link",
 			options: "Customer",
+			on_change: () => {
+				var customer = frappe.query_report.get_filter_value('customer');
+				if (customer) {
+					frappe.db.get_value('Customer', customer, ["customer_name"], function(value) {
+						frappe.query_report.set_filter_value('customer_name', value["customer_name"]);
+					});
+				} else {
+					frappe.query_report.set_filter_value('customer_name', "");
+				}
+			},
+		},
+		{
+			fieldname: "customer_name",
+			label: __("Customer Name"),
+			fieldtype: "Data",
+			read_only: 1,
+			hidden: 1,
 		},
 		{
 			"fieldname":"print_order",
@@ -55,20 +72,6 @@ frappe.query_reports["Print Packing List"] = {
 			options: "Package Type",
 		},
 		{
-			fieldname: "process_item",
-			label: __("Print Process"),
-			fieldtype: "Link",
-			options: "Item",
-			get_query: function() {
-				return {
-					query: "erpnext.controllers.queries.item_query",
-					filters: {
-						'textile_item_type': "Print Process"
-					}
-				};
-			},
-		},
-		{
 			fieldname: "fabric_item",
 			label: __("Fabric Item"),
 			fieldtype: "Link",
@@ -81,18 +84,29 @@ frappe.query_reports["Print Packing List"] = {
 					}
 				};
 			},
+			on_change: () => {
+				var item = frappe.query_report.get_filter_value('fabric_item');
+				if (item) {
+					frappe.db.get_value('Item', item, ["item_name"], function(value) {
+						frappe.query_report.set_filter_value('fabric_item_name', value["item_name"]);
+					});
+				} else {
+					frappe.query_report.set_filter_value('fabric_item_name', "");
+				}
+			},
+		},
+		{
+			fieldname: "fabric_item_name",
+			label: __("Fabric Item Name"),
+			fieldtype: "Data",
+			read_only: 1,
+			hidden: 1,
 		},
 		{
 			fieldname: "fabric_material",
 			label: __("Fabric Material"),
 			fieldtype: "Link",
 			options: "Fabric Material",
-		},
-		{
-			fieldname: "fabric_type",
-			label: __("Fabric Type"),
-			fieldtype: "Link",
-			options: "Fabric Type",
 		},
 		{
 			fieldname: "group_by_1",
