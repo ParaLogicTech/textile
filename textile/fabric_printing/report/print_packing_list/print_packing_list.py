@@ -159,14 +159,14 @@ class PrintPackingList:
 
 		totals['reference_type'] = reference_dt
 		if not group_field:
-			totals['reference'] = "'Total'"
+			totals['reference'] = "Total"
 		elif not reference_dt:
 			totals['reference'] = "'{0}'".format(grouped_by.get(reference_field))
 		else:
 			totals['reference'] = grouped_by.get(reference_field)
 
 		if not group_field and self.group_by == [None]:
-			totals['reference'] = "'Total'"
+			totals['reference'] = "Total"
 
 		totals['disable_item_formatter'] = cint(self.show_item_name)
 

@@ -1,0 +1,110 @@
+<style>
+	@media screen {
+		.print-format {
+			padding: 8mm;
+		}
+	}
+
+	.print-format {
+		font-size: 8pt;
+	}
+	.print-format td, .print-format th {
+		vertical-align: middle !important;
+		padding: 1px 6px !important;
+	}
+
+	.text-bold {
+		font-weight: bold !important;
+	}
+
+	.line-blue td {
+		color: #0070c0 !important;
+	}
+
+	.field-label {
+		font-size: 14px;
+	}
+
+	.field-value {
+		font-size: 12px;
+		font-weight: 500 !important;
+	}
+
+	.blue-row td {
+		color: #0070c0 !important;
+	}
+
+	.bold-row td {
+		font-weight: bold !important;
+	}
+</style>
+
+<div>
+	<h2 class="text-center" style="margin-top:0;">{%= __("Packing List") %}</h1>
+	<hr>
+	<h6>
+		{%=__("<b>Company</b>:") %} {%= filters.company %}
+	</h6>
+	{% if (filters.customer) { %}
+	<h6>
+		{%= __("<b>Customer</b>:") %} {%= filters.customer %}
+		{% if (filters.customer_name && filters.customer_name != filters.customer) { %}
+			- {%= filters.customer_name %}
+		{% } %}
+	</h6>
+	{% } %}
+
+	{% if (filters.print_order && filters.print_order.length) { %}
+	<h6>
+		{%=__("<b>Print Order</b>:") %} {%= filters.print_order %}
+	</h6>
+	{% } %}
+
+	{% if (filters.fabric_item) { %}
+	<h6>
+		{%= __("<b>Fabric Item</b>:") %} {%= filters.fabric_item %}
+		{% if (filters.fabric_item_name && filters.fabric_item_name != filters.fabric_item) { %}
+			- {%= filters.fabric_item_name %}
+		{% } %}
+	</h6>
+	{% } %}
+
+	{% if (filters.package_type) { %}
+	<h6>
+			{%=__("<b>Package Type</b>:") %} {%= filters.package_type %}
+	</h6>
+	{% } %}
+	<hr>
+</div>
+
+<table class="table table-bordered w-100">
+	<thead>
+		<th class="field-label" style="width: 3%;">{%= __("Sr.") %}</th>
+		<th class="field-label">{%= __("Reference") %}</th>
+		<th class="field-label">{%= __("Date") %}</th>
+		<th class="field-label">{%= __("Fabric") %}</th>
+		<th class="field-label">{%= __("Design") %}</th>
+		<th class="field-label text-right" style="width: 4%;">{%= __("Qty") %}</th>
+		<th class="field-label text-right" style="width: 4%;">{%= __("Return") %}</th>
+		<th class="field-label text-right" style="width: 4%;">{%= __("Total") %}</th>
+		<th class="field-label" style="width: 4%;">{%= __("UOM") %}</th>
+		<th class="field-label text-right" style="width: 4%;">{%= __("Panels") %}</th>
+	</thead>
+
+	<tbody>
+		{% for (let d of data) { %}
+		<tr class="{% if (!d._isGroupTotal && !filters.totals_only) { %}blue-row{% } %} {% if (d.reference == 'Total' && !d.reference_dt) { %}bold-row{% } %}">
+			<td class="field-value">{%= d._group_idx %}</td>
+			<td class="field-value">{%= d._isGroupTotal || filters.totals_only ? d.reference : "" %}</td>
+			<td class="field-value text-nowrap">{%= d.posting_date ? frappe.datetime.str_to_user(d.posting_date) : "" %}</td>
+			<td class="field-value">{%= d.fabric_item_name %}</td>
+			<td class="field-value">{%= d.design_item_name %}</td>
+			<td class="field-value text-right">{%= d.qty ? format_number(d.qty) : "" %}</td>
+			<td class="field-value text-right">{%= d.return_qty ? format_number(d.return_qty) : "" %}</td>
+			<td class="field-value text-right">{%= d.total_qty ? format_number(d.total_qty) : "" %}</td>
+			<td class="field-value text-right">{%= d.uom %}</td>
+			<td class="field-value text-right">{%= d.panel_qty ? format_number(d.panel_qty) : "" %}</td>
+		</tr>
+		{% } %}
+	</tbody>
+</table>
