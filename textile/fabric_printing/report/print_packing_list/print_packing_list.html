@@ -82,8 +82,7 @@
 		<th class="field-label" style="width: 3%;">{%= __("Sr.") %}</th>
 		<th class="field-label">{%= __("Reference") %}</th>
 		<th class="field-label">{%= __("Date") %}</th>
-		<th class="field-label">{%= __("Fabric") %}</th>
-		<th class="field-label">{%= __("Design") %}</th>
+		<th class="field-label">{%= __("Item") %}</th>
 		<th class="field-label text-right" style="width: 4%;">{%= __("Qty") %}</th>
 		<th class="field-label text-right" style="width: 4%;">{%= __("Return") %}</th>
 		<th class="field-label text-right" style="width: 4%;">{%= __("Total") %}</th>
@@ -97,8 +96,7 @@
 			<td class="field-value">{%= d._group_idx %}</td>
 			<td class="field-value">{%= d._isGroupTotal || filters.totals_only ? d.reference : "" %}</td>
 			<td class="field-value text-nowrap">{%= d.posting_date ? frappe.datetime.str_to_user(d.posting_date) : "" %}</td>
-			<td class="field-value">{%= d.fabric_item_name %}</td>
-			<td class="field-value">{%= d.design_item_name %}</td>
+			<td class="field-value">{%= d.item_name %}</td>
 			<td class="field-value text-right">{%= d.qty ? format_number(d.qty) : "" %}</td>
 			<td class="field-value text-right">{%= d.return_qty ? format_number(d.return_qty) : "" %}</td>
 			<td class="field-value text-right">{%= d.total_qty ? format_number(d.total_qty) : "" %}</td>

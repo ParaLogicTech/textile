@@ -173,6 +173,8 @@ class PrintPackingList:
 		if totals.get("print_order"):
 			totals['customer'] = data[0].customer
 			totals['fabric_item'] = data[0].fabric_item
+			totals['item_code'] = data[0].fabric_item
+			totals['item_name'] = data[0].fabric_item_name
 
 		if totals.get("packing_slip"):
 			totals['package_type'] = data[0].package_type
@@ -187,6 +189,8 @@ class PrintPackingList:
 				totals['print_order'] = list(print_orders)[0]
 			if len(fabric_items) == 1:
 				totals['fabric_item'] = list(fabric_items)[0]
+				totals['item_code'] = list(fabric_items)[0]
+				totals['item_name'] = data[0].fabric_item_name
 
 		if totals.get("is_return_fabric") and not totals.get("design_item") and not totals.get("reference"):
 			totals['design_item_name'] = "Return Fabric"
@@ -195,9 +199,13 @@ class PrintPackingList:
 		if totals.get("design_item"):
 			totals['design_item_name'] = data[0].design_item_name
 			totals['fabric_item'] = data[0].fabric_item
+			totals['item_code'] = data[0].item_code
+			totals['item_name'] = data[0].item_name
 
 		if totals.get('fabric_item'):
 			totals['fabric_item_name'] = data[0].fabric_item_name
+			totals['item_code'] = totals.get("fabric_item")
+			totals['item_name'] = totals.get("fabric_item_name")
 
 		if totals.get('customer'):
 			totals['customer_name'] = data[0].customer_name
