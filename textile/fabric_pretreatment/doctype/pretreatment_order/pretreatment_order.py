@@ -575,7 +575,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 @frappe.whitelist()
 def create_work_order(pretreatment_order, ignore_version=True, ignore_feed=True):
-	from erpnext.selling.doctype.sales_order.sales_order import make_work_orders
+	from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
 
 	if isinstance(pretreatment_order, str):
 		doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
@@ -600,7 +600,7 @@ def create_work_order(pretreatment_order, ignore_version=True, ignore_feed=True)
 
 	wo_list = []
 	for i, d in enumerate(wo_items):
-		wo_list += make_work_orders([d], doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+		wo_list += create_work_orders([d], doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 	if wo_list:
 		wo_message = _("Work Order created: {0}").format(
