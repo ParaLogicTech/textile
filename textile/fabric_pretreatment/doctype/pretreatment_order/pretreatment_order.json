@@ -14,6 +14,7 @@
   "po_no",
   "po_date",
   "is_fabric_provided_by_customer",
+  "is_internal_customer",
   "column_break_mb5rm",
   "notes",
   "delivery_required",
@@ -132,7 +133,8 @@
    "default": "0",
    "fieldname": "is_fabric_provided_by_customer",
    "fieldtype": "Check",
-   "label": "Fabric Provided By Customer"
+   "label": "Fabric Provided By Customer",
+   "read_only_depends_on": "is_internal_customer"
   },
   {
    "fieldname": "column_break_mb5rm",
@@ -149,7 +151,8 @@
    "default": "0",
    "fieldname": "delivery_required",
    "fieldtype": "Check",
-   "label": "Delivery Required"
+   "label": "Delivery Required",
+   "read_only_depends_on": "is_internal_customer"
   },
   {
    "default": "0",
@@ -649,12 +652,19 @@
    "options": "Pretreatment Order",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_internal_customer",
+   "fieldtype": "Check",
+   "label": "Is Internal Customer",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-06 23:18:20.746187",
+ "modified": "2023-09-07 14:47:59.691497",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

@@ -1,5 +1,5 @@
 import frappe
-from frappe import _
+from frappe import _, cint
 from frappe.utils import cint, flt
 from textile.rotated_image import get_rotated_image  # do not remove import
 
@@ -71,6 +71,18 @@ def get_fabric_item_details(fabric_item):
 	out.fabric_per_pickup = fabric_doc.fabric_per_pickup
 
 	return out
+
+
+@frappe.whitelist()
+def is_internal_customer(customer, company):
+	if not customer or not company:
+		return 0
+
+	customer_doc = frappe.get_cached_doc("Customer", customer)
+	if not customer_doc.is_internal_customer or not customer_doc.represents_company:
+		return 0
+
+	return cint(customer_doc.represents_company == company)
 
 
 def get_yard_to_meter():

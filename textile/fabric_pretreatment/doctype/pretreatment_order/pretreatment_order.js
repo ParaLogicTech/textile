@@ -106,12 +106,12 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 			}
 
 			if (doc.status != "Closed") {
-				if (flt(doc.per_ordered) < 100) {
+				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
 				}
 
-				if (bom_created && doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
+				if (bom_created && flt(doc.per_work_ordered) < 100) {
 					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 						__("Create"));
 				}
@@ -138,6 +138,40 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 
 	setup_progressbars() {
 
+	}
+
+	customer() {
+		this.get_is_internal_customer();
+	}
+
+	company() {
+		this.get_is_internal_customer();
+	}
+
+	get_is_internal_customer() {
+		if (!this.frm.doc.customer || !this.frm.doc.company) {
+			return this.frm.set_value("is_internal_customer", 0);
+		} else {
+			return frappe.call({
+				method: "textile.utils.is_internal_customer",
+				args: {
+					customer: this.frm.doc.customer,
+					company: this.frm.doc.company,
+				},
+				callback: (r) => {
+					return this.frm.set_value("is_internal_customer", r.message);
+				}
+			});
+		}
+	}
+
+	is_internal_customer() {
+		if (this.frm.doc.is_internal_customer) {
+			this.frm.set_value({
+				is_fabric_provided_by_customer: 0,
+				delivery_required: 0,
+			});
+		}
 	}
 
 	greige_fabric_item() {

@@ -75,8 +75,8 @@ calculate_taxes_and_totals = [
 	"textile.overrides.taxes_and_totals_hooks.calculate_panel_qty_for_taxes_and_totals"
 ]
 
-update_work_order_from_sales_order = [
-	"textile.overrides.work_order_hooks.update_work_order_from_sales_order",
+update_work_order_on_create = [
+	"textile.overrides.work_order_hooks.update_work_order_on_create",
 ]
 
 update_stock_entry_from_work_order = [

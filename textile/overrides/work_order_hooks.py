@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 
 
@@ -20,14 +20,17 @@ class WorkOrderDP(WorkOrder):
 					d.source_warehouse = self.wip_warehouse
 
 
-def update_work_order_from_sales_order(work_order):
+def update_work_order_on_create(work_order, args=None):
 	def get_pretreatment_order_details():
-		fields = ["packing_slip_required"] + greige_fabric_fields + warehouse_fields
+		fields = ["packing_slip_required", "delivery_required"] + greige_fabric_fields + warehouse_fields
 		return frappe.db.get_value("Pretreatment Order", work_order.pretreatment_order, fields, as_dict=1)
 
 	def get_print_order_details():
 		fields = ["packing_slip_required"] + fabric_fields + print_process_fields + warehouse_fields
 		return frappe.db.get_value("Print Order", work_order.print_order, fields, as_dict=1)
+
+	if args and args.get("pretreatment_order"):
+		work_order.pretreatment_order = args.get("pretreatment_order")
 
 	# Set Order Reference
 	if work_order.get('sales_order_item'):
@@ -44,7 +47,9 @@ def update_work_order_from_sales_order(work_order):
 
 		work_order.skip_transfer = 0
 		work_order.from_wip_warehouse = 0
-		work_order.packing_slip_required = pretreatment_order_details.packing_slip_required
+		work_order.packing_slip_required = cint(
+			pretreatment_order_details.delivery_required and pretreatment_order_details.packing_slip_required
+		)
 
 		for warehouse_field in warehouse_fields:
 			warehouse = pretreatment_order_details.get(warehouse_field)
