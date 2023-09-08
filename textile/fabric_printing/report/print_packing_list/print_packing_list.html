@@ -37,21 +37,15 @@
 	.bold-row td {
 		font-weight: bold !important;
 	}
-
-	.float-div {
-		float: left;
-		width: 33.33%;
-		padding: 0 4px;
-		margin-bottom: 7px;
-	}
-
 </style>
 
 <div>
 	<h2 class="text-center" style="margin-top:0;">{%= __("Packing List") %}</h1>
-	<hr class="mb-2">
+	<hr>
+	{% if subtitle %}
 	{%= subtitle %}
-	<hr style="clear:both;">
+	<hr>
+	{% endif %}
 </div>
 
 <table class="table table-bordered w-100">
