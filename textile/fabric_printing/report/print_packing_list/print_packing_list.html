@@ -42,39 +42,10 @@
 <div>
 	<h2 class="text-center" style="margin-top:0;">{%= __("Packing List") %}</h1>
 	<hr>
-	<h6>
-		{%=__("<b>Company</b>:") %} {%= filters.company %}
-	</h6>
-	{% if (filters.customer) { %}
-	<h6>
-		{%= __("<b>Customer</b>:") %} {%= filters.customer %}
-		{% if (filters.customer_name && filters.customer_name != filters.customer) { %}
-			- {%= filters.customer_name %}
-		{% } %}
-	</h6>
-	{% } %}
-
-	{% if (filters.print_order && filters.print_order.length) { %}
-	<h6>
-		{%=__("<b>Print Order</b>:") %} {%= filters.print_order %}
-	</h6>
-	{% } %}
-
-	{% if (filters.fabric_item) { %}
-	<h6>
-		{%= __("<b>Fabric Item</b>:") %} {%= filters.fabric_item %}
-		{% if (filters.fabric_item_name && filters.fabric_item_name != filters.fabric_item) { %}
-			- {%= filters.fabric_item_name %}
-		{% } %}
-	</h6>
-	{% } %}
-
-	{% if (filters.package_type) { %}
-	<h6>
-		{%=__("<b>Package Type</b>:") %} {%= filters.package_type %}
-	</h6>
-	{% } %}
+	{% if subtitle %}
+	{%= subtitle %}
 	<hr>
+	{% endif %}
 </div>
 
 <table class="table table-bordered w-100">

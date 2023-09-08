@@ -20,6 +20,7 @@ frappe.query_reports["Print Packing List"] = {
 			options: "Company",
 			default: frappe.defaults.get_user_default("Company"),
 			reqd: 1,
+			print_hide: 1,
 		},
 		{
 			fieldname: "customer",
@@ -36,6 +37,7 @@ frappe.query_reports["Print Packing List"] = {
 					frappe.query_report.set_filter_value('customer_name', "");
 				}
 			},
+			print_hide: 1,
 		},
 		{
 			fieldname: "customer_name",
@@ -113,19 +115,22 @@ frappe.query_reports["Print Packing List"] = {
 			label: __("Group By Level 1"),
 			fieldtype: "Select",
 			options: group_field_opts,
-			default: ""
+			default: "",
+			print_hide: 1,
 		},
 		{
 			fieldname: "group_by_2",
 			label: __("Group By Level 2"),
 			fieldtype: "Select",
 			options: group_field_opts,
-			default: "Group by Package"
+			default: "Group by Package",
+			print_hide: 1,
 		},
 		{
 			fieldname: "totals_only",
 			label: __("Group Totals Only"),
 			fieldtype: "Check",
+			print_hide: 1,
 		},
 		{
 			fieldname: "show_delivered",
