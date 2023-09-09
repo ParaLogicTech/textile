@@ -82,23 +82,20 @@
   "items_created",
   "column_break_zltke",
   "per_ordered",
-  "column_break_3qzv3",
   "per_work_ordered",
-  "section_break_2pbh5",
+  "column_break_3qzv3",
   "fabric_transfer_status",
   "fabric_transfer_qty",
+  "section_break_2pbh5",
   "column_break_rwkru",
   "production_status",
   "per_produced",
   "column_break_r0yyq",
   "packing_status",
   "per_packed",
-  "section_break_dtb5f",
-  "delivery_status",
-  "per_delivered",
   "column_break_paad7",
-  "billing_status",
-  "per_billed"
+  "delivery_status",
+  "per_delivered"
  ],
  "fields": [
   {
@@ -440,14 +437,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "per_billed",
-   "fieldtype": "Percent",
-   "label": "% Billed",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_rwkru",
    "fieldtype": "Column Break"
   },
@@ -653,16 +642,6 @@
    "read_only": 1
   },
   {
-   "default": "To Bill",
-   "fieldname": "billing_status",
-   "fieldtype": "Select",
-   "label": "Billing Status",
-   "no_copy": 1,
-   "options": "To Bill\nBilled\nNot Applicable",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_zltke",
    "fieldtype": "Column Break"
   },
@@ -681,10 +660,6 @@
   {
    "fieldname": "column_break_paad7",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_dtb5f",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "fabric_transfer_qty",
@@ -744,7 +719,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-08-31 15:13:58.620377",
+ "modified": "2023-09-09 15:49:12.366387",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

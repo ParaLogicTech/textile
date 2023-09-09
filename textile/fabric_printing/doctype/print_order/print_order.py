@@ -67,7 +67,6 @@ class PrintOrder(TextileOrder):
 		self.set_fabric_transfer_status()
 		self.set_production_packing_status()
 		self.set_delivery_status()
-		self.set_billing_status()
 		self.set_status()
 
 		self.set_title(self.fabric_material, self.total_print_length)
@@ -165,7 +164,6 @@ class PrintOrder(TextileOrder):
 			"production_status": "Not Applicable",
 			"packing_status": "Not Applicable",
 			"delivery_status": "Not Applicable",
-			"billing_status": "Not Applicable",
 		})
 
 	def set_status(self, status=None, update=False, update_modified=True):
@@ -202,7 +200,6 @@ class PrintOrder(TextileOrder):
 		self.set_fabric_transfer_status(update=True)
 		self.set_production_packing_status(update=True)
 		self.set_delivery_status(update=True)
-		self.set_billing_status(update=True)
 		self.set_status(update=True, status=status)
 		self.notify_update()
 		clear_doctype_notifications(self)
@@ -640,62 +637,6 @@ class PrintOrder(TextileOrder):
 	def validate_delivered_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('delivered_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="qty")
-
-	def set_billing_status(self, update=False, update_modified=True):
-		data = self.get_billed_status_data()
-
-		for d in self.items:
-			d.billed_qty = flt(data.billed_qty_map.get(d.name))
-			if update:
-				d.db_set({
-					'billed_qty': d.billed_qty
-				}, update_modified=update_modified)
-
-		self.per_billed = flt(self.calculate_status_percentage('billed_qty', 'stock_print_length', self.items))
-		within_allowance = self.per_ordered >= 100 and self.per_billed > 0 and not data.has_incomplete_billing
-
-		self.billing_status = self.get_completion_status('per_billed', 'Bill',
-			not_applicable=self.status == "Closed", within_allowance=within_allowance)
-
-		if update:
-			self.db_set({
-				'per_billed': self.per_billed,
-				'billing_status': self.billing_status,
-			}, update_modified=update_modified)
-
-	def get_billed_status_data(self):
-		out = frappe._dict()
-		out.billed_qty_map = {}
-		out.has_incomplete_billing = False
-
-		if self.docstatus == 1:
-			row_names = [d.name for d in self.items]
-			if row_names:
-				billed_data = frappe.db.sql("""
-					SELECT print_order_item, stock_qty
-					FROM `tabSales Invoice Item`
-					WHERE docstatus = 1 AND print_order_item IN %s
-				""", [row_names], as_dict=1)
-
-				for d in billed_data:
-					out.billed_qty_map.setdefault(d.print_order_item, 0)
-					out.billed_qty_map[d.print_order_item] += flt(d.stock_qty)
-
-			sales_orders_to_bill = frappe.db.sql_list("""
-				select count(so.name)
-				from `tabSales Order Item` i
-				inner join `tabSales Order` so on so.name = i.parent
-				where so.docstatus = 1 and so.billing_status = 'To Bill' and i.print_order = %s
-			""", self.name)
-			sales_orders_to_bill = cint(sales_orders_to_bill[0]) if sales_orders_to_bill else 0
-			if sales_orders_to_bill:
-				out.has_incomplete_billing = True
-
-		return out
-
-	def validate_billed_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('billed_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
 	def _background_start_print_order(self, fabric_transfer_qty, publish_progress=True):
 		self._start_print_order.catch(self, fabric_transfer_qty=fabric_transfer_qty, publish_progress=publish_progress)
@@ -1287,33 +1228,6 @@ def make_delivery_note(source_name, target_doc=None):
 
 	for d in sales_orders:
 		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
-
-	return target_doc
-
-
-@frappe.whitelist()
-def make_sales_invoice(print_order):
-	from erpnext.controllers.queries import _get_delivery_notes_to_be_billed
-	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
-
-	doc = frappe.get_doc("Print Order", print_order)
-
-	target_doc = frappe.new_doc("Sales Invoice")
-
-	delivery_note_filters = ["""EXISTS(
-		SELECT dni.name
-		FROM `tabDelivery Note Item` dni
-		WHERE dni.parent = `tabDelivery Note`.name
-			AND dni.print_order = {0}
-	)""".format(frappe.db.escape(doc.name))]
-
-	delivery_notes = _get_delivery_notes_to_be_billed(filters=delivery_note_filters)
-
-	if not delivery_notes:
-		frappe.throw(_("There are no Delivery Notes to be billed"))
-
-	for d in delivery_notes:
-		target_doc = make_sales_invoice(d.name, target_doc=target_doc)
 
 	return target_doc
 

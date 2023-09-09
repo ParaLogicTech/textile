@@ -360,14 +360,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 						$(delivery_note_btn).removeClass("btn-default").addClass("btn-primary");
 					}
 				}
-
-				if (doc.per_delivered && doc.per_billed < doc.per_delivered) {
-					let sales_invoice_btn = this.frm.add_custom_button(__("Sales Invoice"), () => this.make_sales_invoice());
-
-					if (this.frm.doc.delivery_status == "Delivered") {
-						$(sales_invoice_btn).removeClass("btn-default").addClass("btn-primary");
-					}
-				}
 			}
 
 			if (doc.status != "Closed") {
@@ -813,21 +805,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			method: "textile.fabric_printing.doctype.print_order.print_order.make_delivery_note",
 			args: {
 				"source_name": this.frm.doc.name,
-			},
-			callback: function (r) {
-				if (!r.exc) {
-					var doclist = frappe.model.sync(r.message);
-					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
-				}
-			}
-		});
-	}
-
-	make_sales_invoice() {
-		return frappe.call({
-			method: "textile.fabric_printing.doctype.print_order.print_order.make_sales_invoice",
-			args: {
-				"print_order": this.frm.doc.name,
 			},
 			callback: function (r) {
 				if (!r.exc) {
