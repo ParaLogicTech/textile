@@ -82,23 +82,23 @@ def update_work_order_on_create(work_order, args=None):
 			"stock_fabric_length", cache=1))
 
 
-def on_work_order_update_status(doc, hook, status=None):
-	if doc.get('pretreatment_order') and not frappe.flags.skip_print_order_status_update:
-		doc = frappe.get_doc("Pretreatment Order", doc.pretreatment_order)
+def on_work_order_update_status(work_order, hook, status=None):
+	if work_order.get('pretreatment_order'):
+		doc = frappe.get_doc("Pretreatment Order", work_order.pretreatment_order)
 		doc.set_production_packing_status(update=True)
 
 		if hook != 'update_status':
-			doc.validate_work_order_qty(from_doctype=doc.doctype)
+			doc.validate_work_order_qty(from_doctype=work_order.doctype)
 
 		doc.set_status(update=True)
 		doc.notify_update()
 
-	if doc.get('print_order') and doc.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
-		doc = frappe.get_doc("Print Order", doc.print_order)
+	if work_order.get('print_order') and work_order.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
+		doc = frappe.get_doc("Print Order", work_order.print_order)
 		doc.set_production_packing_status(update=True)
 
 		if hook != 'update_status':
-			doc.validate_work_order_qty(from_doctype=doc.doctype, row_names=[doc.print_order_item])
+			doc.validate_work_order_qty(from_doctype=work_order.doctype, row_names=[work_order.print_order_item])
 
 		doc.set_status(update=True)
 		doc.notify_update()

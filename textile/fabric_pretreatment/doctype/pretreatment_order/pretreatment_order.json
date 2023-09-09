@@ -79,14 +79,10 @@
   "packing_status",
   "packed_qty",
   "per_packed",
-  "section_break_dtb5f",
+  "column_break_paad7",
   "delivery_status",
   "delivered_qty",
-  "per_delivered",
-  "column_break_paad7",
-  "billing_status",
-  "billed_qty",
-  "per_billed"
+  "per_delivered"
  ],
  "fields": [
   {
@@ -402,10 +398,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "section_break_dtb5f",
-   "fieldtype": "Section Break"
-  },
-  {
    "default": "To Deliver",
    "fieldname": "delivery_status",
    "fieldtype": "Select",
@@ -418,16 +410,6 @@
   {
    "fieldname": "column_break_paad7",
    "fieldtype": "Column Break"
-  },
-  {
-   "default": "To Bill",
-   "fieldname": "billing_status",
-   "fieldtype": "Select",
-   "label": "Billing Status",
-   "no_copy": 1,
-   "options": "To Bill\nBilled\nNot Applicable",
-   "print_hide": 1,
-   "read_only": 1
   },
   {
    "fieldname": "bleaching_item",
@@ -572,14 +554,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "billed_qty",
-   "fieldtype": "Float",
-   "label": "Billed Qty",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fetch_from": "ready_fabric_item.fabric_width",
    "fieldname": "ready_fabric_width",
    "fieldtype": "Float",
@@ -637,14 +611,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "per_billed",
-   "fieldtype": "Percent",
-   "label": "% Billed",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -664,7 +630,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-07 14:47:59.691497",
+ "modified": "2023-09-09 15:55:37.049465",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",
@@ -723,8 +689,8 @@
    "share": 1
   },
   {
-   "role": "Packing User",
-   "select": 1
+   "read": 1,
+   "role": "Packing User"
   }
  ],
  "search_fields": "customer, customer_name, transaction_date, greige_fabric_item_name, ready_fabric_item_name",

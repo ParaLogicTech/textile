@@ -1,5 +1,5 @@
 import frappe
-from frappe import _
+# from frappe import _
 from erpnext.selling.doctype.sales_order.sales_order import SalesOrder
 from textile.fabric_printing.doctype.print_order.print_order import validate_transaction_against_print_order
 from textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order import validate_transaction_against_pretreatment_order
@@ -7,7 +7,7 @@ from textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order i
 
 class SalesOrderDP(SalesOrder):
 	def validate_with_previous_doc(self):
-		super(SalesOrderDP, self).validate_with_previous_doc()
+		super().validate_with_previous_doc()
 		validate_transaction_against_pretreatment_order(self)
 		validate_transaction_against_print_order(self)
 
@@ -19,9 +19,7 @@ class SalesOrderDP(SalesOrder):
 			doc = frappe.get_doc("Pretreatment Order", name)
 			doc.set_sales_order_status(update=True)
 			doc.set_production_packing_status(update=True)
-
 			doc.validate_ordered_qty(from_doctype=self.doctype)
-
 			doc.set_status(update=True)
 			doc.notify_update()
 
@@ -34,9 +32,7 @@ class SalesOrderDP(SalesOrder):
 			doc = frappe.get_doc("Print Order", name)
 			doc.set_sales_order_status(update=True)
 			doc.set_production_packing_status(update=True)
-
 			doc.validate_ordered_qty(from_doctype=self.doctype, row_names=print_order_row_names)
-
 			doc.set_status(update=True)
 			doc.notify_update()
 
@@ -59,18 +55,16 @@ class SalesOrderDP(SalesOrder):
 		if row.get('print_order_item'):
 			return frappe.db.get_value("Print Order Item", row.print_order_item, "design_bom", cache=1)
 
+	def get_skip_delivery_note(self, row):
+		if row.get("pretreatment_order"):
+			delivery_required = frappe.db.get_value("Pretreatment Order", row.pretreatment_order, "delivery_required", cache=1)
+			if not delivery_required:
+				return True
+
 
 def override_sales_order_dashboard(data):
-	data["internal_links"]["Pretreatment Order"] = ["items", "pretreatment_order"]
-	data["internal_links"]["Print Order"] = ["items", "print_order"]
-
-	textile_section = {
-		"label": _("Textile"),
-		"items": ["Pretreatment Order", "Print Order"]
-	}
-	data["transactions"].append(textile_section)
-
-	return data
+	from textile.utils import override_sales_transaction_dashboard
+	return override_sales_transaction_dashboard(data)
 
 
 def update_sales_order_mapper(mapper, target_doctype):

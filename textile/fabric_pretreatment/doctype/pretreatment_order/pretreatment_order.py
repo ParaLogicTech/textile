@@ -8,6 +8,8 @@ from frappe.utils import cint, flt, round_up
 from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item, \
 	is_internal_customer
 from frappe.model.mapper import get_mapped_doc
+from frappe.desk.notifications import clear_doctype_notifications
+from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
 
 
 force_customer_fields = ["customer_name"]
@@ -47,7 +49,6 @@ class PretreatmentOrder(TextileOrder):
 		self.set_sales_order_status()
 		self.set_production_packing_status()
 		self.set_delivery_status()
-		self.set_billing_status()
 		self.set_status()
 
 		self.set_title(self.greige_fabric_material, self.stock_qty)
@@ -270,13 +271,24 @@ class PretreatmentOrder(TextileOrder):
 		return existing_bom[0] if existing_bom else None
 
 	def create_work_order(self, ignore_version=True, ignore_feed=True):
-		from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
 		if self.docstatus != 1:
 			frappe.throw(_("Pretreatment Order is not submitted"))
 
 		if not self.ready_fabric_bom:
 			frappe.throw(_("Ready Fabric BOM not created"))
 
+		if self.is_internal_customer:
+			wo_list = self.create_work_order_against_pretreatment_order(ignore_version=ignore_version, ignore_feed=ignore_feed)
+		else:
+			wo_list = self.create_work_order_against_sales_order(ignore_version=ignore_version, ignore_feed=ignore_feed)
+
+		if wo_list:
+			wo_message = _("Work Order created: {0}").format(
+				", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+			)
+			frappe.msgprint(wo_message, indicator='green')
+
+	def create_work_order_against_pretreatment_order(self, ignore_version=True, ignore_feed=True):
 		pending_qty = flt(self.stock_qty) - flt(self.work_order_qty)
 		pending_qty = round_up(pending_qty, frappe.get_precision("Work Order", "qty"))
 
@@ -295,12 +307,31 @@ class PretreatmentOrder(TextileOrder):
 			"customer_name": self.customer_name,
 		}
 
-		wo_list = create_work_orders([work_order_item], self.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
-		if wo_list:
-			wo_message = _("Work Order created: {0}").format(
-				", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
-			)
-			frappe.msgprint(wo_message, indicator='green')
+		return create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
+			ignore_feed=ignore_feed)
+
+	def create_work_order_against_sales_order(self, ignore_version=True, ignore_feed=True):
+		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
+			'pretreatment_order': self.name,
+			'docstatus': 1
+		}, pluck="sales_order")
+
+		if not sales_orders:
+			frappe.throw(_("Please create Sales Order first"))
+
+		wo_items = []
+		for so in sales_orders:
+			so_doc = frappe.get_doc('Sales Order', so)
+			wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.pretreatment_order == self.name)
+
+		wo_list = []
+		for i, d in enumerate(wo_items):
+			wo_list += create_work_orders([d], self.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+
+		if not wo_list:
+			frappe.msgprint(_("Work Order already created"))
+
+		return wo_list
 
 	def set_sales_order_status(self, update=False, update_modified=True):
 		sales_order_data = frappe.db.sql("""
@@ -348,7 +379,7 @@ class PretreatmentOrder(TextileOrder):
 
 		packing_within_allowance = self.per_work_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
 		self.packing_status = self.get_completion_status('per_packed', 'Pack',
-			not_applicable=self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
+			not_applicable=not self.delivery_required or not self.packing_slip_required or self.status == "Closed" or not self.per_produced,
 			within_allowance=packing_within_allowance)
 
 		if update:
@@ -406,11 +437,61 @@ class PretreatmentOrder(TextileOrder):
 		self.validate_completed_qty_for_row(self, 'work_order_qty', 'stock_qty',
 			allowance_type="production", from_doctype=from_doctype, item_field="ready_fabric_item")
 
-	def set_delivery_status(self, update=False, update_modified=True):
-		pass
+	def validate_packed_qty(self, from_doctype=None):
+		self.validate_completed_qty_for_row(self, 'packed_qty', 'stock_qty',
+			allowance_type="production", from_doctype=from_doctype, item_field="ready_fabric_item")
 
-	def set_billing_status(self, update=False, update_modified=True):
-		pass
+	def set_delivery_status(self, update=False, update_modified=True):
+		data = self.get_delivered_status_data()
+		self.delivered_qty = flt(data.delivered_qty)
+
+		stock_qty = flt(self.stock_qty, self.precision("qty"))
+		delivered_qty = flt(self.delivered_qty, self.precision("qty"))
+		self.per_delivered = flt(delivered_qty / stock_qty * 100 if stock_qty else 0, 3)
+
+		within_allowance = self.per_ordered >= 100 and self.per_delivered > 0 and not data.has_incomplete_delivery
+		self.delivery_status = self.get_completion_status('per_delivered', 'Deliver',
+			not_applicable=not self.delivery_required or self.status == "Closed", within_allowance=within_allowance)
+
+		if update:
+			self.db_set({
+				'delivered_qty': self.delivered_qty,
+				'per_delivered': self.per_delivered,
+				'delivery_status': self.delivery_status,
+			}, update_modified=update_modified)
+
+	def get_delivered_status_data(self):
+		out = frappe._dict()
+		out.delivered_qty = 0
+		out.has_incomplete_delivery = False
+
+		if self.docstatus == 1:
+			delivered_data = frappe.db.sql("""
+				select i.pretreatment_order, i.stock_qty, p.is_return, p.reopen_order
+				from `tabDelivery Note Item` i
+				inner join `tabDelivery Note` p on p.name = i.parent
+				where p.docstatus = 1 and i.pretreatment_order = %s and i.item_code = %s
+			""", (self.name, self.ready_fabric_item), as_dict=1)
+
+			for d in delivered_data:
+				if not d.is_return or d.reopen_order:
+					out.delivered_qty += flt(d.stock_qty)
+
+			sales_orders_to_deliver = frappe.db.sql_list("""
+				select count(so.name)
+				from `tabSales Order Item` i
+				inner join `tabSales Order` so on so.name = i.parent
+				where so.docstatus = 1 and so.delivery_status = 'To Deliver' and i.pretreatment_order = %s
+			""", self.name)
+			sales_orders_to_deliver = cint(sales_orders_to_deliver[0]) if sales_orders_to_deliver else 0
+			if sales_orders_to_deliver:
+				out.has_incomplete_delivery = True
+
+		return out
+
+	def validate_delivered_qty(self, from_doctype=None):
+		self.validate_completed_qty_for_row(self, 'delivered_qty', 'stock_qty',
+			allowance_type="qty", from_doctype=from_doctype, item_field="ready_fabric_item")
 
 	def update_status_on_cancel(self):
 		self.db_set({
@@ -418,7 +499,6 @@ class PretreatmentOrder(TextileOrder):
 			"production_status": "Not Applicable",
 			"packing_status": "Not Applicable",
 			"delivery_status": "Not Applicable",
-			"billing_status": "Not Applicable",
 		})
 
 	def set_status(self, status=None, update=False, update_modified=True):
@@ -450,14 +530,22 @@ class PretreatmentOrder(TextileOrder):
 		if update:
 			self.db_set('status', self.status, update_modified=update_modified)
 
+	def update_status(self, status):
+		self.set_status(status=status)
+		self.set_production_packing_status(update=True)
+		self.set_delivery_status(update=True)
+		self.set_status(update=True, status=status)
+		self.notify_update()
+		clear_doctype_notifications(self)
+
 
 def validate_transaction_against_pretreatment_order(doc):
 	def get_order_details(name):
 		if not order_map.get(name):
 			order_map[name] = frappe.db.get_value("Pretreatment Order", name, [
 				"name", "docstatus", "status", "company",
-				"customer", "is_internal_customer",
-				"fg_warehouse", "ready_fabric_item"
+				"customer", "customer_name", "is_internal_customer",
+				"fg_warehouse", "ready_fabric_item", "greige_fabric_item",
 			], as_dict=1)
 
 		return order_map[name]
@@ -495,10 +583,11 @@ def validate_transaction_against_pretreatment_order(doc):
 			))
 
 		if order_details.is_internal_customer:
-			frappe.throw(_("Row #{0}: Cannot create Sales Order against {1} because it is against an internal customer {2}").format(
+			frappe.throw(_("Row #{0}: Cannot create {1} against {2} because it is against an internal customer {3}").format(
 				d.idx,
+				doc.doctype,
 				frappe.get_desk_link("Pretreatment Order", order_details.name),
-				frappe.bold(order_details.customer)
+				frappe.bold(order_details.customer_name or order_details.customer)
 			))
 
 		if doc.company != order_details.company:
@@ -512,17 +601,25 @@ def validate_transaction_against_pretreatment_order(doc):
 			frappe.throw(_("Row #{0}: Customer does not match with {1}. Customer must be {2}").format(
 				d.idx,
 				frappe.get_desk_link("Pretreatment Order", order_details.name),
-				order_details.customer
+				order_details.customer_name or order_details.customer
 			))
 
-		if d.item_code != order_details.ready_fabric_item:
-			frappe.throw(_("Row #{0}: Item Code does not match with {1}. Item Code must be {2}").format(
-				d.idx,
-				frappe.get_desk_link("Pretreatment Order", order_details.name),
-				order_details.ready_fabric_item
-			))
+		if d.get("is_return_fabric"):
+			if d.item_code != order_details.greige_fabric_item:
+				frappe.throw(_("Row #{0}: Return Fabric Item does not match with {1}. Item Code must be {2}").format(
+					d.idx,
+					frappe.get_desk_link("Pretreatment Order", order_details.name),
+					order_details.greige_fabric_item
+				))
+		else:
+			if d.item_code != order_details.ready_fabric_item:
+				frappe.throw(_("Row #{0}: Item Code does not match with {1}. Item Code must be {2}").format(
+					d.idx,
+					frappe.get_desk_link("Pretreatment Order", order_details.name),
+					order_details.ready_fabric_item
+				))
 
-		if d.warehouse != order_details.fg_warehouse and doc.doctype == "Sales Order":
+		if doc.doctype == "Sales Order" and d.warehouse != order_details.fg_warehouse:
 			frappe.throw(_("Row #{0}: Warehouse does not match with {1}. Warehouse must be {2}").format(
 				d.idx,
 				frappe.get_desk_link("Pretreatment Order", order_details.name),
@@ -618,7 +715,6 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			},
 			"validation": {
 				"docstatus": ["=", 1],
-				"is_internal_customer": ["=", 0],
 			}
 		},
 	}, target_doc, set_missing_values, ignore_permissions=ignore_permissions)
@@ -630,3 +726,100 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 def create_work_order(pretreatment_order):
 	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
 	doc.create_work_order()
+
+
+@frappe.whitelist()
+def make_packing_slip(source_name, target_doc=None):
+	from erpnext.selling.doctype.sales_order.sales_order import make_packing_slip
+
+	doc = frappe.get_doc("Pretreatment Order", source_name)
+
+	selected_children = frappe.get_all("Sales Order Item", filters={"pretreatment_order": doc.name}, pluck="name")
+	frappe.flags.selected_children = {"items": selected_children}
+
+	sales_orders = frappe.db.sql("""
+		SELECT DISTINCT s.name
+		FROM `tabSales Order Item` i
+		INNER JOIN `tabSales Order` s ON s.name = i.parent
+		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+			AND s.per_packed < 100 and i.skip_delivery_note = 0
+			AND s.company = %(company)s AND i.pretreatment_order = %(pretreatment_order)s
+	""", {"pretreatment_order": doc.name, "company": doc.company},  as_dict=1)
+
+	if not sales_orders:
+		frappe.throw(_("There are no Sales Orders to be packed"))
+
+	for d in sales_orders:
+		target_doc = make_packing_slip(d.name, target_doc=target_doc)
+
+	return target_doc
+
+
+@frappe.whitelist()
+def make_delivery_note(source_name, target_doc=None):
+	from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note_from_packing_slips
+
+	doc = frappe.get_doc("Pretreatment Order", source_name)
+
+	selected_children = frappe.get_all("Sales Order Item", filters={"pretreatment_order": doc.name}, pluck="name")
+	frappe.flags.selected_children = {"items": selected_children}
+
+	sales_orders = frappe.db.sql("""
+		SELECT DISTINCT s.name
+		FROM `tabSales Order Item` i
+		INNER JOIN `tabSales Order` s ON s.name = i.parent
+		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+			AND s.per_delivered < 100 AND i.skip_delivery_note = 0
+			AND s.company = %(company)s AND i.pretreatment_order = %(pretreatment_order)s
+	""", {"pretreatment_order": doc.name, "company": doc.company},  as_dict=1)
+
+	if not sales_orders:
+		frappe.throw(_("There are no Sales Orders to be delivered"))
+
+	packing_filter = "Packed Items Only" if doc.packing_slip_required else None
+
+	for d in sales_orders:
+		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
+
+	return target_doc
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_pretreatment_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict):
+	return _get_pretreatment_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict)
+
+
+def _get_pretreatment_orders_to_be_delivered(doctype="Pretreatment Order", txt="", searchfield="name", start=0, page_len=0,
+		filters=None, as_dict=True, ignore_permissions=False):
+	from frappe.desk.reportview import get_match_cond, get_filters_cond
+	from erpnext.controllers.queries import get_fields
+
+	fields = get_fields("Pretreatment Order")
+	select_fields = ", ".join(["`tabPretreatment Order`.{0}".format(f) for f in fields])
+	limit = "limit {0}, {1}".format(start, page_len) if page_len else ""
+
+	if not filters:
+		filters = {}
+
+	return frappe.db.sql("""
+		select {fields}
+		from `tabPretreatment Order`
+		where `tabPretreatment Order`.docstatus = 1
+			and `tabPretreatment Order`.`status` != 'Closed'
+			and ifnull(`tabPretreatment Order`.`ready_fabric_bom`, '') != ''
+			and `tabPretreatment Order`.`delivery_status` = 'To Deliver'
+			and `tabPretreatment Order`.`{key}` like {txt}
+			and `tabPretreatment Order`.`per_delivered` < `tabPretreatment Order`.`per_produced`
+			and (`tabPretreatment Order`.`packing_slip_required` = 0 or `tabPretreatment Order`.`per_delivered` < `tabPretreatment Order`.`per_packed`)
+			{fcond} {mcond}
+		order by `tabPretreatment Order`.transaction_date, `tabPretreatment Order`.creation
+		{limit}
+	""".format(
+		fields=select_fields,
+		key=searchfield,
+		fcond=get_filters_cond(doctype, filters, [], ignore_permissions=ignore_permissions),
+		mcond="" if ignore_permissions else get_match_cond(doctype),
+		limit=limit,
+		txt="%(txt)s",
+	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)

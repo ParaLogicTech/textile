@@ -345,7 +345,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				if (has_unpacked) {
 					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
 
-					if (this.frm.doc.packing_status != "Packed") {
+					if (doc.packing_status != "Packed") {
 						$(packing_slip_btn).removeClass("btn-default").addClass("btn-primary");
 					}
 				}
@@ -652,7 +652,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	get_items_from_attachments = frappe.utils.debounce(() => {
-		var me = this;
+		let me = this;
 		return frappe.call({
 			method: "on_upload_complete",
 			doc: me.frm.doc,
@@ -752,7 +752,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				},
 				callback: function (r) {
 					if (!r.exc) {
-						var doclist = frappe.model.sync(r.message);
+						let doclist = frappe.model.sync(r.message);
 						frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 					}
 				}
@@ -788,12 +788,12 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		return frappe.call({
 			method: "textile.fabric_printing.doctype.print_order.print_order.make_packing_slip",
 			args: {
-				"source_name": this.frm.doc.name,
-				"selected_rows": selected_rows,
+				source_name: this.frm.doc.name,
+				selected_rows: selected_rows,
 			},
 			callback: function (r) {
 				if (!r.exc) {
-					var doclist = frappe.model.sync(r.message);
+					let doclist = frappe.model.sync(r.message);
 					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 				}
 			}
@@ -804,11 +804,11 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		return frappe.call({
 			method: "textile.fabric_printing.doctype.print_order.print_order.make_delivery_note",
 			args: {
-				"source_name": this.frm.doc.name,
+				source_name: this.frm.doc.name,
 			},
 			callback: function (r) {
 				if (!r.exc) {
-					var doclist = frappe.model.sync(r.message);
+					let doclist = frappe.model.sync(r.message);
 					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 				}
 			}

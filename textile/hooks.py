@@ -97,11 +97,11 @@ update_sales_invoice_from_sales_order_mapper = [
 ]
 
 update_sales_invoice_from_delivery_note_mapper = [
-	"textile.overrides.delivery_note_hooks.map_print_order_reference_in_sales_invoice_item",
+	"textile.overrides.delivery_note_hooks.update_delivery_note_mapper",
 ]
 
 update_delivery_note_from_packing_slip_mapper = [
-	"textile.overrides.packing_slip_hooks.map_print_order_reference_in_delivery_note_item",
+	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
 ]
 
 delete_file_data_content = "textile.rotated_image.delete_file_data_content"

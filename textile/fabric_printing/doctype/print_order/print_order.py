@@ -178,7 +178,7 @@ class PrintOrder(TextileOrder):
 		elif self.docstatus == 1:
 			if self.status == "Closed":
 				self.status = "Closed"
-			elif self.per_ordered < 100:
+			elif self.per_work_ordered < 100:
 				self.status = "Not Started"
 			elif self.production_status == "To Produce":
 				self.status = "To Produce"
@@ -507,10 +507,10 @@ class PrintOrder(TextileOrder):
 
 		production_within_allowance = self.per_work_ordered >= 100 and self.per_produced > 0 and not data.has_work_order_to_produce
 		self.production_status = self.get_completion_status('per_produced', 'Produce',
-			not_applicable=self.status == "Closed" or not self.per_ordered,
+			not_applicable=self.status == "Closed" or not self.per_work_ordered,
 			within_allowance=production_within_allowance)
 
-		packing_within_allowance = self.per_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
+		packing_within_allowance = self.per_work_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
 		self.packing_status = self.get_completion_status('per_packed', 'Pack',
 			not_applicable=self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
 			within_allowance=packing_within_allowance)
@@ -571,10 +571,6 @@ class PrintOrder(TextileOrder):
 	def validate_work_order_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('work_order_qty', 'stock_print_length', self.items,
 			from_doctype=from_doctype, row_names=row_names, allowance_type="production")
-
-	def validate_produced_qty(self, from_doctype=None, row_names=None):
-		self.validate_completed_qty('produced_qty', 'stock_print_length', self.items,
-			from_doctype=from_doctype, row_names=row_names, allowance_type="max_qty_field", max_qty_field="stock_fabric_length")
 
 	def validate_packed_qty(self, from_doctype=None, row_names=None):
 		self.validate_completed_qty('packed_qty', 'stock_print_length', self.items,
@@ -858,7 +854,7 @@ def validate_transaction_against_print_order(doc):
 	def get_order_details(name):
 		if not order_map.get(name):
 			order_map[name] = frappe.db.get_value("Print Order", name,
-				["name", "docstatus", "status", "company", "customer", "fg_warehouse"], as_dict=1)
+				["name", "docstatus", "status", "company", "customer", "customer_name", "fg_warehouse"], as_dict=1)
 
 		return order_map[name]
 
@@ -913,7 +909,7 @@ def validate_transaction_against_print_order(doc):
 			frappe.throw(_("Row #{0}: Customer does not match with {1}. Customer must be {2}").format(
 				d.idx,
 				frappe.get_desk_link("Print Order", order_details.name),
-				order_details.customer
+				order_details.customer_name or order_details.customer
 			))
 
 		if doc.doctype == "Sales Order" and d.warehouse != order_details.fg_warehouse:
@@ -1188,12 +1184,16 @@ def make_packing_slip(source_name, target_doc=None, selected_rows=None):
 	if selected_rows:
 		selected_children = frappe.get_all("Sales Order Item", filters={"print_order_item": ["in", selected_rows]}, pluck="name")
 		frappe.flags.selected_children = {"items": selected_children}
+	else:
+		selected_children = frappe.get_all("Sales Order Item", filters={"print_order": doc.name}, pluck="name")
+		frappe.flags.selected_children = {"items": selected_children}
 
 	sales_orders = frappe.db.sql("""
 		SELECT DISTINCT s.name
 		FROM `tabSales Order Item` i
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
+			AND s.per_packed < 100 AND i.skip_delivery_note = 0
 			AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 
@@ -1212,12 +1212,15 @@ def make_delivery_note(source_name, target_doc=None):
 
 	doc = frappe.get_doc("Print Order", source_name)
 
+	selected_children = frappe.get_all("Sales Order Item", filters={"print_order": doc.name}, pluck="name")
+	frappe.flags.selected_children = {"items": selected_children}
+
 	sales_orders = frappe.db.sql("""
 		SELECT DISTINCT s.name
 		FROM `tabSales Order Item` i
 		INNER JOIN `tabSales Order` s ON s.name = i.parent
 		WHERE s.docstatus = 1 AND s.status NOT IN ('Closed', 'On Hold')
-			AND s.per_delivered < 100 AND s.skip_delivery_note = 0
+			AND s.per_delivered < 100 AND i.skip_delivery_note = 0
 			AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
 

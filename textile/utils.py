@@ -1,5 +1,5 @@
 import frappe
-from frappe import _, cint
+from frappe import _
 from frappe.utils import cint, flt
 from textile.rotated_image import get_rotated_image  # do not remove import
 
@@ -104,3 +104,22 @@ def update_conversion_factor_global_defaults():
 
 	frappe.db.set_default("inch_to_meter", inch_to_meter)
 	frappe.db.set_default("yard_to_meter", yard_to_meter)
+
+
+def override_sales_transaction_dashboard(data):
+	data["internal_links"]["Pretreatment Order"] = ["items", "pretreatment_order"]
+	data["internal_links"]["Print Order"] = ["items", "print_order"]
+
+	textile_items = ["Pretreatment Order", "Print Order"]
+
+	ref_section = [d for d in data["transactions"] if d["label"] == _("Reference")]
+	if ref_section:
+		ref_section = ref_section[0]
+		ref_section["items"] = textile_items + ref_section["items"]
+	else:
+		data["transactions"].append({
+			"label": _("Textile"),
+			"items": textile_items
+		})
+
+	return data
