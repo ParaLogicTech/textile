@@ -171,7 +171,115 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 	}
 
 	setup_progressbars() {
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.per_work_ordered) {
+			this.show_progress_for_production();
+			this.show_progress_for_packing();
+			this.show_progress_for_delivery();
+		}
+	}
 
+	show_progress_for_production() {
+		let produced_qty = this.frm.doc.produced_qty;
+		let remaining_qty = this.frm.doc.stock_qty - produced_qty;
+		remaining_qty = Math.max(remaining_qty, 0);
+
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
+			title: __('Production Status'),
+			total_qty: this.frm.doc.stock_qty,
+			progress_bars: [
+				{
+					title: __('<b>Produced:</b> {0} / {1} {2} ({3}%)', [
+						format_number(produced_qty),
+						format_number(this.frm.doc.stock_qty),
+						"Meter",
+						format_number(produced_qty / this.frm.doc.stock_qty * 100, null, 1),
+					]),
+					completed_qty: produced_qty,
+					progress_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Remaining:</b> {0} {1}", [format_number(remaining_qty), "Meter"]),
+					completed_qty: remaining_qty,
+					progress_class: "progress-bar-warning",
+				},
+			],
+		});
+	}
+
+	show_progress_for_packing() {
+		let produced_qty = this.frm.doc.produced_qty;
+		if (!produced_qty || !this.frm.doc.delivery_required || !this.frm.doc.packing_slip_required) {
+			return;
+		}
+
+		let packed_qty = this.frm.doc.packed_qty;
+		let to_pack_qty = produced_qty - packed_qty;
+		to_pack_qty = Math.max(to_pack_qty, 0);
+
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
+			title: __('Packing Status'),
+			total_qty: this.frm.doc.stock_qty,
+			progress_bars: [
+				{
+					title: __('<b>Packed:</b> {0} {1} ({2}%)', [
+						format_number(packed_qty),
+						"Meter",
+						format_number(packed_qty / this.frm.doc.stock_qty * 100, null, 1),
+					]),
+					completed_qty: packed_qty,
+					progress_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Ready to Pack:</b> {0} {1}", [format_number(to_pack_qty), "Meter"]),
+					completed_qty: to_pack_qty,
+					progress_class: "progress-bar-warning",
+				},
+			],
+		});
+	}
+
+	show_progress_for_delivery() {
+		if (!this.frm.doc.delivery_required) {
+			return;
+		}
+
+		let produced_qty = this.frm.doc.produced_qty;
+		let packed_qty = this.frm.doc.packed_qty;
+		let deliverable_qty = this.frm.doc.packing_slip_required ? packed_qty : produced_qty;
+		if (!deliverable_qty) {
+			return;
+		}
+
+		let delivered_qty = this.frm.doc.delivered_qty;
+		let to_deliver = deliverable_qty - delivered_qty;
+		to_deliver = Math.max(to_deliver, 0);
+
+		erpnext.utils.show_progress_for_qty({
+			frm: this.frm,
+			title: __('Delivery Status'),
+			total_qty: this.frm.doc.stock_qty,
+			progress_bars: [
+				{
+					title: __('<b>Delivered:</b> {0} {1} ({2}%)', [
+						format_number(delivered_qty),
+						"Meter",
+						format_number(delivered_qty / this.frm.doc.stock_qty * 100, null, 1),
+					]),
+					completed_qty: delivered_qty,
+					progress_class: "progress-bar-success",
+					add_min_width: 0.5,
+				},
+				{
+					title: __("<b>Ready to Deliver:</b> {0} {1}", [format_number(to_deliver), "Meter"]),
+					completed_qty: to_deliver,
+					progress_class: "progress-bar-warning",
+				},
+			],
+		});
 	}
 
 	customer() {
