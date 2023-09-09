@@ -355,7 +355,10 @@ class PrintPackingList:
 				columns = [c for c in columns if c['fieldname'] not in ('packing_slip', 'fabric_item', 'design_item')]
 
 			if self.filters.totals_only:
-				columns = [c for c in columns if c['fieldname'] not in ('design_item', 'design_item_name', 'sales_order', 'work_order')]
+				columns = [c for c in columns if c['fieldname'] not in ('sales_order', 'work_order')]
+
+			if self.filters.totals_only and ("design_item", "is_return_fabric") not in self.group_by:
+				columns = [c for c in columns if c['fieldname'] not in ('design_item', 'design_item_name')]
 
 			reference_column = {
 				"label": _("Reference"),
