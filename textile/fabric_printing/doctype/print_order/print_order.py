@@ -702,6 +702,7 @@ class PrintOrder(TextileOrder):
 		self.set_fabric_transfer_status(update=True)
 		self.set_sales_order_status(update=True)
 		self.set_production_packing_status(update=True)
+		self.set_delivery_status(update=True)
 		self.set_status(update=True)
 
 		self.validate_ordered_qty()

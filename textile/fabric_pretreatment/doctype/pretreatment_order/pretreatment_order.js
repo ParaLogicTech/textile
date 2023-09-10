@@ -100,6 +100,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				});
 			}
 
+			let can_create_sales_order = false;
+			let can_create_work_order = false;
+
 			let bom_created = doc.ready_fabric_bom;
 			if (!bom_created) {
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
@@ -121,6 +124,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
+					can_create_sales_order = true;
 				}
 
 				if (
@@ -131,6 +135,8 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				) {
 					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 						__("Create"));
+
+					can_create_work_order = true;
 				}
 
 				if (is_unpacked) {
@@ -149,6 +155,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 					) {
 						$(delivery_note_btn).removeClass("btn-default").addClass("btn-primary");
 					}
+				}
+			}
+
+			if (doc.status != "Closed") {
+				if (!bom_created || can_create_sales_order || can_create_work_order) {
+					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_pretreatment_order());
+					$(start_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 			}
 		}
@@ -392,6 +405,49 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		this.frm.doc.stock_qty = this.frm.doc.qty * conversion_factor;
 
 		this.frm.refresh_fields();
+	}
+
+	start_pretreatment_order() {
+		this.show_fabric_transfer_qty_prompt((data) => {
+			return this._start_pretreatment_order(data.fabric_transfer_qty);
+		}, __("Quick starting will create Ready Fabric BOM, Fabric Transfer Entry, Sales Order and Work Order"));
+	}
+
+	_start_pretreatment_order(fabric_transfer_qty) {
+		return frappe.call({
+			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.start_pretreatment_order",
+			args: {
+				pretreatment_order: this.frm.doc.name,
+				fabric_transfer_qty: flt(fabric_transfer_qty),
+			},
+			freeze: true,
+			callback: (r) => {
+				if (!r.exc) {
+					this.frm.reload_doc();
+				}
+			}
+		});
+	}
+
+	show_fabric_transfer_qty_prompt(callback, qty_description) {
+		return frappe.prompt([
+			{
+				label: __("Greige Fabric Transfer Qty"),
+				fieldname: "fabric_transfer_qty",
+				fieldtype: "Float",
+				default: this.frm.doc.stock_qty,
+				description: qty_description
+			},
+			{
+				label: __("Greige Fabric Qty In Stock"),
+				fieldname: "greige_fabric_stock_qty",
+				fieldtype: "Float",
+				default: this.frm.doc.greige_fabric_stock_qty,
+				read_only: 1,
+			},
+		], (data) => {
+			return callback && callback(data);
+		}, "Enter Fabric Transfer Qty");
 	}
 
 	create_ready_fabric_bom() {

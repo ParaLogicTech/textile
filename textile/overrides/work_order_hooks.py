@@ -83,7 +83,7 @@ def update_work_order_on_create(work_order, args=None):
 
 
 def on_work_order_update_status(work_order, hook, status=None):
-	if work_order.get('pretreatment_order'):
+	if work_order.get('pretreatment_order') and not frappe.flags.skip_pretreatment_order_status_update:
 		doc = frappe.get_doc("Pretreatment Order", work_order.pretreatment_order)
 		doc.set_production_packing_status(update=True)
 

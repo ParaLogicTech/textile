@@ -364,7 +364,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 			if (doc.status != "Closed") {
 				if (has_missing_item || can_create_sales_order || can_create_work_order) {
-					let start_btn = this.frm.add_custom_button(__("Start"), () => this.start_print_order());
+					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_print_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 			}
@@ -686,7 +686,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	start_print_order() {
 		this.show_fabric_transfer_qty_prompt((data) => {
 			return this._start_print_order(data.fabric_transfer_qty);
-		}, __("Starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"));
+		}, __("Quick starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"));
 	}
 
 	_start_print_order(fabric_transfer_qty) {

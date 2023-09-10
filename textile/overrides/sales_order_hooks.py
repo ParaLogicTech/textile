@@ -15,13 +15,14 @@ class SalesOrderDP(SalesOrder):
 		super().update_previous_doc_status()
 
 		pretreatment_orders = set([d.pretreatment_order for d in self.items if d.get('pretreatment_order')])
-		for name in pretreatment_orders:
-			doc = frappe.get_doc("Pretreatment Order", name)
-			doc.set_sales_order_status(update=True)
-			doc.set_production_packing_status(update=True)
-			doc.validate_ordered_qty(from_doctype=self.doctype)
-			doc.set_status(update=True)
-			doc.notify_update()
+		if not frappe.flags.skip_pretreatment_order_status_update:
+			for name in pretreatment_orders:
+				doc = frappe.get_doc("Pretreatment Order", name)
+				doc.set_sales_order_status(update=True)
+				doc.set_production_packing_status(update=True)
+				doc.validate_ordered_qty(from_doctype=self.doctype)
+				doc.set_status(update=True)
+				doc.notify_update()
 
 		print_orders = []
 		if not frappe.flags.skip_print_order_status_update:

@@ -35,7 +35,7 @@ class PretreatmentOrder(TextileOrder):
 			self.set_work_order_onload()
 			self.set_onload('disallow_on_submit', self.get_disallow_on_submit_fields())
 
-		self.set_fabric_stock_qty("greige_")
+		self.set_fabric_stock_qty()
 
 	def validate(self):
 		self.set_missing_values()
@@ -102,6 +102,9 @@ class PretreatmentOrder(TextileOrder):
 		for k, v in ready_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
+
+	def set_fabric_stock_qty(self, prefix=None):
+		super().set_fabric_stock_qty(prefix or "greige_")
 
 	def validate_customer(self):
 		super().validate_customer()
@@ -192,6 +195,53 @@ class PretreatmentOrder(TextileOrder):
 			ready_fabric_doc.fabric_item = self.greige_fabric_item
 			ready_fabric_doc.save(ignore_permissions=True)
 
+	def start_pretreatment_order(self, fabric_transfer_qty):
+		from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
+
+		frappe.flags.skip_pretreatment_order_status_update = True
+
+		# Ready Fabric BOM
+		if not self.ready_fabric_bom:
+			self.create_ready_fabric_bom(ignore_version=True, ignore_feed=True)
+
+		# Sales Order
+		if flt(self.per_ordered) < 100 and not self.is_internal_customer:
+			sales_order = _make_sales_order(self.name, ignore_permissions=True)
+			sales_order.flags.ignore_version = True
+			sales_order.flags.ignore_feed = True
+			sales_order.flags.ignore_permissions = True
+			sales_order.save()
+			sales_order.submit()
+
+			sales_order_msg = _("Sales Order created: {0}").format(
+				frappe.utils.get_link_to_form("Sales Order", sales_order.name)
+			)
+			frappe.msgprint(sales_order_msg)
+
+		# Work Order
+		if flt(self.per_work_ordered) < 100:
+			self.create_work_order(ignore_version=True, ignore_feed=True)
+
+		# Material Transfer
+		if flt(fabric_transfer_qty) > 0:
+			wo_list = frappe.get_all("Work Order", filters={"pretreatment_order": self.name, "docstatus": 1},
+				pluck="name")
+			if wo_list:
+				make_stock_entry(wo_list[0], "Material Transfer for Manufacture", fabric_transfer_qty, auto_submit=True)
+
+		# Status Update
+		frappe.flags.skip_pretreatment_order_status_update = False
+
+		self.set_sales_order_status(update=True)
+		self.set_production_packing_status(update=True)
+		self.set_delivery_status(update=True)
+		self.set_status(update=True)
+
+		self.validate_ordered_qty()
+		self.validate_work_order_qty()
+
+		self.notify_update()
+
 	def create_ready_fabric_bom(self, ignore_version=True, ignore_feed=True):
 		bom_doc = self.make_ready_fabric_bom()
 		bom_doc.flags.ignore_version = ignore_version
@@ -201,6 +251,11 @@ class PretreatmentOrder(TextileOrder):
 		bom_doc.submit()
 
 		self.db_set("ready_fabric_bom", bom_doc.name)
+
+		frappe.msgprint(_("Ready Fabric {0} created successfully").format(
+			frappe.get_desk_link("BOM", bom_doc.name))
+		)
+
 		return bom_doc.name
 
 	def make_ready_fabric_bom(self):
@@ -307,6 +362,8 @@ class PretreatmentOrder(TextileOrder):
 				", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
 			)
 			frappe.msgprint(wo_message, indicator='green')
+
+		return wo_list
 
 	def create_work_order_against_pretreatment_order(self, ignore_version=True, ignore_feed=True):
 		pending_qty = flt(self.stock_qty) - flt(self.work_order_qty)
@@ -720,6 +777,33 @@ def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, ge
 
 
 @frappe.whitelist()
+def start_pretreatment_order(pretreatment_order, fabric_transfer_qty=None):
+	from erpnext.stock.stock_ledger import get_allow_negative_stock
+
+	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
+
+	if doc.docstatus != 1:
+		frappe.throw(_("Pretreatment Order {0} is not submitted").format(doc.name))
+	if doc.status == "Closed":
+		frappe.throw(_("Pretreatment Order {0} is Closed").format(doc.name))
+
+	if fabric_transfer_qty is None:
+		fabric_transfer_qty = doc.stock_qty
+
+	fabric_transfer_qty = flt(fabric_transfer_qty, doc.precision("stock_qty"))
+
+	doc.set_fabric_stock_qty()
+	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.greige_fabric_stock_qty and not get_allow_negative_stock():
+		frappe.throw(_("Not enough Greige Fabric Item {0} in Raw Material Warehouse ({1} {2} in stock)").format(
+			frappe.utils.get_link_to_form("Item", doc.greige_fabric_item),
+			doc.get_formatted("greige_fabric_stock_qty"),
+			doc.stock_uom,
+		))
+
+	doc.start_pretreatment_order(fabric_transfer_qty=fabric_transfer_qty)
+
+
+@frappe.whitelist()
 def create_ready_fabric_bom(pretreatment_order):
 	if isinstance(pretreatment_order, str):
 		doc = frappe.get_doc("Pretreatment Order", pretreatment_order)
@@ -731,12 +815,8 @@ def create_ready_fabric_bom(pretreatment_order):
 	if doc.ready_fabric_bom:
 		frappe.throw(_("Ready Fabric BOM already created"))
 
-	bom_no = doc.create_ready_fabric_bom()
+	doc.create_ready_fabric_bom()
 	doc.notify_update()
-
-	frappe.msgprint(_("Ready Fabric {0} created successfully").format(
-		frappe.get_desk_link("BOM", bom_no))
-	)
 
 
 @frappe.whitelist()
