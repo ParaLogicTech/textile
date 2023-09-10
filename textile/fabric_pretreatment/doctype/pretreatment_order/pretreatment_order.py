@@ -33,6 +33,7 @@ class PretreatmentOrder(TextileOrder):
 			self.calculate_totals()
 		elif self.docstatus == 1:
 			self.set_work_order_onload()
+			self.set_onload('disallow_on_submit', self.get_disallow_on_submit_fields())
 
 		self.set_fabric_stock_qty("greige_")
 
@@ -53,6 +54,19 @@ class PretreatmentOrder(TextileOrder):
 
 		self.set_title(self.greige_fabric_material, self.stock_qty)
 
+	def before_update_after_submit(self):
+		self.validate_dates()
+		self.get_disallow_on_submit_fields()
+
+		self._before_change = frappe.db.get_value(self.doctype, self.name, ["delivery_required", "packing_slip_required"],
+			as_dict=1)
+
+	def on_update_after_submit(self):
+		self.handle_delivery_required_changed()
+		self.set_production_packing_status(update=True)
+		self.set_delivery_status(update=True)
+		self.set_status(update=True)
+
 	def on_submit(self):
 		self.link_greige_fabric_in_ready_fabric()
 
@@ -68,6 +82,12 @@ class PretreatmentOrder(TextileOrder):
 			order_by="docstatus desc"
 		)
 		self.set_onload("work_order", work_order)
+
+	def get_disallow_on_submit_fields(self):
+		if self.cant_change_delivery_required():
+			self.flags.disallow_on_submit = [("delivery_required", None), ("packing_slip_required", None)]
+
+		return self.flags.disallow_on_submit or []
 
 	def set_missing_values(self):
 		self.set_fabric_item_details()
@@ -537,6 +557,47 @@ class PretreatmentOrder(TextileOrder):
 		self.set_status(update=True, status=status)
 		self.notify_update()
 		clear_doctype_notifications(self)
+
+	def cant_change_delivery_required(self):
+		if self.status == "Closed" or self.is_internal_customer:
+			return True
+
+		has_packing_slip = frappe.db.exists("Packing Slip Item", {"pretreatment_order": self.name, "docstatus": ["<", 2]})
+		if has_packing_slip:
+			return True
+		has_delivery_note = frappe.db.exists("Delivery Note Item", {"pretreatment_order": self.name, "docstatus": ["<", 2]})
+		if has_delivery_note:
+			return True
+
+	def handle_delivery_required_changed(self):
+		# Update Work Orders packing_slip_required
+		if self.delivery_required != self._before_change.delivery_required or self.packing_slip_required != self._before_change.packing_slip_required:
+			work_orders = frappe.get_all("Work Order", filters={"pretreatment_order": self.name}, pluck="name")
+			for name in work_orders:
+				work_order = frappe.get_doc("Work Order", name)
+				work_order.db_set({
+					"packing_slip_required": cint(self.delivery_required and self.packing_slip_required),
+				})
+				if work_order.docstatus == 1:
+					work_order.set_packing_status(update=True)
+
+				work_order.notify_update()
+
+		# Update Sales Order skip_delivery_note
+		if self.delivery_required != self._before_change.delivery_required:
+			sales_orders = frappe.get_all("Sales Order Item", filters={"pretreatment_order": self.name},
+				fields="distinct parent as sales_order", pluck="sales_order")
+			for name in sales_orders:
+				sales_order = frappe.get_doc("Sales Order", name)
+				for d in sales_order.items:
+					if d.pretreatment_order == self.name:
+						sales_order.set_skip_delivery_note_for_row(d, update=True)
+
+				sales_order.set_skip_delivery_note_for_order(update=True)
+				sales_order.set_delivery_status(update=True)
+				sales_order.set_production_packing_status(update=True)
+				sales_order.set_status(update=True)
+				sales_order.notify_update()
 
 
 def validate_transaction_against_pretreatment_order(doc):

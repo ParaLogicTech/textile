@@ -21,6 +21,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
+		this.frm.trigger('set_disallow_on_submit_fields_read_only');
 		this.setup_progressbars();
 	}
 

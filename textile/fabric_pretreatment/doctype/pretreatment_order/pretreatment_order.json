@@ -144,6 +144,7 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "delivery_required",
    "fieldtype": "Check",
@@ -151,6 +152,7 @@
    "read_only_depends_on": "is_internal_customer"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "depends_on": "delivery_required",
    "fieldname": "packing_slip_required",
@@ -339,6 +341,7 @@
    "label": "Status"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -365,6 +368,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "allow_on_submit": 1,
    "default": "To Produce",
    "fieldname": "production_status",
    "fieldtype": "Select",
@@ -375,6 +379,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "per_produced",
    "fieldtype": "Percent",
    "in_list_view": 1,
@@ -388,6 +393,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "default": "To Pack",
    "fieldname": "packing_status",
    "fieldtype": "Select",
@@ -398,6 +404,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "To Deliver",
    "fieldname": "delivery_status",
    "fieldtype": "Select",
@@ -530,6 +537,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "produced_qty",
    "fieldtype": "Float",
    "label": "Produced Qty",
@@ -538,6 +546,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "packed_qty",
    "fieldtype": "Float",
    "label": "Packed Qty",
@@ -546,6 +555,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "delivered_qty",
    "fieldtype": "Float",
    "label": "Delivered Qty",
@@ -594,6 +604,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "per_packed",
    "fieldtype": "Percent",
    "label": "% Packed",
@@ -602,6 +613,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "per_delivered",
    "fieldtype": "Percent",
    "in_list_view": 1,
@@ -630,7 +642,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-09 15:55:37.049465",
+ "modified": "2023-09-10 05:19:40.777739",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

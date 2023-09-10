@@ -71,6 +71,9 @@ class PrintOrder(TextileOrder):
 
 		self.set_title(self.fabric_material, self.total_print_length)
 
+	def before_update_after_submit(self):
+		self.validate_dates()
+
 	def on_submit(self):
 		self.set_order_defaults_for_customer()
 
