@@ -20,3 +20,4 @@ textile.patches.rename_textile_item_type
 textile.patches.update_is_return_fabric_field
 textile.patches.set_default_fabric_pickup
 textile.patches.rename_process_component_field
+textile.patches.set_do_not_explode_for_fabric

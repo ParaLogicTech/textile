@@ -276,6 +276,7 @@ class PretreatmentOrder(TextileOrder):
 			"qty": 1,
 			"uom": "Meter",
 			"skip_transfer_for_manufacture": 0,
+			"do_not_explode": 1,
 		})
 
 		components = []
