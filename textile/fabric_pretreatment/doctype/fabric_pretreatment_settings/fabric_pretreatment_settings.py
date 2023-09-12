@@ -11,6 +11,7 @@ class FabricPretreatmentSettings(Document):
 
 	def update_global_defaults(self):
 		global_default_fields = [
+			"default_pretreatment_fabric_warehouse",
 			"default_pretreatment_source_warehouse",
 			"default_pretreatment_wip_warehouse",
 			"default_pretreatment_fg_warehouse"

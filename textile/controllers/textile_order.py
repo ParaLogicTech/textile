@@ -61,11 +61,11 @@ class TextileOrder(StatusUpdater):
 		qty_field = f"{cstr(prefix)}fabric_stock_qty"
 		fabric_item = self.get(fabric_field)
 
-		if not fabric_item or not self.get("source_warehouse"):
+		if not fabric_item or not self.get("fabric_warehouse"):
 			self.set(qty_field, 0)
 			return
 
-		bin_details = get_bin_details(fabric_item, self.source_warehouse)
+		bin_details = get_bin_details(fabric_item, self.fabric_warehouse)
 		self.set(qty_field, flt(bin_details.get("actual_qty")))
 
 	@staticmethod

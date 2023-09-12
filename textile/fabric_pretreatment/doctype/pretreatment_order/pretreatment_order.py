@@ -795,7 +795,7 @@ def start_pretreatment_order(pretreatment_order, fabric_transfer_qty=None):
 
 	doc.set_fabric_stock_qty()
 	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.greige_fabric_stock_qty and not get_allow_negative_stock():
-		frappe.throw(_("Not enough Greige Fabric Item {0} in Raw Material Warehouse ({1} {2} in stock)").format(
+		frappe.throw(_("Not enough Greige Fabric Item {0} in Fabric Warehouse ({1} {2} in stock)").format(
 			frappe.utils.get_link_to_form("Item", doc.greige_fabric_item),
 			doc.get_formatted("greige_fabric_stock_qty"),
 			doc.stock_uom,

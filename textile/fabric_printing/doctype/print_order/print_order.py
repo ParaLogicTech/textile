@@ -998,7 +998,7 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 
 	doc.set_fabric_stock_qty()
 	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
-		frappe.throw(_("Not enough Fabric Item {0} in Raw Material Warehouse ({1} Meter in stock)").format(
+		frappe.throw(_("Not enough Ready Fabric Item {0} in Fabric Warehouse ({1} Meter in stock)").format(
 			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
 		))
 
@@ -1139,7 +1139,7 @@ def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit
 	stock_entry.purpose = "Material Transfer for Manufacture"
 	stock_entry.print_order = doc.name
 	stock_entry.company = doc.company
-	stock_entry.from_warehouse = doc.source_warehouse
+	stock_entry.from_warehouse = doc.fabric_warehouse
 	stock_entry.to_warehouse = doc.wip_warehouse
 
 	row = stock_entry.append("items")

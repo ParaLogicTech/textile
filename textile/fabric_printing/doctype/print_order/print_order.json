@@ -52,6 +52,8 @@
   "protection_paper_item",
   "protection_paper_item_name",
   "warehouse_section",
+  "fabric_warehouse",
+  "column_break_dczul",
   "source_warehouse",
   "column_break_6wauy",
   "wip_warehouse",
@@ -715,12 +717,23 @@
    "label": "Fabric Pickup %",
    "precision": "1",
    "read_only": 1
+  },
+  {
+   "fieldname": "fabric_warehouse",
+   "fieldtype": "Link",
+   "label": "Ready Fabric Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dczul",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-12 13:41:18.753348",
+ "modified": "2023-09-12 13:56:42.524332",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

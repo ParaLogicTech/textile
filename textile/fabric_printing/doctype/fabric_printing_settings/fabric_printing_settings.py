@@ -4,12 +4,14 @@
 import frappe
 from frappe.model.document import Document
 
+
 class FabricPrintingSettings(Document):
 	def validate(self):
 		self.update_global_defaults()
 
 	def update_global_defaults(self):
 		global_default_fields = [
+			"default_printing_fabric_warehouse",
 			"default_printing_source_warehouse",
 			"default_printing_wip_warehouse",
 			"default_printing_fg_warehouse"

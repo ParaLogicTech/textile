@@ -56,7 +56,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 			});
 		}
 
-		for (let warehouse_field of ["source_warehouse", "wip_warehouse", "fg_warehouse"]) {
+		for (let warehouse_field of ["fabric_warehouse", "source_warehouse", "wip_warehouse", "fg_warehouse"]) {
 			this.frm.set_query(warehouse_field, () => {
 				return erpnext.queries.warehouse(this.frm.doc);
 			});
@@ -170,6 +170,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 	set_default_warehouse() {
 		if (this.frm.is_new()) {
 			const order_to_settings_field_map = {
+				'fabric_warehouse': 'default_pretreatment_fabric_warehouse',
 				'source_warehouse': 'default_pretreatment_source_warehouse',
 				'wip_warehouse': 'default_pretreatment_wip_warehouse',
 				'fg_warehouse': 'default_pretreatment_fg_warehouse',
@@ -339,7 +340,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		this.get_fabric_item_details("ready_", false, true);
 	}
 
-	source_warehouse() {
+	fabric_warehouse() {
 		this.get_fabric_stock_qty("greige_");
 	}
 
@@ -347,12 +348,12 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		let fabric_field = cstr(prefix) + "fabric_item";
 		let qty_field = cstr(prefix) + "fabric_stock_qty";
 
-		if (this.frm.doc[fabric_field] && this.frm.doc.source_warehouse) {
+		if (this.frm.doc[fabric_field] && this.frm.doc.fabric_warehouse) {
 			return this.frm.call({
 				method: "erpnext.stock.get_item_details.get_bin_details",
 				args: {
 					item_code: this.frm.doc[fabric_field],
-					warehouse: this.frm.doc.source_warehouse,
+					warehouse: this.frm.doc.fabric_warehouse,
 				},
 				callback: (r) => {
 					if (r.message) {

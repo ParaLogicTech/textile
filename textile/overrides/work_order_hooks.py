@@ -3,7 +3,7 @@ from frappe.utils import flt, cint
 from erpnext.manufacturing.doctype.work_order.work_order import WorkOrder
 
 
-warehouse_fields = ['source_warehouse', 'wip_warehouse', 'fg_warehouse']
+warehouse_fields = ['fabric_warehouse', 'source_warehouse', 'wip_warehouse', 'fg_warehouse']
 print_process_fields = ["process_item", "process_item_name"]
 fabric_fields = ["fabric_item", "fabric_item_name", "fabric_material", "fabric_width", "fabric_gsm"]
 greige_fabric_fields = ["greige_" + f for f in fabric_fields]
@@ -18,6 +18,14 @@ class WorkOrderDP(WorkOrder):
 			for d in self.get("required_items"):
 				if d.item_code == fabric_item:
 					d.source_warehouse = self.wip_warehouse
+
+		if not reset_only_qty and self.get("pretreatment_order"):
+			order = frappe.db.get_value("Pretreatment Order", self.pretreatment_order,
+				["greige_fabric_item", "fabric_warehouse"], as_dict=1)
+
+			for d in self.get("required_items"):
+				if d.item_code == order.greige_fabric_item:
+					d.source_warehouse = order.fabric_warehouse
 
 
 def update_work_order_on_create(work_order, args=None):

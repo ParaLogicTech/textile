@@ -57,6 +57,8 @@
   "bleaching_item_name",
   "bleaching_item_by_fabric_weight",
   "warehouse_section",
+  "fabric_warehouse",
+  "column_break_prxxl",
   "source_warehouse",
   "column_break_6wauy",
   "wip_warehouse",
@@ -637,12 +639,23 @@
    "fieldtype": "Check",
    "label": "Is Internal Customer",
    "read_only": 1
+  },
+  {
+   "fieldname": "fabric_warehouse",
+   "fieldtype": "Link",
+   "label": "Greige Fabric Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_prxxl",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-12 13:41:09.330105",
+ "modified": "2023-09-12 13:56:23.342606",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

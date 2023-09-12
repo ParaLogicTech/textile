@@ -79,7 +79,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			});
 		}
 
-		for (let warehouse_field of ["source_warehouse", "wip_warehouse", "fg_warehouse"]) {
+		for (let warehouse_field of ["fabric_warehouse", "source_warehouse", "wip_warehouse", "fg_warehouse"]) {
 			this.frm.set_query(warehouse_field, () => {
 				return erpnext.queries.warehouse(this.frm.doc);
 			});
@@ -374,6 +374,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	set_default_warehouse() {
 		if (this.frm.is_new()) {
 			const po_to_dps_warehouse_fn_map = {
+				'fabric_warehouse': 'default_printing_fabric_warehouse',
 				'source_warehouse': 'default_printing_source_warehouse',
 				'wip_warehouse': 'default_printing_wip_warehouse',
 				'fg_warehouse': 'default_printing_fg_warehouse',
@@ -402,7 +403,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 		this.get_process_item_details();
 	}
 
-	source_warehouse() {
+	fabric_warehouse() {
 		this.get_fabric_stock_qty();
 	}
 
@@ -424,12 +425,12 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	get_fabric_stock_qty() {
-		if (this.frm.doc.fabric_item && this.frm.doc.source_warehouse) {
+		if (this.frm.doc.fabric_item && this.frm.doc.fabric_warehouse) {
 			return this.frm.call({
 				method: "erpnext.stock.get_item_details.get_bin_details",
 				args: {
 					item_code: this.frm.doc.fabric_item,
-					warehouse: this.frm.doc.source_warehouse,
+					warehouse: this.frm.doc.fabric_warehouse,
 				},
 				callback: (r) => {
 					if (r.message) {
@@ -499,9 +500,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 	before_items_remove(doc, cdt, cdn) {
 		let row = frappe.get_doc(cdt, cdn);
-		let file_name = this.frm.attachments.get_file_id_from_file_url(row.design_image);
-		this.frm.attachments.remove_attachment(file_name);
-		this.calculate_totals();
+		return this.frm.attachments.remove_attachment_by_filename(row.design_image);
 	}
 
 	design_image(doc, cdt, cdn) {

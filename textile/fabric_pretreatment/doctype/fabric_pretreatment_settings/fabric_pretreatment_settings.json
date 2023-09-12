@@ -11,6 +11,7 @@
   "singeing_mandatory",
   "desizing_mandatory",
   "column_break_yc3wg",
+  "default_pretreatment_fabric_warehouse",
   "default_pretreatment_source_warehouse",
   "default_pretreatment_wip_warehouse",
   "default_pretreatment_fg_warehouse"
@@ -55,12 +56,18 @@
    "fieldname": "desizing_mandatory",
    "fieldtype": "Check",
    "label": "Desizing Mandatory in Pretreatment Order"
+  },
+  {
+   "fieldname": "default_pretreatment_fabric_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Greige Fabric Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-24 14:34:47.587278",
+ "modified": "2023-09-12 13:55:17.953935",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment Settings",
