@@ -1,35 +1,34 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:print_process_rule_name",
- "creation": "2023-06-07 16:42:33.386459",
+ "autoname": "field:pretreatment_process_rule_name",
+ "creation": "2023-09-12 23:17:46.193131",
  "default_view": "List",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "print_process_rule_name",
+  "pretreatment_process_rule_name",
   "filter_criteria_section",
   "fabric_material",
   "column_break_fze2w",
   "fabric_type",
   "process_details_section",
-  "process_item",
-  "process_item_name",
-  "coating_item_required",
-  "softener_item_required",
+  "singeing_item",
+  "singeing_item_name",
   "column_break_sioio",
-  "coating_item",
-  "coating_item_name",
+  "desizing_item",
+  "desizing_item_name",
+  "desizing_item_unset",
   "column_break_8qvrk",
-  "softener_item",
-  "softener_item_name"
+  "bleaching_item",
+  "bleaching_item_name"
  ],
  "fields": [
   {
-   "fieldname": "print_process_rule_name",
+   "fieldname": "pretreatment_process_rule_name",
    "fieldtype": "Data",
-   "label": "Print Process Rule Name",
+   "label": "Pretreatment Process Rule Name",
    "reqd": 1,
    "unique": 1
   },
@@ -64,38 +63,19 @@
    "label": "Process Details"
   },
   {
-   "fieldname": "process_item",
+   "fieldname": "singeing_item",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Process Item",
-   "options": "Item",
-   "reqd": 1
+   "label": "Singeing Item",
+   "options": "Item"
   },
   {
-   "depends_on": "eval:doc.process_item && doc.process_item_name != doc.process_item",
-   "fetch_from": "process_item.item_name",
-   "fieldname": "process_item_name",
+   "depends_on": "eval:doc.singeing_item && doc.singeing_item_name != doc.singeing_item",
+   "fetch_from": "singeing_item.item_name",
+   "fieldname": "singeing_item_name",
    "fieldtype": "Data",
-   "label": "Process Item Name",
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fetch_from": "process_item.coating_item_required",
-   "fieldname": "coating_item_required",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Require Coating Selection",
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fetch_from": "process_item.softener_item_required",
-   "fieldname": "softener_item_required",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Require Softener Selection",
+   "label": "Singeing Item Name",
    "read_only": 1
   },
   {
@@ -103,20 +83,20 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "coating_item_required",
-   "fieldname": "coating_item",
+   "depends_on": "eval:!doc.desizing_item_unset",
+   "fieldname": "desizing_item",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Coating Item",
+   "label": "Desizing Item",
    "options": "Item"
   },
   {
-   "depends_on": "eval:doc.coating_item_required && doc.coating_item && doc.coating_item_name != doc.coating_item",
-   "fetch_from": "coating_item.item_name",
-   "fieldname": "coating_item_name",
+   "depends_on": "eval:!doc.desizing_item_unset && doc.desizing_item && doc.desizing_item_name != doc.desizing_item",
+   "fetch_from": "desizing_item.item_name",
+   "fieldname": "desizing_item_name",
    "fieldtype": "Data",
-   "label": "Coating Item Name",
+   "label": "Desizing Item Name",
    "read_only": 1
   },
   {
@@ -124,29 +104,34 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "softener_item_required",
-   "fieldname": "softener_item",
+   "fieldname": "bleaching_item",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Softener Item",
+   "label": "Bleaching Item",
    "options": "Item"
   },
   {
-   "depends_on": "eval:doc.softener_item_required && doc.softener_item && doc.softener_item_name != doc.softener_item",
-   "fetch_from": "softener_item.item_name",
-   "fieldname": "softener_item_name",
+   "depends_on": "eval:doc.bleaching_item && doc.bleaching_item_name != doc.bleaching_item",
+   "fetch_from": "bleaching_item.item_name",
+   "fieldname": "bleaching_item_name",
    "fieldtype": "Data",
-   "label": "Softener Item Name",
+   "label": "Bleaching Item Name",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "desizing_item_unset",
+   "fieldtype": "Check",
+   "label": "Desizing Not Required"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-09-12 23:16:19.736261",
+ "modified": "2023-09-12 23:49:00.900251",
  "modified_by": "Administrator",
- "module": "Fabric Printing",
- "name": "Print Process Rule",
+ "module": "Fabric Pretreatment",
+ "name": "Pretreatment Process Rule",
  "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [

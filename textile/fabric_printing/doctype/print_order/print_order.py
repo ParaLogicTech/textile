@@ -1297,14 +1297,14 @@ def get_fabric_item_details(fabric_item, get_default_process=True):
 	out = get_fabric_item_details(fabric_item)
 
 	if fabric_item and cint(get_default_process):
-		process_details = get_default_fabric_process(fabric_item)
+		process_details = get_default_print_process(fabric_item)
 		out.update(process_details)
 
 	return out
 
 
 @frappe.whitelist()
-def get_default_fabric_process(fabric_item):
+def get_default_print_process(fabric_item):
 	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
 	out = frappe._dict()
 

@@ -333,11 +333,11 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 
 	greige_fabric_item() {
 		this.get_fabric_stock_qty("greige_");
-		this.get_fabric_item_details("greige_", true, false);
+		this.get_fabric_item_details("greige_", true, false, true);
 	}
 
 	ready_fabric_item() {
-		this.get_fabric_item_details("ready_", false, true);
+		this.get_fabric_item_details("ready_", false, true, false);
 	}
 
 	fabric_warehouse() {
@@ -366,7 +366,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 		}
 	}
 
-	get_fabric_item_details(prefix, get_ready_fabric, get_greige_fabric) {
+	get_fabric_item_details(prefix, get_ready_fabric, get_greige_fabric, get_default_process) {
 		let fabric_field = cstr(prefix) + "fabric_item";
 
 		if (this.frm.doc[fabric_field]) {
@@ -377,6 +377,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 					prefix: prefix,
 					get_ready_fabric: cint(get_ready_fabric),
 					get_greige_fabric: cint(get_greige_fabric),
+					get_default_process: cint(get_default_process),
 				},
 				callback: (r) => {
 					if (r.message) {

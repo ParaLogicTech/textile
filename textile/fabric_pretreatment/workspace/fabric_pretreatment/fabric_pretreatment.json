@@ -15,24 +15,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 1,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fabric Pretreatment Settings",
-   "link_count": 0,
-   "link_to": "Fabric Pretreatment Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Order",
    "link_count": 4,
    "onboard": 0,
@@ -181,9 +163,37 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fabric Pretreatment Settings",
+   "link_count": 0,
+   "link_to": "Fabric Pretreatment Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pretreatment Process Rule",
+   "link_count": 0,
+   "link_to": "Pretreatment Process Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-09-12 23:03:31.438057",
+ "modified": "2023-09-12 23:18:32.627133",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment",

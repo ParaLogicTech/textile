@@ -10,6 +10,7 @@ from textile.utils import pretreatment_components, get_textile_conversion_factor
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
 
 
 force_customer_fields = ["customer_name"]
@@ -93,12 +94,12 @@ class PretreatmentOrder(TextileOrder):
 		self.set_fabric_item_details()
 
 	def set_fabric_item_details(self):
-		ready_details = get_fabric_item_details(self.greige_fabric_item, prefix="greige_")
+		ready_details = get_fabric_item_details(self.greige_fabric_item, prefix="greige_", get_default_process=False)
 		for k, v in ready_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
 
-		ready_details = get_fabric_item_details(self.ready_fabric_item, prefix="ready_")
+		ready_details = get_fabric_item_details(self.ready_fabric_item, prefix="ready_", get_default_process=False)
 		for k, v in ready_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -747,7 +748,8 @@ def validate_transaction_against_pretreatment_order(doc):
 
 
 @frappe.whitelist()
-def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, get_greige_fabric=False):
+def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, get_greige_fabric=False,
+		get_default_process=True):
 	from textile.utils import get_fabric_item_details
 
 	get_ready_fabric = cint(get_ready_fabric)
@@ -773,6 +775,26 @@ def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, ge
 
 		if textile_item_type == "Ready Fabric" and greige_fabric_item:
 			out.greige_fabric_item = greige_fabric_item
+
+	if fabric_item and cint(get_default_process):
+		process_details = get_default_pretreatment_process(fabric_item)
+		out.update(process_details)
+
+	return out
+
+
+@frappe.whitelist()
+def get_default_pretreatment_process(fabric_item):
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
+	out = frappe._dict()
+
+	for component_item_field in pretreatment_components:
+		out[component_item_field] = None
+		out[f"{component_item_field}_name"] = None
+
+	# Set process components from rules
+	print_process_defaults = get_pretreatment_process_values(fabric_doc.name)
+	out.update(print_process_defaults)
 
 	return out
 

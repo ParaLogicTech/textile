@@ -3,35 +3,38 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, cint
 from frappe.model.document import Document
-from textile.utils import validate_textile_item, printing_components
+from textile.utils import validate_textile_item, pretreatment_components
 
 filter_fields = ['fabric_material', 'fabric_type']
 
 
-class PrintProcessRule(Document):
+class PretreatmentProcessRule(Document):
 	def validate(self):
 		self.validate_duplicate()
 		self.validate_process_items()
 
 	def on_change(self):
-		clear_print_process_rule_cache()
+		clear_pretreatment_process_rule_cache()
 
 	def after_rename(self, old_name, new_name, merge):
-		clear_print_process_rule_cache()
+		clear_pretreatment_process_rule_cache()
 
 	def validate_process_items(self):
-		if self.get("process_item"):
-			validate_textile_item(self.process_item, "Print Process")
+		all_empty = True
 
-		for component_item_field, component_type in printing_components.items():
-			if self.get(f"{component_item_field}_required"):
-				if self.get(component_item_field):
-					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
-			else:
+		for component_item_field, component_type in pretreatment_components.items():
+			if self.get(f"{component_item_field}_unset"):
 				self.set(component_item_field, None)
+
+			if self.get(component_item_field):
+				validate_textile_item(self.get(component_item_field), "Process Component", component_type)
+				all_empty = False
+			else:
 				self.set(f"{component_item_field}_name", None)
+
+		if all_empty:
+			frappe.throw(_("Please select at least one process component"))
 
 	def validate_duplicate(self):
 		filters = {}
@@ -45,10 +48,10 @@ class PrintProcessRule(Document):
 			else:
 				filters[f] = ['is', 'not set']
 
-		existing = frappe.get_all("Print Process Rule", filters=filters)
+		existing = frappe.get_all("Pretreatment Process Rule", filters=filters)
 		if existing:
 			frappe.throw(_("{0} already exists with the same filters")
-				.format(frappe.get_desk_link("Print Process Rule", existing[0].name)))
+				.format(frappe.get_desk_link("Pretreatment Process Rule", existing[0].name)))
 
 	def get_applicable_rule_dict(self, filters):
 		required_filters = self.get_required_filters()
@@ -84,7 +87,7 @@ class PrintProcessRule(Document):
 		return rule_dict
 
 
-def get_print_process_values(fabric_item):
+def get_pretreatment_process_values(fabric_item):
 	filters = get_filters_dict(fabric_item)
 	applicable_rules = get_applicable_rules_for_filters(filters)
 	return get_default_values_dict(applicable_rules)
@@ -117,27 +120,20 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	applicable_rules = sorted(applicable_rules, key=lambda d: sorting_function(d))
 
-	component_required_fields = [f"{component_item_field}_required" for component_item_field in printing_components]
-
-	rule_meta = frappe.get_meta("Print Process Rule")
+	rule_meta = frappe.get_meta("Pretreatment Process Rule")
 	values = frappe._dict()
 	for rule in applicable_rules:
 		for fieldname, value in rule.items():
-			if fieldname == "print_process_rule_name":
-				continue
-			if fieldname in component_required_fields:
+			if fieldname == "pretreatment_process_rule_name":
 				continue
 
 			if value and fieldname not in filter_fields and rule_meta.has_field(fieldname):
 				if not values.get(fieldname):
 					values[fieldname] = value
 
-	if values.get("process_item"):
-		process_item_doc = frappe.get_cached_doc("Item", values.process_item)
-		for component_item_field in printing_components:
-			if not process_item_doc.get(f"{component_item_field}_required"):
-				values.pop(component_item_field, None)
-				values.pop(f"{component_item_field}_name", None)
+	for component_item_field in pretreatment_components:
+		if values.get(f"{component_item_field}_unset"):
+			values[component_item_field] = None
 
 	return values
 
@@ -166,7 +162,7 @@ def get_applicable_rules_for_filters(filters):
 	if not filters:
 		filters = frappe._dict()
 
-	rules = get_print_process_rule_docs()
+	rules = get_pretreatment_process_rule_docs()
 
 	applicable_rules = []
 	for rule in rules:
@@ -177,76 +173,19 @@ def get_applicable_rules_for_filters(filters):
 	return applicable_rules
 
 
-def get_print_process_rule_docs():
-	names = get_print_process_rule_names()
-	docs = [frappe.get_cached_doc("Print Process Rule", name) for name in names]
+def get_pretreatment_process_rule_docs():
+	names = get_pretreatment_process_rule_names()
+	docs = [frappe.get_cached_doc("Pretreatment Process Rule", name) for name in names]
 	return docs
 
 
-def get_print_process_rule_names():
+def get_pretreatment_process_rule_names():
 	def generator():
-		names = [d.name for d in frappe.get_all('Print Process Rule')]
+		names = [d.name for d in frappe.get_all('Pretreatment Process Rule')]
 		return names
 
-	return frappe.cache().get_value("print_process_rule_names", generator)
+	return frappe.cache().get_value("pretreatment_process_rule_names", generator)
 
 
-def clear_print_process_rule_cache():
-	frappe.cache().delete_value('print_process_rule_names')
-
-
-@frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
-def paper_item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=False):
-	from erpnext.controllers.queries import item_query
-
-	if not filters:
-		filters = {}
-
-	filters["textile_item_type"] = "Process Component"
-
-	process_component = filters.pop("process_component", None)
-	fabric_item = filters.pop("fabric_item", None)
-
-	if not process_component:
-		frappe.throw(_("Process Component not provided"))
-	if not fabric_item:
-		frappe.throw(_("Fabric Item not provided"))
-
-	fabric_width = frappe.get_cached_value("Item", fabric_item, "fabric_width")
-
-	papers = get_applicable_papers(process_component, fabric_width)
-	paper_item_codes = [d.name for d in papers]
-
-	if paper_item_codes:
-		filters["name"] = ("in", paper_item_codes)
-	else:
-		filters.update({
-			"process_component": process_component,
-		})
-
-	return item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=as_dict)
-
-
-def get_applicable_papers(process_component, fabric_width):
-	fabric_width = flt(fabric_width)
-
-	items = frappe.get_all("Item", fields=["name", "item_name", "paper_width"], filters={
-		"textile_item_type": "Process Component",
-		"process_component": process_component,
-		"paper_width": [">", fabric_width],
-		"disabled": 0,
-	}, order_by="paper_width")
-
-	if not items:
-		return []
-
-	if not fabric_width:
-		return items
-
-	smallest_width = cint(items[0].paper_width)
-	if not smallest_width:
-		return items
-
-	smallest_width_items = [d for d in items if cint(d.paper_width) == smallest_width]
-	return smallest_width_items
+def clear_pretreatment_process_rule_cache():
+	frappe.cache().delete_value('pretreatment_process_rule_names')
