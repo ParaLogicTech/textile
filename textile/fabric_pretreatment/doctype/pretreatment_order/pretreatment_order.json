@@ -196,7 +196,8 @@
    "fieldname": "delivery_date",
    "fieldtype": "Date",
    "label": "Planned Delivery Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "reqd": 1
   },
   {
    "fieldname": "section_break_rdsdl",
@@ -641,7 +642,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-10 14:54:32.132809",
+ "modified": "2023-09-12 13:41:09.330105",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",
