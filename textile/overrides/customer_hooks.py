@@ -8,6 +8,8 @@ def customer_order_default_validate(self, hook):
 
 
 def override_customer_dashboard(data):
-	ref_section = [d for d in data["transactions"] if d["label"] == _("Pre Sales")][0]
-	ref_section["items"].insert(0, "Print Order")
+	data["transactions"].append({
+		"label": _("Textile"),
+		"items": ["Pretreatment Order", "Print Order"]
+	})
 	return data
