@@ -111,6 +111,12 @@ frappe.query_reports["Print Packing List"] = {
 			options: "Fabric Material",
 		},
 		{
+			fieldname: "fabric_type",
+			label: __("Fabric Type"),
+			fieldtype: "Link",
+			options: "Fabric Type",
+		},
+		{
 			fieldname: "group_by_1",
 			label: __("Group By Level 1"),
 			fieldtype: "Select",
