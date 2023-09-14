@@ -11,7 +11,7 @@ let group_field_opts = [
 	"Group by Design Item",
 ]
 
-frappe.query_reports["Print Packing List"] = {
+frappe.query_reports["Fabric Packing List"] = {
 	"filters": [
 		{
 			fieldname: "company",

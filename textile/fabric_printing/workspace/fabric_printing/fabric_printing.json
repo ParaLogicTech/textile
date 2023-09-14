@@ -263,9 +263,9 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Print Packing List",
+   "label": "Fabric Packing List",
    "link_count": 0,
-   "link_to": "Print Packing List",
+   "link_to": "Fabric Packing List",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -281,7 +281,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-09-15 00:11:21.048768",
+ "modified": "2023-09-15 00:11:21.048769",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",

@@ -8,10 +8,10 @@ from frappe.desk.query_report import group_report_data
 
 
 def execute(filters=None):
-	return PrintPackingList(filters).run()
+	return FabricPackingList(filters).run()
 
 
-class PrintPackingList:
+class FabricPackingList:
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
 		self.show_item_name = frappe.defaults.get_global_default('item_naming_by') != "Item Name"
@@ -32,14 +32,15 @@ class PrintPackingList:
 
 		self.data = frappe.db.sql("""
 			SELECT ps.name as packing_slip, ps.posting_date as posting_date, ps.package_type,
-				ps.customer, ps.warehouse, ps.status, psi.print_order, psi.sales_order, psi.work_order,
+				ps.customer, ps.warehouse, ps.status,
+				psi.print_order, psi.pretreatment_order, psi.sales_order, psi.work_order,
 				psi.stock_qty as qty, psi.stock_uom as uom, psi.panel_qty,
 				psi.item_code, psi.item_name, psi.is_return_fabric,
-				pro.fabric_item, pro.fabric_item_name, item.textile_item_type
+				item.fabric_item, fabric.item_name as fabric_item_name, item.textile_item_type
 			FROM `tabPacking Slip Item` psi
 			INNER JOIN `tabPacking Slip` ps ON ps.name = psi.parent
-			INNER JOIN `tabPrint Order` pro ON pro.name = psi.print_order
 			INNER JOIN `tabItem` item ON item.name = psi.item_code
+			LEFT JOIN `tabItem` fabric on fabric.name = item.fabric_item
 			WHERE ps.docstatus = 1
 				AND ps.status != 'Unpacked'
 				AND ifnull(psi.source_packing_slip, '') = ''
@@ -68,9 +69,6 @@ class PrintPackingList:
 
 		if self.filters.package_type:
 			conditions.append("ps.package_type = %(package_type)s")
-
-		if self.filters.process_item:
-			conditions.append("pro.process_item = %(process_item)s")
 
 		if self.filters.fabric_item:
 			conditions.append("(item.fabric_item = %(fabric_item)s or (item.item_code = %(fabric_item)s))")
@@ -104,7 +102,10 @@ class PrintPackingList:
 				d.return_qty = d.qty
 				d.qty = None
 
-			if d.textile_item_type == "Printed Design":
+			if d.textile_item_type in ("Ready Fabric", "Greige Fabric"):
+				d.fabric_item = d.item_code
+				d.fabric_item_name = d.item_name
+			elif d.textile_item_type == "Printed Design":
 				d.design_item = d.item_code
 				d.design_item_name = d.item_name
 			elif d.is_return_fabric:
@@ -170,7 +171,7 @@ class PrintPackingList:
 
 		totals['disable_item_formatter'] = cint(self.show_item_name)
 
-		if totals.get("print_order"):
+		if totals.get("print_order") or totals.get("pretreatment_order"):
 			totals['customer'] = data[0].customer
 			totals['fabric_item'] = data[0].fabric_item
 			totals['item_code'] = data[0].fabric_item
@@ -183,10 +184,15 @@ class PrintPackingList:
 			totals['status'] = data[0].status
 			totals['warehouse'] = data[0].warehouse
 
+			pretreatment_orders = set([d.pretreatment_order for d in data if d.pretreatment_order])
+			if len(pretreatment_orders) == 1:
+				totals['pretreatment_order'] = list(pretreatment_orders)[0]
+
 			print_orders = set([d.print_order for d in data if d.print_order])
-			fabric_items = set([d.fabric_item for d in data if d.fabric_item])
 			if len(print_orders) == 1:
 				totals['print_order'] = list(print_orders)[0]
+
+			fabric_items = set([d.fabric_item for d in data if d.fabric_item])
 			if len(fabric_items) == 1:
 				totals['fabric_item'] = list(fabric_items)[0]
 				totals['item_code'] = list(fabric_items)[0]
@@ -316,6 +322,13 @@ class PrintPackingList:
 				"fieldname": "print_order",
 				"fieldtype": "Link",
 				"options": "Print Order",
+				"width": 100
+			},
+			{
+				"label": _("Pretreatment Order"),
+				"fieldname": "pretreatment_order",
+				"fieldtype": "Link",
+				"options": "Pretreatment Order",
 				"width": 100
 			},
 			{

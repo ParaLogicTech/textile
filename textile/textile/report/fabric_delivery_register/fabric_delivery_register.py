@@ -71,13 +71,6 @@ class FabricSalesPurchaseReport(SalesPurchaseDetailsReport):
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
 		totals = super().calculate_group_totals(data, group_field, group_value, grouped_by)
 
-		fabric_items = set([d.fabric_item for d in data if d.fabric_item])
-		if len(fabric_items) == 1:
-			totals['fabric_item'] = list(fabric_items)[0]
-
-		if totals.get('fabric_item'):
-			totals['fabric_item_name'] = data[0].fabric_item_name
-
 		if totals.get("parent"):
 			pretreatment_orders = set([d.pretreatment_order for d in data if d.pretreatment_order])
 			if len(pretreatment_orders) == 1:
@@ -86,6 +79,13 @@ class FabricSalesPurchaseReport(SalesPurchaseDetailsReport):
 			print_orders = set([d.print_order for d in data if d.print_order])
 			if len(print_orders) == 1:
 				totals.print_order = list(print_orders)[0]
+
+			fabric_items = set([d.fabric_item for d in data if d.fabric_item])
+			if len(fabric_items) == 1:
+				totals['fabric_item'] = list(fabric_items)[0]
+
+		if totals.get('fabric_item'):
+			totals['fabric_item_name'] = data[0].fabric_item_name
 
 		return totals
 
