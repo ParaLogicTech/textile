@@ -6,7 +6,6 @@ textile.patches.update_fabric_items_conversions
 textile.patches.set_work_order_packing_slip_required
 textile.patches.change_print_order_status_not_started
 textile.patches.refactor_fabric_printing
-execute:frappe.delete_doc_if_exists("Report", "Print Packing List")
 
 [post_model_sync]
 textile.patches.set_panel_based_qty
@@ -24,3 +23,4 @@ textile.patches.rename_process_component_field
 textile.patches.set_do_not_explode_for_fabric
 textile.patches.set_fabric_warehouse
 textile.patches.delete_duplicate_file_attachments
+execute:frappe.delete_doc_if_exists("Report", "Print Packing List")
