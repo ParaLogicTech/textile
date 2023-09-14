@@ -624,14 +624,28 @@ class PretreatmentOrder(TextileOrder):
 		has_packing_slip = frappe.db.exists("Packing Slip Item", {"pretreatment_order": self.name, "docstatus": ["<", 2]})
 		if has_packing_slip:
 			return True
+
 		has_delivery_note = frappe.db.exists("Delivery Note Item", {"pretreatment_order": self.name, "docstatus": ["<", 2]})
 		if has_delivery_note:
+			return True
+
+		is_sales_order_closed = frappe.db.sql("""
+			select so.name
+			from `tabSales Order Item` i
+			inner join `tabSales Order` so on so.name = i.parent
+			where so.docstatus = 1 and so.status = 'Closed' and i.pretreatment_order = %s
+			limit 1
+		""", self.name)
+		if is_sales_order_closed:
 			return True
 
 	def handle_delivery_required_changed(self):
 		# Update Work Orders packing_slip_required
 		if self.delivery_required != self._before_change.delivery_required or self.packing_slip_required != self._before_change.packing_slip_required:
-			work_orders = frappe.get_all("Work Order", filters={"pretreatment_order": self.name}, pluck="name")
+			work_orders = frappe.get_all("Work Order",
+				filters={"pretreatment_order": self.name},
+				pluck="name"
+			)
 			for name in work_orders:
 				work_order = frappe.get_doc("Work Order", name)
 				work_order.db_set({
@@ -644,19 +658,24 @@ class PretreatmentOrder(TextileOrder):
 
 		# Update Sales Order skip_delivery_note
 		if self.delivery_required != self._before_change.delivery_required:
-			sales_orders = frappe.get_all("Sales Order Item", filters={"pretreatment_order": self.name},
-				fields="distinct parent as sales_order", pluck="sales_order")
+			sales_orders = frappe.get_all("Sales Order Item",
+				filters={"pretreatment_order": self.name, "docstatus": ["<", 2]},
+				fields="distinct parent as sales_order",
+				pluck="sales_order"
+			)
 			for name in sales_orders:
 				sales_order = frappe.get_doc("Sales Order", name)
 				for d in sales_order.items:
 					if d.pretreatment_order == self.name:
 						sales_order.set_skip_delivery_note_for_row(d, update=True)
 
-				sales_order.set_skip_delivery_note_for_order(update=True)
-				sales_order.set_delivery_status(update=True)
-				sales_order.set_production_packing_status(update=True)
-				sales_order.set_status(update=True)
-				sales_order.notify_update()
+				if sales_order.docstatus == 1:
+					sales_order.set_skip_delivery_note_for_order(update=True)
+					sales_order.set_delivery_status(update=True)
+					sales_order.set_production_packing_status(update=True)
+					sales_order.set_status(update=True)
+					sales_order.update_reserved_qty()
+					sales_order.notify_update()
 
 
 def validate_transaction_against_pretreatment_order(doc):
