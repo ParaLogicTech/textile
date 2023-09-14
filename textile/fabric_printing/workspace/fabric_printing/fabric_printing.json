@@ -15,44 +15,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Reports",
-   "link_count": 3,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Fabric Printing Summary",
-   "link_count": 0,
-   "link_to": "Fabric Printing Summary",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Print Packing List",
-   "link_count": 0,
-   "link_to": "Print Packing List",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Print Production Register",
-   "link_count": 0,
-   "link_to": "Print Production Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Masters",
    "link_count": 3,
    "onboard": 0,
@@ -269,9 +231,57 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Fabric Printing Summary",
+   "link_count": 0,
+   "link_to": "Fabric Printing Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Fabric Delivery Register",
+   "link_count": 0,
+   "link_to": "Fabric Delivery Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Print Packing List",
+   "link_count": 0,
+   "link_to": "Print Packing List",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Print Production Register",
+   "link_count": 0,
+   "link_to": "Print Production Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-09-13 17:14:25.366658",
+ "modified": "2023-09-15 00:11:21.048768",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
