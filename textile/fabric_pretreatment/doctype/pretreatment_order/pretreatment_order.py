@@ -196,7 +196,7 @@ class PretreatmentOrder(TextileOrder):
 			ready_fabric_doc.fabric_item = self.greige_fabric_item
 			ready_fabric_doc.save(ignore_permissions=True)
 
-	def start_pretreatment_order(self, fabric_transfer_qty):
+	def start_pretreatment_order(self):
 		from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 
 		frappe.flags.skip_pretreatment_order_status_update = True
@@ -222,13 +222,6 @@ class PretreatmentOrder(TextileOrder):
 		# Work Order
 		if flt(self.per_work_ordered) < 100:
 			self.create_work_order(ignore_version=True, ignore_feed=True)
-
-		# Material Transfer
-		if flt(fabric_transfer_qty) > 0:
-			wo_list = frappe.get_all("Work Order", filters={"pretreatment_order": self.name, "docstatus": 1},
-				pluck="name")
-			if wo_list:
-				make_stock_entry(wo_list[0], "Material Transfer for Manufacture", fabric_transfer_qty, auto_submit=True)
 
 		# Status Update
 		frappe.flags.skip_pretreatment_order_status_update = False
@@ -819,9 +812,7 @@ def get_default_pretreatment_process(fabric_item):
 
 
 @frappe.whitelist()
-def start_pretreatment_order(pretreatment_order, fabric_transfer_qty=None):
-	from erpnext.stock.stock_ledger import get_allow_negative_stock
-
+def start_pretreatment_order(pretreatment_order):
 	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
 
 	if doc.docstatus != 1:
@@ -829,20 +820,7 @@ def start_pretreatment_order(pretreatment_order, fabric_transfer_qty=None):
 	if doc.status == "Closed":
 		frappe.throw(_("Pretreatment Order {0} is Closed").format(doc.name))
 
-	if fabric_transfer_qty is None:
-		fabric_transfer_qty = doc.stock_qty
-
-	fabric_transfer_qty = flt(fabric_transfer_qty, doc.precision("stock_qty"))
-
-	doc.set_fabric_stock_qty()
-	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.greige_fabric_stock_qty and not get_allow_negative_stock():
-		frappe.throw(_("Not enough Greige Fabric Item {0} in Fabric Warehouse ({1} {2} in stock)").format(
-			frappe.utils.get_link_to_form("Item", doc.greige_fabric_item),
-			doc.get_formatted("greige_fabric_stock_qty"),
-			doc.stock_uom,
-		))
-
-	doc.start_pretreatment_order(fabric_transfer_qty=fabric_transfer_qty)
+	doc.start_pretreatment_order()
 
 
 @frappe.whitelist()

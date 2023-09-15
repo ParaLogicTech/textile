@@ -410,17 +410,19 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 	}
 
 	start_pretreatment_order() {
-		this.show_fabric_transfer_qty_prompt((data) => {
-			return this._start_pretreatment_order(data.fabric_transfer_qty);
-		}, __("Quick starting will create Ready Fabric BOM, Fabric Transfer Entry, Sales Order and Work Order"));
+		frappe.confirm(
+			__("Are you sure you want to start this Pretreatment Order? Quick starting will create Ready Fabric BOM, Sales Order and Work Order"),
+			() => {
+				return this._start_pretreatment_order();
+			}
+		);
 	}
 
-	_start_pretreatment_order(fabric_transfer_qty) {
+	_start_pretreatment_order() {
 		return frappe.call({
 			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.start_pretreatment_order",
 			args: {
 				pretreatment_order: this.frm.doc.name,
-				fabric_transfer_qty: flt(fabric_transfer_qty),
 			},
 			freeze: true,
 			callback: (r) => {
@@ -429,27 +431,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				}
 			}
 		});
-	}
-
-	show_fabric_transfer_qty_prompt(callback, qty_description) {
-		return frappe.prompt([
-			{
-				label: __("Greige Fabric Transfer Qty"),
-				fieldname: "fabric_transfer_qty",
-				fieldtype: "Float",
-				default: this.frm.doc.stock_qty,
-				description: qty_description
-			},
-			{
-				label: __("Greige Fabric Qty In Stock"),
-				fieldname: "greige_fabric_stock_qty",
-				fieldtype: "Float",
-				default: this.frm.doc.greige_fabric_stock_qty,
-				read_only: 1,
-			},
-		], (data) => {
-			return callback && callback(data);
-		}, "Enter Fabric Transfer Qty");
 	}
 
 	create_ready_fabric_bom() {
