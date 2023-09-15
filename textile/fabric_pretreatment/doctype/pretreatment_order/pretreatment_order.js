@@ -11,6 +11,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 			'Packing Slip': 'Packing Slip',
 			'Delivery Note': 'Delivery Note',
 			'Sales Invoice': 'Sales Invoice',
+			'Print Order': 'Print Order',
 		}
 
 		this.setup_queries();
@@ -162,6 +163,10 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 				if (!bom_created || can_create_sales_order || can_create_work_order) {
 					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_pretreatment_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");
+				}
+
+				if (!this.frm.doc.is_internal_customer) {
+					this.frm.add_custom_button(__("Print Order"), () => this.make_print_order(), __("Create"));
 				}
 			}
 		}
@@ -488,6 +493,21 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 	make_delivery_note() {
 		return frappe.call({
 			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_delivery_note",
+			args: {
+				source_name: this.frm.doc.name,
+			},
+			callback: function (r) {
+				if (!r.exc) {
+					let doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+				}
+			}
+		});
+	}
+
+	make_print_order() {
+		return frappe.call({
+			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_print_order",
 			args: {
 				source_name: this.frm.doc.name,
 			},

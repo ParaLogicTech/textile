@@ -15,6 +15,7 @@
   "is_fabric_provided_by_customer",
   "column_break_mb5rm",
   "notes",
+  "pretreatment_order",
   "packing_slip_required",
   "column_break_kji8i",
   "naming_series",
@@ -728,12 +729,20 @@
   {
    "fieldname": "column_break_dczul",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pretreatment_order",
+   "fieldtype": "Link",
+   "label": "Pretreatment Order",
+   "no_copy": 1,
+   "options": "Pretreatment Order",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-12 13:56:42.524332",
+ "modified": "2023-09-16 00:20:08.525107",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

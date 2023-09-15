@@ -17,6 +17,10 @@ def get_data():
 			{
 				'label': _("Delivery"),
 				'items': ['Packing Slip', 'Delivery Note']
+			},
+			{
+				'label': _("Printing"),
+				'items': ['Print Order']
 			}
 		]
 	}

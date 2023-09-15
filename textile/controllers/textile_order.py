@@ -34,6 +34,49 @@ class TextileOrder(StatusUpdater):
 		if self.get("customer"):
 			validate_party_frozen_disabled("Customer", self.customer)
 
+	def validate_pretreatment_order(self):
+		if not self.get("pretreatment_order"):
+			return
+
+		pretreatment_order = frappe.db.get_value("Pretreatment Order", self.pretreatment_order,
+			["customer", "ready_fabric_item", "fg_warehouse", "docstatus", "status", "is_internal_customer"],
+			as_dict=1)
+
+		if not pretreatment_order:
+			frappe.throw(_("Pretreatment Order {0} does not exist").format(
+				frappe.bold(self.pretreatment_order)
+			))
+
+		if pretreatment_order.docstatus != 1:
+			frappe.throw(_("{0} is not submitted").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order)
+			))
+		if pretreatment_order.status == "Closed":
+			frappe.throw(_("{0} is {1}").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
+				pretreatment_order.status)
+			)
+		if pretreatment_order.is_internal_customer:
+			frappe.throw(_("{0} for an internal customer").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order))
+			)
+
+		if self.customer != pretreatment_order.customer:
+			frappe.throw(_("Customer does not match with {0}. Customer should be {1}").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
+				frappe.bold(pretreatment_order.customer)
+			))
+		if self.fabric_item != pretreatment_order.ready_fabric_item:
+			frappe.throw(_("Ready Fabric Item does not match with {0}. Fabric Item should be {1}").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
+				frappe.bold(pretreatment_order.ready_fabric_item)
+			))
+		if self.fabric_warehouse != pretreatment_order.fg_warehouse:
+			frappe.throw(_("Fabric Warehouse does not match with {0}'s Finished Goods Warehouse. Fabric Warehouse should be {1}").format(
+				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
+				frappe.bold(pretreatment_order.fg_warehouse)
+			))
+
 	def validate_fabric_item(self, textile_item_type, prefix=None):
 		fabric_field = f"{cstr(prefix)}fabric_item"
 		fabric_item = self.get(fabric_field)

@@ -946,6 +946,29 @@ def make_delivery_note(source_name, target_doc=None):
 
 
 @frappe.whitelist()
+def make_print_order(source_name):
+	pretreatment_order = frappe.get_doc('Pretreatment Order', source_name)
+
+	if pretreatment_order.docstatus != 1:
+		frappe.throw(_("Pretreatment Order {0} is not submitted").format(pretreatment_order.name))
+	if pretreatment_order.is_internal_customer:
+		frappe.throw(_("Cannot make Print Order against Pretreatment Order for internal customer"))
+	if pretreatment_order.status == "Closed":
+		frappe.throw(_("Pretreatment Order {0} is Closed").format(pretreatment_order.name))
+
+	print_order = frappe.new_doc("Print Order")
+	print_order.pretreatment_order = pretreatment_order.name
+	print_order.customer = pretreatment_order.customer
+	print_order.is_fabric_provided_by_customer = pretreatment_order.is_fabric_provided_by_customer
+	print_order.fabric_item = pretreatment_order.ready_fabric_item
+	print_order.fabric_warehouse = pretreatment_order.fg_warehouse
+
+	print_order.run_method("set_missing_values", get_default_process=True)
+
+	return print_order
+
+
+@frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_pretreatment_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict):
 	return _get_pretreatment_orders_to_be_delivered(doctype, txt, searchfield, start, page_len, filters, as_dict)

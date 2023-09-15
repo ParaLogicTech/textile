@@ -52,6 +52,7 @@ class PrintOrder(TextileOrder):
 		self.set_missing_values()
 		self.validate_dates()
 		self.validate_customer()
+		self.validate_pretreatment_order()
 		self.validate_fabric_item("Ready Fabric")
 		self.validate_process_items()
 		self.validate_design_items()
@@ -83,10 +84,10 @@ class PrintOrder(TextileOrder):
 
 		self.update_status_on_cancel()
 
-	def set_missing_values(self):
+	def set_missing_values(self, get_default_process=False):
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
-		self.set_fabric_item_details()
+		self.set_fabric_item_details(get_default_process=get_default_process)
 		self.set_process_item_details()
 		self.set_process_component_details()
 
@@ -123,8 +124,8 @@ class PrintOrder(TextileOrder):
 			design_details = get_image_details(d.design_image, throw_not_found=self.docstatus == 1)
 			d.update(design_details)
 
-	def set_fabric_item_details(self):
-		details = get_fabric_item_details(self.fabric_item, get_default_process=False)
+	def set_fabric_item_details(self, get_default_process=False):
+		details = get_fabric_item_details(self.fabric_item, get_default_process=get_default_process)
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
