@@ -28,6 +28,11 @@ class DeliveryNoteDP(DeliveryNote):
 			doc = frappe.get_doc("Pretreatment Order", name)
 			doc.set_delivery_status(update=True)
 			doc.validate_delivered_qty(from_doctype=self.doctype)
+
+			# Update packed qty for unpacked returns
+			if self.is_return and self.reopen_order:
+				doc.set_production_packing_status(update=True)
+
 			doc.set_status(update=True)
 			doc.notify_update()
 
@@ -37,6 +42,11 @@ class DeliveryNoteDP(DeliveryNote):
 			doc = frappe.get_doc("Print Order", name)
 			doc.set_delivery_status(update=True)
 			doc.validate_delivered_qty(from_doctype=self.doctype, row_names=print_order_row_names)
+
+			# Update packed qty for unpacked returns
+			if self.is_return and self.reopen_order:
+				doc.set_production_packing_status(update=True)
+
 			doc.set_status(update=True)
 			doc.notify_update()
 
@@ -69,3 +79,22 @@ def update_delivery_note_mapper(mapper, target_doctype):
 
 	field_map["print_order"] = "print_order"
 	field_map["print_order_item"] = "print_order_item"
+
+
+def update_return_mapper(mapper, doctype):
+	child_dt = f"{doctype} Item"
+	if not mapper.get(child_dt):
+		return
+
+	field_map = mapper[child_dt]["field_map"]
+
+	field_map["pretreatment_order"] = "pretreatment_order"
+
+	field_map["print_order"] = "print_order"
+	field_map["print_order_item"] = "print_order_item"
+
+	if not frappe.flags.args or not frappe.flags.args.reopen_order:
+		if not frappe.flags.args:
+			frappe.flags.args = frappe._dict()
+
+		frappe.flags.args.reopen_order = "Yes"

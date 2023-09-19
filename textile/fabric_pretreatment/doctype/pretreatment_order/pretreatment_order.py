@@ -495,8 +495,8 @@ class PretreatmentOrder(TextileOrder):
 
 			# Packing Slips
 			packed_data = frappe.db.sql("""
-				SELECT sum(stock_qty)
-				FROM `tabPacking Slip Item`
+				SELECT sum(packed_qty * conversion_factor)
+				FROM `tabSales Order Item`
 				WHERE docstatus = 1 AND pretreatment_order = %s and item_code = %s
 			""", (self.name, self.ready_fabric_item))
 
@@ -539,15 +539,12 @@ class PretreatmentOrder(TextileOrder):
 
 		if self.docstatus == 1:
 			delivered_data = frappe.db.sql("""
-				select i.pretreatment_order, i.stock_qty, p.is_return, p.reopen_order
-				from `tabDelivery Note Item` i
-				inner join `tabDelivery Note` p on p.name = i.parent
-				where p.docstatus = 1 and i.pretreatment_order = %s and i.item_code = %s
-			""", (self.name, self.ready_fabric_item), as_dict=1)
-
-			for d in delivered_data:
-				if not d.is_return or d.reopen_order:
-					out.delivered_qty += flt(d.stock_qty)
+				SELECT sum(delivered_qty * conversion_factor)
+				FROM `tabSales Order Item`
+				WHERE docstatus = 1 AND pretreatment_order = %s and item_code = %s
+			""", (self.name, self.ready_fabric_item))
+			if delivered_data:
+				out.delivered_qty = flt(delivered_data[0][0])
 
 			sales_orders_to_deliver = frappe.db.sql_list("""
 				select count(so.name)

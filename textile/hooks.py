@@ -104,6 +104,14 @@ update_delivery_note_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
 ]
 
+update_sales_invoice_from_packing_slip_mapper = [
+	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
+]
+
+update_sales_purchase_return_mapper = [
+	"textile.overrides.delivery_note_hooks.update_return_mapper",
+]
+
 delete_file_data_content = "textile.rotated_image.delete_file_data_content"
 
 

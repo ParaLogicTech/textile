@@ -560,15 +560,12 @@ class PrintOrder(TextileOrder):
 						out.has_work_order_to_pack = True
 
 				# Packing Slips
-				packed_data = frappe.db.sql("""
-					SELECT print_order_item, stock_qty
-					FROM `tabPacking Slip Item`
-					WHERE docstatus = 1 AND print_order_item IN %s
-				""", [row_names], as_dict=1)
-
-				for d in packed_data:
-					out.packed_qty_map.setdefault(d.print_order_item, 0)
-					out.packed_qty_map[d.print_order_item] += flt(d.stock_qty)
+				out.packed_qty_map = dict(frappe.db.sql("""
+					select print_order_item, sum(packed_qty * conversion_factor)
+					from `tabSales Order Item`
+					where docstatus = 1 and print_order_item in %s
+					group by print_order_item
+				""", [row_names]))
 
 		return out
 
@@ -610,17 +607,12 @@ class PrintOrder(TextileOrder):
 		if self.docstatus == 1:
 			row_names = [d.name for d in self.items]
 			if row_names:
-				delivered_data = frappe.db.sql("""
-					select i.print_order_item, i.stock_qty, p.is_return, p.reopen_order
-					from `tabDelivery Note Item` i
-					inner join `tabDelivery Note` p on p.name = i.parent
-					where p.docstatus = 1 and i.print_order_item in %s
-				""", [row_names], as_dict=1)
-
-				for d in delivered_data:
-					if not d.is_return or d.reopen_order:
-						out.delivered_qty_map.setdefault(d.print_order_item, 0)
-						out.delivered_qty_map[d.print_order_item] += flt(d.stock_qty)
+				out.delivered_qty_map = dict(frappe.db.sql("""
+					select print_order_item, sum(delivered_qty * conversion_factor)
+					from `tabSales Order Item`
+					where docstatus = 1 and print_order_item in %s
+					group by print_order_item
+				""", [row_names]))
 
 			sales_orders_to_deliver = frappe.db.sql_list("""
 				select count(so.name)
@@ -1237,6 +1229,9 @@ def make_delivery_note(source_name, target_doc=None):
 
 	for d in sales_orders:
 		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
+
+	if doc.packing_slip_required and not target_doc:
+		frappe.throw(_("There are no packed Sales Orders to be delivered"))
 
 	return target_doc
 
