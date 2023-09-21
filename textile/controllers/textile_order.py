@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import getdate, cstr, flt, cint
 from erpnext.controllers.status_updater import StatusUpdater
 from erpnext.accounts.party import validate_party_frozen_disabled
-from textile.utils import validate_textile_item, gsm_to_grams
+from textile.utils import validate_textile_item, gsm_to_grams, is_internal_customer
 from erpnext.stock.get_item_details import get_bin_details, is_item_uom_convertible
 
 
@@ -34,6 +34,15 @@ class TextileOrder(StatusUpdater):
 		if self.get("customer"):
 			validate_party_frozen_disabled("Customer", self.customer)
 
+		if self.meta.has_field("is_internal_customer"):
+			self.is_internal_customer = is_internal_customer(self.customer, self.company)
+
+			if self.is_internal_customer:
+				if self.meta.has_field("delivery_required"):
+					self.delivery_required = 0
+				if self.meta.has_field("is_fabric_provided_by_customer"):
+					self.is_fabric_provided_by_customer = 0
+
 	def validate_pretreatment_order(self):
 		if not self.get("pretreatment_order"):
 			return
@@ -57,7 +66,7 @@ class TextileOrder(StatusUpdater):
 				pretreatment_order.status)
 			)
 		if pretreatment_order.is_internal_customer:
-			frappe.throw(_("{0} for an internal customer").format(
+			frappe.throw(_("{0} is for an internal customer").format(
 				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order))
 			)
 

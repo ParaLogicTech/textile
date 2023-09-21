@@ -34,11 +34,15 @@ def update_work_order_on_create(work_order, args=None):
 		return frappe.db.get_value("Pretreatment Order", work_order.pretreatment_order, fields, as_dict=1)
 
 	def get_print_order_details():
-		fields = ["packing_slip_required"] + fabric_fields + print_process_fields + warehouse_fields
+		fields = ["packing_slip_required", "is_internal_customer"] + fabric_fields + print_process_fields + warehouse_fields
 		return frappe.db.get_value("Print Order", work_order.print_order, fields, as_dict=1)
 
 	if args and args.get("pretreatment_order"):
 		work_order.pretreatment_order = args.get("pretreatment_order")
+	if args and args.get("print_order"):
+		work_order.print_order = args.get("print_order")
+	if args and args.get("print_order_item"):
+		work_order.print_order_item = args.get("print_order_item")
 
 	# Set Order Reference
 	if work_order.get('sales_order_item'):
@@ -74,7 +78,9 @@ def update_work_order_on_create(work_order, args=None):
 
 		work_order.skip_transfer = 1
 		work_order.from_wip_warehouse = 0
-		work_order.packing_slip_required = print_order_details.packing_slip_required
+		work_order.packing_slip_required = cint(
+			not print_order_details.is_internal_customer and print_order_details.packing_slip_required
+		)
 
 		for warehouse_field in warehouse_fields:
 			warehouse = print_order_details.get(warehouse_field)

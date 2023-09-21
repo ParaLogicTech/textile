@@ -5,8 +5,7 @@ import frappe
 from frappe import _
 from textile.controllers.textile_order import TextileOrder
 from frappe.utils import cint, flt, round_up
-from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item, \
-	is_internal_customer
+from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
@@ -107,14 +106,6 @@ class PretreatmentOrder(TextileOrder):
 	def set_fabric_stock_qty(self, prefix=None):
 		super().set_fabric_stock_qty(prefix or "greige_")
 
-	def validate_customer(self):
-		super().validate_customer()
-		self.is_internal_customer = is_internal_customer(self.customer, self.company)
-
-		if self.is_internal_customer:
-			self.delivery_required = 0
-			self.is_fabric_provided_by_customer = 0
-
 	def validate_fabric_items(self):
 		self.validate_fabric_item("Greige Fabric", "greige_")
 		self.validate_fabric_item("Ready Fabric", "ready_")
@@ -197,8 +188,6 @@ class PretreatmentOrder(TextileOrder):
 			ready_fabric_doc.save(ignore_permissions=True)
 
 	def start_pretreatment_order(self):
-		from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
-
 		frappe.flags.skip_pretreatment_order_status_update = True
 
 		# Ready Fabric BOM

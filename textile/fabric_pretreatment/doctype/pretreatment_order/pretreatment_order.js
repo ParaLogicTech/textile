@@ -3,8 +3,10 @@
 
 frappe.provide("textile");
 
-textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Controller {
+textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder {
 	setup() {
+		super.setup();
+
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
 			'Work Order': 'Work Order',
@@ -13,12 +15,10 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 			'Sales Invoice': 'Sales Invoice',
 			'Print Order': 'Print Order',
 		}
-
-		this.setup_queries();
 	}
 
 	refresh() {
-		erpnext.hide_company();
+		super.refresh();
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
@@ -27,6 +27,8 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 	}
 
 	setup_queries() {
+		super.setup_queries();
+
 		this.frm.set_query("greige_fabric_item", () => {
 			let filters = {
 				'textile_item_type': 'Greige Fabric',
@@ -54,12 +56,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 					process_component: component_type
 				};
 				return erpnext.queries.item(filters);
-			});
-		}
-
-		for (let warehouse_field of ["fabric_warehouse", "source_warehouse", "wip_warehouse", "fg_warehouse"]) {
-			this.frm.set_query(warehouse_field, () => {
-				return erpnext.queries.warehouse(this.frm.doc);
 			});
 		}
 	}
@@ -123,9 +119,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 
 			if (doc.status != "Closed") {
 				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
+					can_create_sales_order = true;
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
-					can_create_sales_order = true;
 				}
 
 				if (
@@ -134,10 +130,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 						|| (doc.is_internal_customer && flt(doc.per_work_ordered) < 100)
 					)
 				) {
+					can_create_work_order = true;
 					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 						__("Create"));
-
-					can_create_work_order = true;
 				}
 
 				if (is_unpacked) {
@@ -308,23 +303,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends frappe.ui.form.Contr
 
 	company() {
 		this.get_is_internal_customer();
-	}
-
-	get_is_internal_customer() {
-		if (!this.frm.doc.customer || !this.frm.doc.company) {
-			return this.frm.set_value("is_internal_customer", 0);
-		} else {
-			return frappe.call({
-				method: "textile.utils.is_internal_customer",
-				args: {
-					customer: this.frm.doc.customer,
-					company: this.frm.doc.company,
-				},
-				callback: (r) => {
-					return this.frm.set_value("is_internal_customer", r.message);
-				}
-			});
-		}
 	}
 
 	is_internal_customer() {

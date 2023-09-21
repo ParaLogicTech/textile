@@ -13,6 +13,7 @@
   "po_no",
   "po_date",
   "is_fabric_provided_by_customer",
+  "is_internal_customer",
   "column_break_mb5rm",
   "notes",
   "pretreatment_order",
@@ -274,7 +275,8 @@
    "default": "0",
    "fieldname": "is_fabric_provided_by_customer",
    "fieldtype": "Check",
-   "label": "Fabric Provided By Customer"
+   "label": "Fabric Provided By Customer",
+   "read_only_depends_on": "is_internal_customer"
   },
   {
    "fieldname": "items_section",
@@ -454,6 +456,7 @@
   },
   {
    "default": "0",
+   "depends_on": "eval:!doc.is_internal_customer",
    "fieldname": "packing_slip_required",
    "fieldtype": "Check",
    "label": "Packing Slip Required for Delivery"
@@ -737,12 +740,19 @@
    "no_copy": 1,
    "options": "Pretreatment Order",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_internal_customer",
+   "fieldtype": "Check",
+   "label": "Is Internal Customer",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-16 00:20:08.525107",
+ "modified": "2023-09-21 12:57:54.996535",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

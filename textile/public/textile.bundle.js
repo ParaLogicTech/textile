@@ -1,4 +1,5 @@
 import "./js/utils.js"
+import "./js/textile_order.js"
 import "./js/print_list_view.js"
 import "../overrides/taxes_and_totals_hooks.js"
 import "../overrides/work_order_hooks.js"

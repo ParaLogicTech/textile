@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, cint
+from frappe.utils import flt, cint, round_up
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
@@ -405,6 +405,88 @@ class PrintOrder(TextileOrder):
 
 		return existing_bom[0] if existing_bom else None
 
+	def create_work_orders(self, publish_progress=True, ignore_version=True, ignore_feed=True):
+		if self.docstatus != 1:
+			frappe.throw(_("Print Order is not submitted"))
+
+		if not all(d.item_code and d.design_bom for d in self.items):
+			frappe.throw(_("Create Items and BOMs first"))
+
+		if self.is_internal_customer:
+			wo_list = self.create_work_orders_against_print_order(publish_progress=publish_progress,
+				ignore_version=ignore_version, ignore_feed=ignore_feed)
+		else:
+			wo_list = self.create_work_order_against_sales_order(publish_progress=publish_progress,
+				ignore_version=ignore_version, ignore_feed=ignore_feed)
+
+		if wo_list:
+			wo_message = _("Work Orders created: {0}").format(
+				", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
+			)
+			frappe.msgprint(wo_message, indicator='green')
+
+	def create_work_orders_against_print_order(self, publish_progress=True, ignore_version=True, ignore_feed=True):
+		from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+
+		wo_list = []
+
+		for i, d in enumerate(self.items):
+			pending_qty = flt(d.stock_print_length) - flt(d.work_order_qty)
+			pending_qty = round_up(pending_qty, frappe.get_precision("Work Order", "qty"))
+
+			if pending_qty <= 0:
+				continue
+
+			work_order_item = {
+				"print_order": self.name,
+				"print_order_item": d.name,
+				"item_code": d.item_code,
+				"item_name": d.item_name,
+				"bom_no": d.design_bom,
+				"warehouse": self.fg_warehouse,
+				"production_qty": pending_qty,
+				"customer": self.customer,
+				"customer_name": self.customer_name,
+			}
+
+			wo_list += create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
+				ignore_feed=ignore_feed)
+
+			if publish_progress:
+				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(self.items))
+
+		if not wo_list:
+			frappe.msgprint(_("Work Orders already created"))
+
+		return wo_list
+
+	def create_work_order_against_sales_order(self, publish_progress=True, ignore_version=True, ignore_feed=True):
+		from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+
+		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
+			'print_order': self.name,
+			'docstatus': 1
+		}, pluck="sales_order")
+
+		if not sales_orders:
+			frappe.throw(_("Please create Sales Order first"))
+
+		wo_items = []
+		for so in sales_orders:
+			so_doc = frappe.get_doc('Sales Order', so)
+			wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.print_order == self.name)
+
+		wo_list = []
+		for i, d in enumerate(wo_items):
+			wo_list += create_work_orders([d], self.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			if publish_progress:
+				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(wo_items))
+
+		if not wo_list:
+			frappe.msgprint(_("Work Order already created"))
+
+		return wo_list
+
 	def set_item_creation_status(self, update=False, update_modified=True):
 		self.items_created = cint(all(d.item_code and d.design_bom for d in self.items))
 		if update:
@@ -516,7 +598,7 @@ class PrintOrder(TextileOrder):
 
 		packing_within_allowance = self.per_work_ordered >= 100 and self.per_packed > 0 and not data.has_work_order_to_pack
 		self.packing_status = self.get_completion_status('per_packed', 'Pack',
-			not_applicable=self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
+			not_applicable=self.is_internal_customer or self.status == "Closed" or not self.packing_slip_required or not self.per_produced,
 			within_allowance=packing_within_allowance)
 
 		if update:
@@ -591,7 +673,7 @@ class PrintOrder(TextileOrder):
 		within_allowance = self.per_ordered >= 100 and self.per_delivered > 0 and not data.has_incomplete_delivery
 
 		self.delivery_status = self.get_completion_status('per_delivered', 'Deliver',
-			not_applicable=self.status == "Closed", within_allowance=within_allowance)
+			not_applicable=self.is_internal_customer or self.status == "Closed", within_allowance=within_allowance)
 
 		if update:
 			self.db_set({
@@ -665,7 +747,7 @@ class PrintOrder(TextileOrder):
 				publish_print_order_progress(self.name, "Transferring Fabric", 1, 1)
 
 		# Sales Order
-		if flt(self.per_ordered) < 100:
+		if flt(self.per_ordered) < 100 and not self.is_internal_customer:
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Sales Order", 0, 1)
 
@@ -686,7 +768,7 @@ class PrintOrder(TextileOrder):
 
 		# Work Orders
 		if flt(self.per_work_ordered) < 100:
-			create_work_orders(self.name, publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
+			self.create_work_orders(publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
 
 		# Status Update
 		frappe.flags.skip_print_order_status_update = False
@@ -851,8 +933,10 @@ def validate_uom_and_qty_type(doc):
 def validate_transaction_against_print_order(doc):
 	def get_order_details(name):
 		if not order_map.get(name):
-			order_map[name] = frappe.db.get_value("Print Order", name,
-				["name", "docstatus", "status", "company", "customer", "customer_name", "fg_warehouse"], as_dict=1)
+			order_map[name] = frappe.db.get_value("Print Order", name, [
+				"name", "docstatus", "status", "company", "customer", "customer_name",
+				"fg_warehouse", "is_internal_customer"
+			], as_dict=1)
 
 		return order_map[name]
 
@@ -894,6 +978,14 @@ def validate_transaction_against_print_order(doc):
 				d.idx,
 				frappe.get_desk_link("Print Order", order_details.name),
 				frappe.bold(order_details.status)
+			))
+
+		if order_details.is_internal_customer:
+			frappe.throw(_("Row #{0}: Cannot create {1} against {2} because it is against an internal customer {3}").format(
+				d.idx,
+				doc.doctype,
+				frappe.get_desk_link("Print Order", order_details.name),
+				frappe.bold(order_details.customer_name or order_details.customer)
 			))
 
 		if doc.company != order_details.company:
@@ -1079,43 +1171,8 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 @frappe.whitelist()
 def create_work_orders(print_order, publish_progress=True, ignore_version=True, ignore_feed=True):
-	from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
-
-	if isinstance(print_order, str):
-		doc = frappe.get_doc('Print Order', print_order)
-	else:
-		doc = print_order
-
-	if doc.docstatus != 1:
-		frappe.throw(_("Print Order is not submitted"))
-
-	if not all(d.item_code and d.design_bom for d in doc.items):
-		frappe.throw(_("Create Items and BOMs first"))
-
-	sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
-		'print_order': doc.name,
-		'docstatus': 1
-	}, pluck="sales_order")
-
-	wo_items = []
-	for so in sales_orders:
-		so_doc = frappe.get_doc('Sales Order', so)
-		wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.print_order == print_order)
-
-	wo_list = []
-	for i, d in enumerate(wo_items):
-		wo_list += create_work_orders([d], doc.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
-
-		if publish_progress:
-			publish_print_order_progress(doc.name, "Creating Work Orders", i+1, len(wo_items))
-
-	if wo_list:
-		wo_message = _("Work Orders created: {0}").format(
-			", ".join([frappe.utils.get_link_to_form('Work Order', wo) for wo in wo_list])
-		)
-		frappe.msgprint(wo_message, indicator='green')
-	else:
-		frappe.msgprint(_("Work Orders already created"))
+	doc = frappe.get_doc("Print Order", print_order)
+	doc.create_work_orders(publish_progress=publish_progress, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 
 @frappe.whitelist()

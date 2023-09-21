@@ -3,7 +3,7 @@
 
 frappe.provide("textile");
 
-textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
+textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 	print_order_item_editable_fields = [
 		"design_name", "qty", "uom", "qty_type", "design_gap",
 	]
@@ -17,6 +17,8 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	print_order_item_fields = this.print_order_item_editable_fields.concat(this.print_order_item_static_fields)
 
 	setup() {
+		super.setup();
+
 		this.frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order',
 			'Work Order': 'Work Order',
@@ -26,12 +28,11 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			'Stock Entry': 'Fabric Transfer Entry',
 		}
 
-		this.setup_queries();
 		this.setup_custom_items_table();
 	}
 
 	refresh() {
-		erpnext.hide_company();
+		super.refresh();
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
@@ -46,6 +47,8 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	setup_queries() {
+		super.setup_queries();
+
 		this.frm.set_query("fabric_item", () => {
 			let filters = {
 				'textile_item_type': 'Ready Fabric',
@@ -76,12 +79,6 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 				} else {
 					return erpnext.queries.item(filters);
 				}
-			});
-		}
-
-		for (let warehouse_field of ["fabric_warehouse", "source_warehouse", "wip_warehouse", "fg_warehouse"]) {
-			this.frm.set_query(warehouse_field, () => {
-				return erpnext.queries.warehouse(this.frm.doc);
 			});
 		}
 	}
@@ -306,13 +303,13 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
 
-			let has_unpacked = doc.items.some(d => {
+			let has_unpacked = !doc.is_internal_customer && doc.items.some(d => {
 				let qty_precision = precision("stock_print_length", d);
 				return flt(d.produced_qty, qty_precision)
 					&& flt(d.packed_qty, qty_precision) < flt(d.produced_qty, qty_precision)
 			});
 
-			let has_undelivered = doc.items.some(d => {
+			let has_undelivered = !doc.is_internal_customer && doc.items.some(d => {
 				let qty_precision = precision("stock_print_length", d);
 				return flt(d.produced_qty, qty_precision)
 					&& flt(d.delivered_qty, qty_precision) < flt(d.produced_qty, qty_precision)
@@ -325,19 +322,22 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 					this.frm.add_custom_button(__("Work Order List"), () => this.show_work_orders());
 				}
 
-				if (flt(doc.per_ordered) < 100) {
+				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
 					can_create_sales_order = true;
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
 				}
 
-				if (doc.per_ordered && doc.per_work_ordered < doc.per_ordered) {
+				if (
+					(!doc.is_internal_customer && doc.per_ordered && doc.per_work_ordered < doc.per_ordered)
+					|| (doc.is_internal_customer && flt(doc.per_work_ordered) < 100)
+				) {
 					can_create_work_order = true;
 					this.frm.add_custom_button(__('Work Order'), () => this.create_work_orders(),
 						__("Create"));
 				}
 
-				if (doc.delivery_status == "To Deliver") {
+				if (doc.fabric_transfer_status == "To Transfer" || doc.delivery_status == "To Deliver") {
 					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
 						__("Create"));
 				}
@@ -392,6 +392,19 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 	customer() {
 		this.get_order_defaults_from_customer();
+		this.get_is_internal_customer();
+	}
+
+	company() {
+		this.get_is_internal_customer();
+	}
+
+	is_internal_customer() {
+		if (this.frm.doc.is_internal_customer) {
+			this.frm.set_value({
+				is_fabric_provided_by_customer: 0,
+			});
+		}
 	}
 
 	fabric_item() {
@@ -883,7 +896,7 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 
 	show_progress_for_packing() {
 		let produced_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.produced_qty));
-		if (!produced_qty || !this.frm.doc.packing_slip_required) {
+		if (!produced_qty || this.frm.doc.is_internal_customer || !this.frm.doc.packing_slip_required) {
 			return;
 		}
 
@@ -916,6 +929,10 @@ textile.PrintOrder = class PrintOrder extends frappe.ui.form.Controller {
 	}
 
 	show_progress_for_delivery() {
+		if (this.frm.doc.is_internal_customer) {
+			return;
+		}
+
 		let produced_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.produced_qty));
 		let packed_qty = frappe.utils.sum(this.frm.doc.items.map(d => d.packed_qty));
 		let deliverable_qty = this.frm.doc.packing_slip_required ? packed_qty : produced_qty;
