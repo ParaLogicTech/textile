@@ -234,6 +234,14 @@ fixtures = [
 			]]
 		}
 	},
+	{
+		"doctype": "Property Setter",
+		"filters": {
+			"name": ["in", [
+				'Item-customer-depends_on',
+			]]
+		}
+	}
 ]
 
 # Includes in <head>

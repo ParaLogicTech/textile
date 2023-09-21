@@ -1,0 +1,18 @@
+[
+ {
+  "default_value": null,
+  "doc_type": "Item",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "customer",
+  "is_system_generated": 0,
+  "modified": "2023-09-21 15:01:39.703909",
+  "module": null,
+  "name": "Item-customer-depends_on",
+  "property": "depends_on",
+  "property_type": "Data",
+  "row_name": null,
+  "value": "eval:doc.is_customer_provided_item || doc.customer || doc.textile_item_type == \"Printed Design\""
+ }
+]
