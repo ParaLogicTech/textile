@@ -792,6 +792,7 @@ class PrintOrder(TextileOrder):
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
 				item_doc.flags.ignore_permissions = True
+				item_doc.flags.from_print_order = True
 				item_doc.save()
 
 				d.db_set({

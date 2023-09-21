@@ -13,6 +13,7 @@ class ItemDP(Item):
 	def before_validate(self):
 		self.validate_textile_item_type()
 		self.validate_fabric_properties()
+		self.set_design_details_from_image()
 		self.validate_design_properties()
 		self.validate_process_properties()
 		self.calculate_net_weight_per_unit()
@@ -100,6 +101,40 @@ class ItemDP(Item):
 			self.per_wastage = None
 			self.design_notes = None
 
+	def set_design_details_from_image(self):
+		# Print order will set the design dimensions, do not load image again for performance
+		if self.flags.from_print_order:
+			return
+
+		# Not a printed design no need for design dimensions
+		if self.textile_item_type != "Printed Design":
+			self.design_width = None
+			self.design_height = None
+			return
+
+		# Image removed? Lets not change the dimensions yet
+		if not self.image:
+			return
+
+		# Dimensions not set but image is there
+		if not self.design_width or not self.design_height:
+			return self.set_design_dimensions()
+
+		# Image changed
+		if self.is_new() or self.image != self.db_get("image"):
+			return self.set_design_dimensions()
+
+	def set_design_dimensions(self):
+		from textile.fabric_printing.doctype.print_order.print_order import get_image_details
+
+		if self.image:
+			design_details = get_image_details(self.image)
+			self.design_width = design_details.design_width
+			self.design_height = design_details.design_height
+		else:
+			self.design_width = None
+			self.design_height = None
+
 	def validate_process_properties(self):
 		if self.textile_item_type != "Print Process":
 			for component_item_field in printing_components:
@@ -151,6 +186,38 @@ class ItemDP(Item):
 
 			self.gross_weight_per_unit = 0
 			self.weight_uom = "Gram"
+
+	_printed_design_cant_change_fields = [
+		"fabric_item", "design_width", "design_height", "image", "is_customer_provided_item", "customer"
+	]
+
+	def get_cant_change_fields_based_on_transactions(self):
+		return super().get_cant_change_fields_based_on_transactions() + ["textile_item_type"]
+
+	def get_cant_change_fields(self):
+		fields = super().get_cant_change_fields()
+
+		if self.textile_item_type == "Printed Design":
+			fields += self._printed_design_cant_change_fields
+
+		return fields
+
+	def check_if_cant_change_field(self, field):
+		if super().check_if_cant_change_field(field):
+			return True
+
+		if field in self._printed_design_cant_change_fields:
+			if self.check_if_linked_doctype_exists("Print Order Item"):
+				return True
+
+		if field in self.get_cant_change_fields_based_on_transactions():
+			if self.check_if_linked_doctype_exists("Print Order Item"):
+				return True
+
+			if self.textile_item_type in ("Ready Fabric", "Greige Fabric"):
+				fieldname = "ready_fabric_item" if self.textile_item_type == "Ready Fabric" else "greige_fabric_item"
+				if self.check_if_linked_doctype_exists("Pretreatment Order", fieldname=fieldname):
+					return True
 
 
 def update_item_override_fields(item_fields, args, validate=False):
