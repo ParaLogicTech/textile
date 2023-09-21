@@ -34,6 +34,9 @@ class TextileOrder(StatusUpdater):
 		if self.get("customer"):
 			validate_party_frozen_disabled("Customer", self.customer)
 
+		self.validate_is_internal_customer()
+
+	def validate_is_internal_customer(self):
 		if self.meta.has_field("is_internal_customer"):
 			self.is_internal_customer = is_internal_customer(self.customer, self.company)
 
