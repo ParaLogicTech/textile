@@ -21,6 +21,7 @@ class FabricPrintingSummary:
 			"packed_qty",
 			"no_of_orders_delivered",
 			"delivered_qty",
+			"fabrics_created",
 		]
 
 	zero_fields = frappe._dict({field: 0 for field in sum_fields})
@@ -119,13 +120,22 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
+		self.fabrics_created = frappe.db.sql("""
+			SELECT item.fabric_material, COUNT(*) as fabrics_created
+			FROM `tabItem` item
+			WHERE item.textile_item_type in ('Ready Fabric', 'Greige Fabric')
+				and item.creation BETWEEN %(from_date)s AND %(to_date)s
+			GROUP BY item.fabric_material
+		""", self.filters, as_dict=1)
+
 	def get_grouped_data(self):
 		data_bank = [
 			self.order_data,
 			self.fabric_received_data,
 			self.production_data,
 			self.packing_data,
-			self.delivery_data
+			self.delivery_data,
+			self.fabrics_created,
 		]
 
 		self.grouped_data = {}
@@ -185,7 +195,7 @@ class FabricPrintingSummary:
 				"fieldname": "fabric_material",
 				"fieldtype": "Link",
 				"options": "Fabric Material",
-				"width": 120
+				"width": 110
 			},
 			{
 				"label": _("Fabric Received Qty"),
@@ -197,49 +207,55 @@ class FabricPrintingSummary:
 				"label": _("Orders Received"),
 				"fieldname": "no_of_orders",
 				"fieldtype": "Int",
-				"width": 110
+				"width": 105
 			},
 			{
 				"label": _("Ordered Qty"),
 				"fieldname": "ordered_qty",
 				"fieldtype": "Float",
-				"width": 120
+				"width": 105
 			},
 			{
 				"label": _("Orders Produced"),
 				"fieldname": "no_of_orders_produced",
 				"fieldtype": "Int",
-				"width": 110
+				"width": 108
 			},
 			{
 				"label": _("Produced Qty"),
 				"fieldname": "produced_qty",
 				"fieldtype": "Float",
-				"width": 120
+				"width": 105
 			},
 			{
 				"label": _("Orders Packed"),
 				"fieldname": "no_of_orders_produced",
 				"fieldtype": "Int",
-				"width": 110
+				"width": 105
 			},
 			{
 				"label": _("Packed Qty"),
 				"fieldname": "packed_qty",
 				"fieldtype": "Float",
-				"width": 120
+				"width": 105
 			},
 			{
 				"label": _("Orders Delivered"),
 				"fieldname": "no_of_orders_delivered",
 				"fieldtype": "Int",
-				"width": 110
+				"width": 108
 			},
 			{
 				"label": _("Delivered Qty"),
 				"fieldname": "delivered_qty",
 				"fieldtype": "Float",
-				"width": 120
+				"width": 105
+			},
+			{
+				"label": _("Fabrics Created"),
+				"fieldname": "fabrics_created",
+				"fieldtype": "Int",
+				"width": 100
 			},
 			{
 				"label": _("Top Item Code"),
