@@ -36,7 +36,7 @@ class FabricPackingList:
 				psi.print_order, psi.pretreatment_order, psi.sales_order, psi.work_order,
 				psi.stock_qty as qty, psi.stock_uom as uom, psi.panel_qty,
 				psi.item_code, psi.item_name, psi.is_return_fabric,
-				item.fabric_item, fabric.item_name as fabric_item_name, item.textile_item_type
+				item.fabric_item, fabric.item_name as fabric_item_name, item.textile_item_type, item.image
 			FROM `tabPacking Slip Item` psi
 			INNER JOIN `tabPacking Slip` ps ON ps.name = psi.parent
 			INNER JOIN `tabItem` item ON item.name = psi.item_code
@@ -127,6 +127,8 @@ class FabricPackingList:
 		if len(self.group_by) <= 1:
 			return self.data
 
+		self.data = sorted(self.data, key=lambda d: cint(d.get("is_return_fabric")))
+
 		return group_report_data(self.data, self.group_by, calculate_totals=self.calculate_group_totals,
 			totals_only=self.filters.totals_only, starting_level=0)
 
@@ -174,8 +176,6 @@ class FabricPackingList:
 		if totals.get("print_order") or totals.get("pretreatment_order"):
 			totals['customer'] = data[0].customer
 			totals['fabric_item'] = data[0].fabric_item
-			totals['item_code'] = data[0].fabric_item
-			totals['item_name'] = data[0].fabric_item_name
 
 		if totals.get("packing_slip"):
 			totals['package_type'] = data[0].package_type
@@ -195,21 +195,24 @@ class FabricPackingList:
 			fabric_items = set([d.fabric_item for d in data if d.fabric_item])
 			if len(fabric_items) == 1:
 				totals['fabric_item'] = list(fabric_items)[0]
-				totals['item_code'] = list(fabric_items)[0]
-				totals['item_name'] = data[0].fabric_item_name
 
 		if totals.get("is_return_fabric") and not totals.get("design_item") and not totals.get("reference"):
 			totals['design_item_name'] = "Return Fabric"
-			totals['reference'] = "'Return Fabric'"
+			totals['reference'] = "Return Fabric"
+			totals['reference_type'] = ""
 
 		if totals.get("design_item"):
+			totals['image'] = data[0].image
 			totals['design_item_name'] = data[0].design_item_name
 			totals['fabric_item'] = data[0].fabric_item
-			totals['item_code'] = data[0].item_code
-			totals['item_name'] = data[0].item_name
 
 		if totals.get('fabric_item'):
 			totals['fabric_item_name'] = data[0].fabric_item_name
+
+		if totals.get("design_item"):
+			totals['item_code'] = totals.get("design_item")
+			totals['item_name'] = totals.get("design_item_name")
+		elif totals.get("fabric_item"):
 			totals['item_code'] = totals.get("fabric_item")
 			totals['item_name'] = totals.get("fabric_item_name")
 

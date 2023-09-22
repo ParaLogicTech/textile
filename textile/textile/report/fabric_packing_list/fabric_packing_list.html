@@ -9,12 +9,12 @@
 		font-size: 8pt;
 	}
 	.print-format td, .print-format th {
-		vertical-align: middle !important;
+		vertical-align: top !important;
 		padding: 1px 6px !important;
 	}
 
-	.text-bold {
-		font-weight: bold !important;
+	.print-format td.design-image {
+		padding: 2px !important;
 	}
 
 	.line-blue td {
@@ -48,12 +48,24 @@
 	{% endif %}
 </div>
 
+{% var show_design_image = filters.show_image_in_print && (data || []).filter(d => d.image).length; %}
+{% var show_date = (data || []).filter(d => d.posting_date).length; %}
+
 <table class="table table-bordered w-100">
 	<thead>
 		<th class="field-label" style="width: 3%;">{%= __("Sr.") %}</th>
 		<th class="field-label">{%= __("Reference") %}</th>
+
+	{% if show_date %}
 		<th class="field-label">{%= __("Date") %}</th>
+	{% endif %}
+
 		<th class="field-label">{%= __("Item") %}</th>
+
+	{% if show_design_image %}
+		<th class="field-label">{%= __("Design") %}</th>
+	{% endif %}
+
 		<th class="field-label text-right" style="width: 4%;">{%= __("Qty") %}</th>
 		<th class="field-label text-right" style="width: 4%;">{%= __("Return") %}</th>
 		<th class="field-label text-right" style="width: 4%;">{%= __("Total") %}</th>
@@ -63,16 +75,29 @@
 
 	<tbody>
 		{% for (let d of data) { %}
-		<tr class="{% if (!d._isGroupTotal && !filters.totals_only) { %}blue-row{% } %} {% if (d.reference == 'Total' && !d.reference_dt) { %}bold-row{% } %}">
+		<tr class="{% if (!d._isGroupTotal) { %}blue-row{% } %} {% if (d.reference == 'Total' && !d.reference_dt) { %}bold-row{% } %}">
 			<td class="field-value">{%= d._group_idx %}</td>
-			<td class="field-value">{%= d._isGroupTotal || filters.totals_only ? d.reference : "" %}</td>
+			<td class="field-value">{%= d.reference_type != "Item" ? d.reference : "" %}</td>
+
+		{% if show_date %}
 			<td class="field-value text-nowrap">{%= d.posting_date ? frappe.datetime.str_to_user(d.posting_date) : "" %}</td>
+		{% endif %}
+
 			<td class="field-value">{%= d.item_name %}</td>
-			<td class="field-value text-right">{%= d.qty ? format_number(d.qty) : "" %}</td>
-			<td class="field-value text-right">{%= d.return_qty ? format_number(d.return_qty) : "" %}</td>
-			<td class="field-value text-right">{%= d.total_qty ? format_number(d.total_qty) : "" %}</td>
+
+		{% if show_design_image %}
+			<td class="design-image">
+			{% if (d.image) { %}
+				<img src="/api/method/textile.utils.get_rotated_image?file={%= encodeURIComponent(d.image) %}" style="max-height: 50px; width: auto !important;">
+			{% } %}
+			</td>
+		{% endif %}
+
+			<td class="field-value text-right">{%= d.qty ? format_number(d.qty, null, 2) : "" %}</td>
+			<td class="field-value text-right">{%= d.return_qty ? format_number(d.return_qty, null, 2) : "" %}</td>
+			<td class="field-value text-right">{%= d.total_qty ? format_number(d.total_qty, null, 2) : "" %}</td>
 			<td class="field-value text-right">{%= d.uom %}</td>
-			<td class="field-value text-right">{%= d.panel_qty ? format_number(d.panel_qty) : "" %}</td>
+			<td class="field-value text-right">{%= d.panel_qty ? format_number(d.panel_qty, null, 1) : "" %}</td>
 		</tr>
 		{% } %}
 	</tbody>

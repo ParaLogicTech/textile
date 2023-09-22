@@ -143,6 +143,11 @@ frappe.query_reports["Fabric Packing List"] = {
 			label: __("Show Delivered"),
 			fieldtype: "Check"
 		},
+		{
+			fieldname: "show_image_in_print",
+			label: __("Show Design Image in Print"),
+			fieldtype: "Check",
+		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		var style = {};
