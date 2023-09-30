@@ -206,6 +206,11 @@ class FabricPackingList:
 			totals['design_item_name'] = data[0].design_item_name
 			totals['fabric_item'] = data[0].fabric_item
 
+			if not totals.get("customer"):
+				customers = set([cstr(d.customer) for d in data])
+				if len(customers) == 1:
+					totals['customer'] = list(customers)[0]
+
 		if totals.get('fabric_item'):
 			totals['fabric_item_name'] = data[0].fabric_item_name
 
