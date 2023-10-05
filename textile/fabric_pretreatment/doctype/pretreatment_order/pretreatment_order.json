@@ -69,14 +69,14 @@
   "column_break_zltke",
   "ordered_qty",
   "per_ordered",
-  "column_break_3qzv3",
+  "section_break_mautg",
   "work_order_qty",
   "per_work_ordered",
-  "section_break_2pbh5",
+  "column_break_3qzv3",
   "production_status",
   "produced_qty",
   "per_produced",
-  "column_break_r0yyq",
+  "section_break_2pbh5",
   "packing_status",
   "packed_qty",
   "per_packed",
@@ -391,10 +391,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_r0yyq",
-   "fieldtype": "Column Break"
-  },
-  {
    "allow_on_submit": 1,
    "default": "To Pack",
    "fieldname": "packing_status",
@@ -650,12 +646,16 @@
   {
    "fieldname": "column_break_prxxl",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_mautg",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-12 13:56:23.342606",
+ "modified": "2023-10-05 14:31:50.987595",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

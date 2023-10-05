@@ -19,6 +19,10 @@ def get_data():
 				'items': ['Packing Slip', 'Delivery Note']
 			},
 			{
+				'label': _("Subcontracting"),
+				'items': ['Purchase Order', 'Purchase Receipt']
+			},
+			{
 				'label': _("Printing"),
 				'items': ['Print Order']
 			}

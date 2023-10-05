@@ -18,11 +18,6 @@ doc_events = {
 	"Customer": {
 		"validate": "textile.overrides.customer_hooks.customer_order_default_validate",
 	},
-	"Work Order": {
-		"on_submit": "textile.overrides.work_order_hooks.on_work_order_update_status",
-		"on_cancel": "textile.overrides.work_order_hooks.on_work_order_update_status",
-		"update_status": "textile.overrides.work_order_hooks.on_work_order_update_status",
-	},
 	"UOM": {
 		"before_rename": "textile.overrides.uom_hooks.before_uom_rename",
 	},
@@ -51,6 +46,9 @@ override_doctype_dashboards = {
 	"Delivery Note": "textile.overrides.delivery_note_hooks.override_delivery_note_dashboard",
 	"Sales Invoice": "textile.overrides.sales_invoice_hooks.override_sales_invoice_dashboard",
 	"Packing Slip": "textile.overrides.packing_slip_hooks.override_packing_slip_dashboard",
+	"Purchase Order": "textile.overrides.purchase_hooks.override_purchase_order_dashboard",
+	"Purchase Receipt": "textile.overrides.purchase_hooks.override_purchase_receipt_dashboard",
+	"Purchase Invoice": "textile.overrides.purchase_hooks.override_purchase_invoice_dashboard",
 }
 
 doctype_js = {
@@ -106,6 +104,22 @@ update_delivery_note_from_packing_slip_mapper = [
 
 update_sales_invoice_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
+]
+
+update_purchase_order_from_work_order = [
+	"textile.overrides.purchase_hooks.update_purchase_order_from_work_order",
+]
+
+update_purchase_receipt_from_purchase_order_mapper = [
+	"textile.overrides.purchase_hooks.update_purchase_order_mapper",
+]
+
+update_purchase_invoice_from_purchase_order_mapper = [
+	"textile.overrides.purchase_hooks.update_purchase_order_mapper",
+]
+
+update_purchase_invoice_from_purchase_receipt_mapper = [
+	"textile.overrides.purchase_hooks.update_purchase_receipt_mapper",
 ]
 
 update_sales_purchase_return_mapper = [
@@ -231,6 +245,10 @@ fixtures = [
 				'Stock Entry-pretreatment_order',
 				'Stock Entry-print_order',
 				'Stock Entry-fabric_printer',
+
+				'Purchase Order Item-pretreatment_order',
+				'Purchase Receipt Item-pretreatment_order',
+				'Purchase Invoice Item-pretreatment_order',
 			]]
 		}
 	},

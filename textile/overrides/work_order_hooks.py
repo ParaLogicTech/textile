@@ -10,6 +10,44 @@ greige_fabric_fields = ["greige_" + f for f in fabric_fields]
 
 
 class WorkOrderDP(WorkOrder):
+	def on_submit(self):
+		super().on_submit()
+		self.update_pretreatment_order(validate_work_order_qty=True)
+		self.update_print_order(validate_work_order_qty=True)
+
+	def on_cancel(self):
+		super().on_cancel()
+		self.update_pretreatment_order()
+		self.update_print_order()
+
+	def update_status(self, status=False, from_doctype=None):
+		super().update_status(status, from_doctype)
+		self.update_pretreatment_order()
+		self.update_print_order()
+
+	def update_print_order(self, validate_work_order_qty=False):
+		if self.get('pretreatment_order') and not frappe.flags.skip_pretreatment_order_status_update:
+			doc = frappe.get_doc("Pretreatment Order", self.pretreatment_order)
+			doc.set_production_packing_status(update=True)
+
+			if validate_work_order_qty:
+				doc.validate_work_order_qty(from_doctype=self.doctype)
+
+			doc.set_status(update=True)
+			doc.notify_update()
+
+	def update_pretreatment_order(self, validate_work_order_qty=False):
+		if self.get('print_order') and self.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
+			doc = frappe.get_doc("Print Order", self.print_order)
+			doc.set_production_packing_status(update=True)
+
+			if validate_work_order_qty:
+				doc.validate_work_order_qty(from_doctype=self.doctype,
+					row_names=[self.print_order_item])
+
+			doc.set_status(update=True)
+			doc.notify_update()
+
 	def set_required_items(self, reset_only_qty=False):
 		super().set_required_items(reset_only_qty)
 
@@ -94,25 +132,3 @@ def update_work_order_on_create(work_order, args=None):
 	if work_order.get('print_order_item'):
 		work_order.max_qty = flt(frappe.db.get_value("Print Order Item", work_order.print_order_item,
 			"stock_fabric_length", cache=1))
-
-
-def on_work_order_update_status(work_order, hook, status=None):
-	if work_order.get('pretreatment_order') and not frappe.flags.skip_pretreatment_order_status_update:
-		doc = frappe.get_doc("Pretreatment Order", work_order.pretreatment_order)
-		doc.set_production_packing_status(update=True)
-
-		if hook != 'update_status':
-			doc.validate_work_order_qty(from_doctype=work_order.doctype)
-
-		doc.set_status(update=True)
-		doc.notify_update()
-
-	if work_order.get('print_order') and work_order.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
-		doc = frappe.get_doc("Print Order", work_order.print_order)
-		doc.set_production_packing_status(update=True)
-
-		if hook != 'update_status':
-			doc.validate_work_order_qty(from_doctype=work_order.doctype, row_names=[work_order.print_order_item])
-
-		doc.set_status(update=True)
-		doc.notify_update()

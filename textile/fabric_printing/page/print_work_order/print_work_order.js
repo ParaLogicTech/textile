@@ -57,7 +57,7 @@ textile.PrintWorkOrderList = class PrintWorkOrderList extends textile.PrintListV
 						<tr>
 							<th>Produced:</th>
 							<td>
-								${this.get_formatted("produced_qty", doc)}
+								${this.get_formatted("completed_qty", doc)}
 								/
 								${this.get_formatted("qty", doc)}
 								${doc.stock_uom}

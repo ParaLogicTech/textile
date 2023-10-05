@@ -624,7 +624,7 @@ class PrintOrder(TextileOrder):
 			if row_names:
 				# Work Order
 				work_order_data = frappe.db.sql("""
-					SELECT print_order_item, qty, produced_qty, production_status, packing_status
+					SELECT print_order_item, qty, completed_qty, production_status, subcontracting_status, packing_status
 					FROM `tabWork Order`
 					WHERE docstatus = 1 AND print_order_item IN %s
 				""", [row_names], as_dict=1)
@@ -634,9 +634,9 @@ class PrintOrder(TextileOrder):
 					out.work_order_qty_map[d.print_order_item] += flt(d.qty)
 
 					out.produced_qty_map.setdefault(d.print_order_item, 0)
-					out.produced_qty_map[d.print_order_item] += flt(d.produced_qty)
+					out.produced_qty_map[d.print_order_item] += flt(d.completed_qty)
 
-					if d.production_status != "Produced":
+					if d.production_status == "To Produce" or d.subcontracting_status == "To Receive":
 						out.has_work_order_to_produce = True
 					if d.packing_status != "Packed":
 						out.has_work_order_to_pack = True

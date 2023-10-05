@@ -194,33 +194,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 	}
 
 	show_progress_for_production() {
-		let produced_qty = this.frm.doc.produced_qty;
-		let remaining_qty = this.frm.doc.stock_qty - produced_qty;
-		remaining_qty = Math.max(remaining_qty, 0);
-
-		erpnext.utils.show_progress_for_qty({
-			frm: this.frm,
-			title: __('Production Status'),
-			total_qty: this.frm.doc.stock_qty,
-			progress_bars: [
-				{
-					title: __('<b>Produced:</b> {0} / {1} {2} ({3}%)', [
-						format_number(produced_qty),
-						format_number(this.frm.doc.stock_qty),
-						"Meter",
-						format_number(produced_qty / this.frm.doc.stock_qty * 100, null, 1),
-					]),
-					completed_qty: produced_qty,
-					progress_class: "progress-bar-success",
-					add_min_width: 0.5,
-				},
-				{
-					title: __("<b>Remaining:</b> {0} {1}", [format_number(remaining_qty), "Meter"]),
-					completed_qty: remaining_qty,
-					progress_class: "progress-bar-warning",
-				},
-			],
-		});
+		if (this.frm.doc.__onload?.progress_data) {
+			erpnext.manufacturing.show_progress_for_production(this.frm.doc.__onload.progress_data, this.frm);
+		}
 	}
 
 	show_progress_for_packing() {

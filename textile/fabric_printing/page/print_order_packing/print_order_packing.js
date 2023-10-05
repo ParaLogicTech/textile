@@ -142,7 +142,7 @@ textile.PrintOrderPackingList = class PrintOrderPackingList extends textile.Prin
 						<td>
 							${this.get_formatted("packed_qty", doc)}
 							/
-							${this.get_formatted("produced_qty", doc)}
+							${this.get_formatted("completed_qty", doc)}
 							Meter
 						</td>
 					</tr>

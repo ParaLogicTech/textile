@@ -33,6 +33,7 @@ class PretreatmentOrder(TextileOrder):
 			self.calculate_totals()
 		elif self.docstatus == 1:
 			self.set_work_order_onload()
+			self.set_progress_data_onload()
 			self.set_onload('disallow_on_submit', self.get_disallow_on_submit_fields())
 
 		self.set_fabric_stock_qty()
@@ -82,6 +83,30 @@ class PretreatmentOrder(TextileOrder):
 			order_by="docstatus desc"
 		)
 		self.set_onload("work_order", work_order)
+
+	def set_progress_data_onload(self):
+		totals = frappe.db.sql("""
+			select
+				sum(qty) as qty,
+				sum(producible_qty) as producible_qty,
+				sum(material_transferred_for_manufacturing) as material_transferred_for_manufacturing,
+				sum(produced_qty) as produced_qty,
+				sum(subcontract_order_qty) as subcontract_order_qty,
+				sum(subcontract_received_qty) as subcontract_received_qty
+			from `tabWork Order`
+			where pretreatment_order = %s and docstatus = 1
+		""", self.name, as_dict=1)
+
+		totals = totals[0] if totals else frappe._dict()
+		self.set_onload("progress_data", {
+			"qty": flt(totals.qty) or flt(self.stock_qty),
+			"stock_uom": self.stock_uom,
+			"producible_qty": flt(totals.producible_qty),
+			"material_transferred_for_manufacturing": flt(totals.material_transferred_for_manufacturing),
+			"produced_qty": flt(totals.produced_qty),
+			"subcontract_order_qty": flt(totals.subcontract_order_qty),
+			"subcontract_received_qty": flt(totals.subcontract_received_qty),
+		})
 
 	def get_disallow_on_submit_fields(self):
 		if self.cant_change_delivery_required():
@@ -421,7 +446,7 @@ class PretreatmentOrder(TextileOrder):
 		data = self.get_production_packing_data()
 
 		self.work_order_qty = data.work_order_qty
-		self.produced_qty = data.produced_qty
+		self.produced_qty = data.completed_qty
 		self.packed_qty = data.packed_qty
 
 		stock_qty = flt(self.stock_qty, self.precision("qty"))
@@ -461,6 +486,7 @@ class PretreatmentOrder(TextileOrder):
 		out = frappe._dict()
 		out.work_order_qty = 0
 		out.produced_qty = 0
+		out.completed_qty = 0
 		out.packed_qty = 0
 		out.has_work_order_to_pack = False
 		out.has_work_order_to_produce = False
@@ -468,7 +494,7 @@ class PretreatmentOrder(TextileOrder):
 		if self.docstatus == 1:
 			# Work Order
 			work_order_data = frappe.db.sql("""
-				SELECT qty, produced_qty, production_status, packing_status
+				SELECT qty, produced_qty, completed_qty, production_status, packing_status, subcontracting_status
 				FROM `tabWork Order`
 				WHERE docstatus = 1 AND pretreatment_order = %s
 			""", self.name, as_dict=1)
@@ -476,8 +502,9 @@ class PretreatmentOrder(TextileOrder):
 			for d in work_order_data:
 				out.work_order_qty += flt(d.qty)
 				out.produced_qty += flt(d.produced_qty)
+				out.completed_qty += flt(d.completed_qty)
 
-				if d.production_status != "Produced":
+				if d.production_status == "To Produce" or d.subcontracting_status == "To Receive":
 					out.has_work_order_to_produce = True
 				if d.packing_status != "Packed":
 					out.has_work_order_to_pack = True
