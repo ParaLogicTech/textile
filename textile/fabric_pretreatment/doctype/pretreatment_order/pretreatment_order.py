@@ -8,7 +8,7 @@ from frappe.utils import cint, flt, round_up
 from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
-from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders, get_subcontractable_qty
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
 
 
@@ -448,6 +448,7 @@ class PretreatmentOrder(TextileOrder):
 		self.work_order_qty = data.work_order_qty
 		self.produced_qty = data.completed_qty
 		self.packed_qty = data.packed_qty
+		self.subcontractable_qty = data.subcontractable_qty
 
 		stock_qty = flt(self.stock_qty, self.precision("qty"))
 		work_order_qty = flt(self.work_order_qty, self.precision("qty"))
@@ -473,6 +474,7 @@ class PretreatmentOrder(TextileOrder):
 				'work_order_qty': self.work_order_qty,
 				'produced_qty': self.produced_qty,
 				'packed_qty': self.packed_qty,
+				'subcontractable_qty': self.subcontractable_qty,
 
 				'per_work_ordered': self.per_work_ordered,
 				'per_produced': self.per_produced,
@@ -485,24 +487,40 @@ class PretreatmentOrder(TextileOrder):
 	def get_production_packing_data(self):
 		out = frappe._dict()
 		out.work_order_qty = 0
+		out.producible_qty = 0
+		out.material_transferred_for_manufacturing = 0
 		out.produced_qty = 0
 		out.completed_qty = 0
+		out.scrap_qty = 0
 		out.packed_qty = 0
+		out.subcontractable_qty = 0
 		out.has_work_order_to_pack = False
 		out.has_work_order_to_produce = False
 
 		if self.docstatus == 1:
 			# Work Order
 			work_order_data = frappe.db.sql("""
-				SELECT qty, produced_qty, completed_qty, production_status, packing_status, subcontracting_status
+				SELECT qty, producible_qty,
+					produced_qty, material_transferred_for_manufacturing, completed_qty, scrap_qty,
+					production_status, packing_status, subcontracting_status
 				FROM `tabWork Order`
 				WHERE docstatus = 1 AND pretreatment_order = %s
 			""", self.name, as_dict=1)
 
 			for d in work_order_data:
 				out.work_order_qty += flt(d.qty)
+				out.producible_qty += flt(d.producible_qty)
+				out.material_transferred_for_manufacturing += flt(d.material_transferred_for_manufacturing)
 				out.produced_qty += flt(d.produced_qty)
 				out.completed_qty += flt(d.completed_qty)
+				out.scrap_qty += flt(d.scrap_qty)
+
+				out.subcontractable_qty += max(get_subcontractable_qty(
+					d.producible_qty,
+					d.material_transferred_for_manufacturing,
+					d.produced_qty,
+					d.scrap_qty
+				), 0)
 
 				if d.production_status == "To Produce" or d.subcontracting_status == "To Receive":
 					out.has_work_order_to_produce = True
@@ -979,6 +997,29 @@ def make_print_order(source_name):
 	print_order.run_method("set_missing_values", get_default_process=True)
 
 	return print_order
+
+
+@frappe.whitelist()
+def make_purchase_order(source_name, target_doc=None):
+	from erpnext.manufacturing.doctype.work_order.work_order import make_purchase_order
+
+	pretreatment_order = frappe.db.get_value("Pretreatment Order", source_name,
+		["name", "docstatus", "status"], as_dict=1)
+
+	if not pretreatment_order:
+		frappe.throw(_("Pretreatment Order {0} does not exist").format(source_name))
+	if pretreatment_order.docstatus != 1:
+		frappe.throw(_("Pretreatment Order {0} is not submitted").format(pretreatment_order.name))
+	if pretreatment_order.status == "Closed":
+		frappe.throw(_("Pretreatment Order {0} is {1}").format(pretreatment_order.name, pretreatment_order.status))
+
+	work_orders = frappe.get_all("Work Order", {
+		"docstatus": 1, "pretreatment_order": source_name
+	}, pluck="name")
+	if not work_orders:
+		frappe.throw(_("There are no Work Orders against Pretreatment Order {0}").format(pretreatment_order.name))
+
+	return make_purchase_order(work_orders, target_doc)
 
 
 @frappe.whitelist()

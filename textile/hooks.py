@@ -54,11 +54,12 @@ override_doctype_dashboards = {
 doctype_js = {
 	"Item": "overrides/item_hooks.js",
 	"Customer": "overrides/customer_hooks.js",
-	"Sales Order": "overrides/sales_order_hooks.js",
 	"Stock Entry": "overrides/stock_entry_hooks.js",
+	"Sales Order": "overrides/sales_order_hooks.js",
 	"Packing Slip": "overrides/packing_slip_hooks.js",
 	"Delivery Note": "overrides/delivery_note_hooks.js",
 	"Sales Invoice": "overrides/sales_invoice_hooks.js",
+	"Purchase Order": "overrides/purchase_order_hooks.js",
 }
 
 doctype_list_js = {

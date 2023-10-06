@@ -72,6 +72,7 @@
   "section_break_mautg",
   "work_order_qty",
   "per_work_ordered",
+  "subcontractable_qty",
   "column_break_3qzv3",
   "production_status",
   "produced_qty",
@@ -650,12 +651,19 @@
   {
    "fieldname": "section_break_mautg",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "subcontractable_qty",
+   "fieldtype": "Float",
+   "label": "Subcontractable Qty",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-10-05 14:31:50.987595",
+ "modified": "2023-10-06 12:19:08.116653",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

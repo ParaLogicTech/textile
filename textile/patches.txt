@@ -26,3 +26,4 @@ textile.patches.set_fabric_warehouse
 textile.patches.delete_duplicate_file_attachments
 execute:frappe.delete_doc_if_exists("Report", "Print Packing List")
 textile.patches.set_print_order_internal_customer
+textile.patches.set_pretreatment_order_subcontractable_qty

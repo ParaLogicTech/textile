@@ -7,7 +7,7 @@ frappe.ui.form.on("Delivery Note", {
 				textile.get_items_from_pretreatment_order(
 					frm,
 					"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_delivery_note",
-					{packing_status: "To Pack"},
+					null,
 					"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.get_pretreatment_orders_to_be_delivered"
 				);
 			}, __("Get Items From"));
