@@ -554,7 +554,7 @@ class PrintOrder(TextileOrder):
 
 		if self.docstatus == 1:
 			ste_data = frappe.db.sql("""
-				select sum(IF(i.t_warehouse = %(wip_warehouse)s, i.transfer_qty, -1 * i.transfer_qty))
+				select sum(IF(i.t_warehouse = %(wip_warehouse)s, i.stock_qty, -1 * i.stock_qty))
 				from `tabStock Entry Detail` i
 				inner join `tabStock Entry` ste on ste.name = i.parent
 				where ste.docstatus = 1
