@@ -896,6 +896,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.pretreatment_order = source_parent.name
 		target.item_code = source_parent.ready_fabric_item
 		target.qty = flt(source_parent.qty) - flt(source_parent.ordered_qty)
+		target.conversion_factor = flt(source_parent.conversion_factor)
 		target.uom = source_parent.uom
 
 	doc = get_mapped_doc("Pretreatment Order", source_name, {
