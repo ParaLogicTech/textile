@@ -6,7 +6,7 @@ textile.patches.update_fabric_items_conversions
 textile.patches.set_work_order_packing_slip_required
 textile.patches.change_print_order_status_not_started
 textile.patches.refactor_fabric_printing
-textile.patches.set_is_sub_contracted
+textile.patches.set_is_sub_contracted #1
 
 [post_model_sync]
 textile.patches.set_panel_based_qty

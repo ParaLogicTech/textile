@@ -4,13 +4,13 @@ import frappe
 def execute():
 	frappe.db.sql("""
 		update `tabItem`
-		set is_sub_contracted_item = 1
-		where textile_item_type = 'Ready Fabric'
+		set is_sub_contracted_item = 0
 	""")
 
 	frappe.db.sql("""
-		update `tabWork Order` wo
-		inner join `tabSales Order` so on so.name = wo.sales_order
-		set wo.expected_delivery_date = so.delivery_date
-		where wo.expected_delivery_date is null
+		update `tabItem` im
+		inner join `tabPurchase Order Item` poi on poi.item_code = im.name
+		inner join `tabPurchase Order` po on po.name = poi.parent
+		set im.is_sub_contracted_item = 1
+		where po.docstatus = 1 and po.is_subcontracted = 1
 	""")

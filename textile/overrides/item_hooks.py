@@ -48,8 +48,6 @@ class ItemDP(Item):
 				frappe.throw(_("Fabric Item must be a Stock Item"))
 
 		if self.textile_item_type == "Ready Fabric":
-			self.is_sub_contracted_item = 1
-
 			if self.fabric_item:
 				greige_fabric_details = frappe.get_cached_value("Item", self.fabric_item,
 					["textile_item_type", "fabric_material", "fabric_type"], as_dict=1)
