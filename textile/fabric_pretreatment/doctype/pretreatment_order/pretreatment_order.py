@@ -197,13 +197,15 @@ class PretreatmentOrder(TextileOrder):
 
 	def calculate_totals(self):
 		self.round_floats_in(self)
+		conversion_factor = self.get_conversion_factor()
+		self.stock_qty = self.qty * conversion_factor
 
+	def get_conversion_factor(self):
 		conversion_factors = get_textile_conversion_factors()
 		uom_to_convert = self.uom + '_to_' + self.stock_uom
 		uom_to_convert = uom_to_convert.lower()
-		conversion_factor = conversion_factors[uom_to_convert] or 1
-
-		self.stock_qty = self.qty * conversion_factor
+		conversion_factor = flt(conversion_factors[uom_to_convert]) or 1
+		return conversion_factor
 
 	def link_greige_fabric_in_ready_fabric(self):
 		linked_greige_fabric = frappe.db.get_value("Item", self.ready_fabric_item, "fabric_item")
@@ -896,7 +898,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.pretreatment_order = source_parent.name
 		target.item_code = source_parent.ready_fabric_item
 		target.qty = flt(source_parent.qty) - flt(source_parent.ordered_qty)
-		target.conversion_factor = flt(source_parent.conversion_factor)
+		target.conversion_factor = flt(source_parent.get_conversion_factor())
 		target.uom = source_parent.uom
 
 	doc = get_mapped_doc("Pretreatment Order", source_name, {
