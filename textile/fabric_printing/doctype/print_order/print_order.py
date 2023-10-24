@@ -849,6 +849,7 @@ class PrintOrder(TextileOrder):
 			"per_wastage": design_item_row.per_wastage,
 			"design_notes": design_item_row.design_notes,
 			"customer": self.customer,
+			"default_material_request_type": "Manufacture",
 		})
 
 		item_doc.append("uom_conversion_graph", {
