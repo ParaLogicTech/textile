@@ -56,6 +56,16 @@ class PrintProductionRegister:
 			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
+		self.design_items = list(set([d.design_item for d in self.data]))
+		self.square_meter_conversion = {}
+
+		if self.design_items:
+			self.square_meter_conversion = dict(frappe.db.sql("""
+				select parent, conversion_factor
+				from `tabUOM Conversion Detail`
+				where parenttype = 'Item' and parent in %s and uom = 'Square Meter'
+			""", [self.design_items]))
+
 	def get_conditions(self):
 		conditions = []
 
@@ -96,6 +106,9 @@ class PrintProductionRegister:
 			d["reference_type"] = "Stock Entry"
 			d["reference"] = d.stock_entry
 
+			if self.square_meter_conversion.get(d.design_item):
+				d["area"] = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
+
 	def get_grouped_data(self):
 		data = self.data
 
@@ -121,7 +134,7 @@ class PrintProductionRegister:
 
 		# Sum
 		uoms = set()
-		sum_fields = ['qty']
+		sum_fields = ['qty', 'area']
 		for d in data:
 			for f in sum_fields:
 				totals[f] = flt(totals.get(f)) + flt(d.get(f))
@@ -229,7 +242,7 @@ class PrintProductionRegister:
 				"width": 100
 			},
 			{
-				"label": _("Qty"),
+				"label": _("Length"),
 				"fieldname": "qty",
 				"fieldtype": "Float",
 				"width": 80
@@ -240,6 +253,12 @@ class PrintProductionRegister:
 				"fieldtype": "Link",
 				"options": "UOM",
 				"width": 60
+			},
+			{
+				"label": _("Sq. Meters"),
+				"fieldname": "area",
+				"fieldtype": "Float",
+				"width": 80
 			},
 			{
 				"label": _("Print Order"),
