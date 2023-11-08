@@ -5,6 +5,7 @@ import frappe
 from frappe import _, scrub, unscrub
 from frappe.utils import cint, cstr, flt, getdate, add_days
 from frappe.desk.query_report import group_report_data
+from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import get_uom_conv_factor
 
 
 def execute(filters=None):
@@ -43,7 +44,8 @@ class PrintProductionRegister:
 				wo.customer, wo.customer_name,
 				wo.production_item as design_item, wo.item_name as design_item_name,
 				wo.process_item, wo.process_item_name,
-				wo.fabric_item, wo.fabric_item_name
+				wo.fabric_item, wo.fabric_item_name,
+				item.net_weight_per_unit, item.weight_uom
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo
 				ON wo.name = se.work_order
@@ -101,13 +103,18 @@ class PrintProductionRegister:
 
 	def prepare_data(self):
 		for d in self.data:
-			d["disable_item_formatter"] = 1
+			d.disable_item_formatter = 1
 
-			d["reference_type"] = "Stock Entry"
-			d["reference"] = d.stock_entry
+			d.reference_type = "Stock Entry"
+			d.reference = d.stock_entry
+
+			d.stock_qty = d.qty * get_uom_conv_factor(d.uom, "Kg")
 
 			if self.square_meter_conversion.get(d.design_item):
-				d["area"] = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
+				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
+
+			if d.net_weight_per_unit:
+				d.net_weight = flt(d.net_weight_per_unit) * flt(d.qty) * get_uom_conv_factor(d.weight_uom, "Kg")
 
 	def get_grouped_data(self):
 		data = self.data
@@ -134,7 +141,7 @@ class PrintProductionRegister:
 
 		# Sum
 		uoms = set()
-		sum_fields = ['qty', 'area']
+		sum_fields = ['qty', 'area', 'net_weight']
 		for d in data:
 			for f in sum_fields:
 				totals[f] = flt(totals.get(f)) + flt(d.get(f))
@@ -242,23 +249,22 @@ class PrintProductionRegister:
 				"width": 100
 			},
 			{
-				"label": _("Qty"),
+				"label": _("Length (Meter)"),
 				"fieldname": "qty",
 				"fieldtype": "Float",
-				"width": 80
+				"width": 100
 			},
 			{
-				"label": _("UOM"),
-				"fieldname": "uom",
-				"fieldtype": "Link",
-				"options": "UOM",
-				"width": 60
-			},
-			{
-				"label": _("Sq. Meters"),
+				"label": _("Area (Sq. Mtr)"),
 				"fieldname": "area",
 				"fieldtype": "Float",
-				"width": 80
+				"width": 100
+			},
+			{
+				"label": _("Weight (Kg)"),
+				"fieldname": "net_weight",
+				"fieldtype": "Float",
+				"width": 100
 			},
 			{
 				"label": _("Print Order"),
