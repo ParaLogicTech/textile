@@ -107,7 +107,7 @@ class PrintProductionRegister:
 			d["reference"] = d.stock_entry
 
 			if self.square_meter_conversion.get(d.design_item):
-				d["area"] = flt(d.qty) / flt(self.square_meter_conversion.get(d.design_item))
+				d["area"] = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
 
 	def get_grouped_data(self):
 		data = self.data

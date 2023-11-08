@@ -155,6 +155,9 @@ class ItemDP(Item):
 		if self.stock_uom != "Meter":
 			frappe.throw(_("Default Unit of Measure must be Meter"))
 
+		self.set_fabric_conversion_uoms()
+
+	def set_fabric_conversion_uoms(self):
 		uoms = []
 
 		for d in self.uom_conversion_graph:
@@ -174,9 +177,9 @@ class ItemDP(Item):
 
 		sq_meter_row.update({
 			"from_qty": 1,
-			"from_uom": "Meter",
+			"from_uom": "Square Meter",
 			"to_qty": self.fabric_width * 0.0254,
-			"to_uom": "Square Meter",
+			"to_uom": "Meter",
 		})
 
 	def calculate_net_weight_per_unit(self):
