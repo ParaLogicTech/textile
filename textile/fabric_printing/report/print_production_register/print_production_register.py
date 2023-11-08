@@ -108,7 +108,7 @@ class PrintProductionRegister:
 			d.reference_type = "Stock Entry"
 			d.reference = d.stock_entry
 
-			d.stock_qty = d.qty * get_uom_conv_factor(d.uom, "Kg")
+			d.length = d.qty * get_uom_conv_factor(d.uom, "Meter")
 
 			if self.square_meter_conversion.get(d.design_item):
 				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
@@ -141,7 +141,7 @@ class PrintProductionRegister:
 
 		# Sum
 		uoms = set()
-		sum_fields = ['qty', 'area', 'net_weight']
+		sum_fields = ['length', 'area', 'net_weight']
 		for d in data:
 			for f in sum_fields:
 				totals[f] = flt(totals.get(f)) + flt(d.get(f))
@@ -196,10 +196,10 @@ class PrintProductionRegister:
 
 		for d in self.data:
 			grand_totals.setdefault(d.posting_date, 0)
-			grand_totals[d.posting_date] += d.qty
+			grand_totals[d.posting_date] += d.length
 
 			process_totals.setdefault(d.process_item, {}).setdefault(d.posting_date, 0)
-			process_totals[d.process_item][d.posting_date] += d.qty
+			process_totals[d.process_item][d.posting_date] += d.length
 
 		labels = [frappe.format(d) for d in dates]
 
@@ -250,7 +250,7 @@ class PrintProductionRegister:
 			},
 			{
 				"label": _("Length (Meter)"),
-				"fieldname": "qty",
+				"fieldname": "length",
 				"fieldtype": "Float",
 				"width": 100
 			},
