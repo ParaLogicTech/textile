@@ -24,7 +24,7 @@ frappe.ui.form.on("Work Order", {
 	},
 });
 
-textile.add_print_order_fields_in_work_order_prompt = function (doc, purpose, fields) {
+textile.add_print_order_fields_in_work_order_prompt = function (doc, fields, purpose) {
 	if (purpose != "Manufacture" || !doc.print_order) {
 		return;
 	}
@@ -65,7 +65,7 @@ textile.add_print_order_fields_in_work_order_prompt = function (doc, purpose, fi
 	});
 }
 
-textile.add_pretreatment_order_fields_in_work_order_prompt = function (doc, purpose, fields) {
+textile.add_pretreatment_order_fields_in_work_order_prompt = function (doc, fields, purpose) {
 	if (!doc.pretreatment_order) {
 		return;
 	}
@@ -148,6 +148,7 @@ textile.add_print_order_fields_in_finish_work_order_prompt = function (doc, fiel
 	work_order_df.in_list_view = 0;
 }
 
-erpnext.manufacturing.work_order_qty_prompt_hooks.push(textile.add_print_order_fields_in_work_order_prompt);
-erpnext.manufacturing.work_order_qty_prompt_hooks.push(textile.add_pretreatment_order_fields_in_work_order_prompt);
+erpnext.manufacturing.stock_entry_qty_prompt_hooks.push(textile.add_print_order_fields_in_work_order_prompt);
+erpnext.manufacturing.stock_entry_qty_prompt_hooks.push(textile.add_pretreatment_order_fields_in_work_order_prompt);
+erpnext.manufacturing.job_card_qty_prompt_hooks.push(textile.add_pretreatment_order_fields_in_work_order_prompt);
 erpnext.manufacturing.multiple_work_orders_qty_prompt_hooks.push(textile.add_print_order_fields_in_finish_work_order_prompt);
