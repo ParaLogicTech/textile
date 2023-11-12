@@ -12,7 +12,7 @@ def get_data():
 			},
 			{
 				'label': _("Production"),
-				'items': ['Work Order', 'Stock Entry']
+				'items': ['Work Order', 'Job Card', 'Stock Entry']
 			},
 			{
 				'label': _("Delivery"),

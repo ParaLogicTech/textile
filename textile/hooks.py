@@ -78,6 +78,10 @@ update_work_order_on_create = [
 	"textile.overrides.work_order_hooks.update_work_order_on_create",
 ]
 
+update_job_card_on_create = [
+	"textile.overrides.work_order_hooks.update_job_card_on_create",
+]
+
 update_stock_entry_from_work_order = [
 	"textile.overrides.stock_entry_hooks.update_stock_entry_from_work_order"
 ]
@@ -242,6 +246,8 @@ fixtures = [
 				'Work Order-process_item',
 				'Work Order-column_break_4pknu',
 				'Work Order-process_item_name',
+
+				'Job Card-pretreatment_order',
 
 				'Stock Entry-pretreatment_order',
 				'Stock Entry-print_order',
