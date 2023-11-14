@@ -132,3 +132,8 @@ def update_work_order_on_create(work_order, args=None):
 	if work_order.get('print_order_item'):
 		work_order.max_qty = flt(frappe.db.get_value("Print Order Item", work_order.print_order_item,
 			"stock_fabric_length", cache=1))
+
+
+def update_job_card_on_create(job_card):
+	pretreatment_order = frappe.db.get_value("Work Order", job_card.work_order, "pretreatment_order")
+	job_card.pretreatment_order = pretreatment_order
