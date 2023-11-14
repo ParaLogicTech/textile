@@ -98,7 +98,7 @@ class PretreatmentOrder(TextileOrder):
 		""", self.name, as_dict=1)
 
 		totals = totals[0] if totals else frappe._dict()
-		self.set_onload("progress_data", {
+		progress_data = {
 			"qty": flt(totals.qty) or flt(self.stock_qty),
 			"stock_uom": self.stock_uom,
 			"producible_qty": flt(totals.producible_qty),
@@ -106,7 +106,24 @@ class PretreatmentOrder(TextileOrder):
 			"produced_qty": flt(totals.produced_qty),
 			"subcontract_order_qty": flt(totals.subcontract_order_qty),
 			"subcontract_received_qty": flt(totals.subcontract_received_qty),
-		})
+			"operations": []
+		}
+
+		operations_data = frappe.db.sql("""
+			select
+				woo.operation,
+				sum(woo.completed_qty) as completed_qty
+			from `tabWork Order Operation` woo
+			inner join `tabWork Order` wo on wo.name = woo.parent
+			where wo.pretreatment_order = %s and wo.docstatus = 1
+			group by woo.operation
+			order by woo.idx
+		""", self.name, as_dict=1)
+
+		for row in operations_data:
+			progress_data["operations"].append(row)
+
+		self.set_onload("progress_data", progress_data)
 
 	def get_disallow_on_submit_fields(self):
 		if self.cant_change_delivery_required():
