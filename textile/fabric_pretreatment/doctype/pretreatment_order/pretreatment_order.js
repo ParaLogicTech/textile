@@ -197,7 +197,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		if (this.frm.doc.__onload?.progress_data) {
 			erpnext.manufacturing.show_progress_for_production(this.frm.doc.__onload.progress_data, this.frm);
 
-			for (let row of this.frm.doc.__onload.progress_data) {
+			for (let row of this.frm.doc.__onload.progress_data.operations || []) {
 				erpnext.manufacturing.show_progress_for_operation(this.frm.doc.__onload.progress_data, row, this.frm);
 			}
 		}

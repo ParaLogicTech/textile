@@ -135,5 +135,5 @@ def update_work_order_on_create(work_order, args=None):
 
 
 def update_job_card_on_create(job_card):
-	pretreatment_order = frappe.db.get_value("Work Order", job_card.work_order, "pretreatment_order")
+	pretreatment_order = frappe.db.get_value("Work Order", job_card.work_order, "pretreatment_order", cache=1)
 	job_card.pretreatment_order = pretreatment_order
