@@ -53,6 +53,7 @@ class PrintProductionRegister:
 				ON item.name = wo.fabric_item
 			WHERE se.docstatus = 1
 				AND se.posting_date between %(from_date)s AND %(to_date)s
+				AND se.purpose = 'Manufacture'
 				AND ifnull(wo.print_order, '') != ''
 				{conditions}
 			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
@@ -328,23 +329,50 @@ class PrintProductionRegister:
 			},
 		]
 
-		if not self.show_customer_name:
-			columns = [c for c in columns if c['fieldname'] != 'customer_name']
-
-		if not self.show_item_name:
-			columns = [c for c in columns if c['fieldname'] != ['fabric_item_name', 'design_item_name', 'process_item_name']]
+		exclude_columns = set()
 
 		if len(self.group_by) > 1:
-			columns = [c for c in columns if c['fieldname'] != 'stock_entry']
-
-			reference_column = {
+			columns.insert(0, {
 				"label": _("Reference"),
 				"fieldname": "reference",
 				"fieldtype": "Dynamic Link",
 				"options": "reference_type",
 				"width": 200
-			}
+			})
 
-			columns.insert(0, reference_column)
+			exclude_columns.add('stock_entry')
+
+			if self.filters.totals_only:
+				# potential empty columns
+				exclude_columns = exclude_columns.union({
+					'posting_dt', 'work_order', 'design_item', 'design_item_name', 'customer', 'customer_name',
+					'fabric_item', 'fabric_item_name', 'print_order', 'process_item_name', 'fabric_printer'
+				})
+
+				if "customer" in self.group_by:
+					exclude_columns.remove('customer')
+					exclude_columns.remove('customer_name')
+
+				if "fabric_item" in self.group_by:
+					exclude_columns.remove('fabric_item')
+					exclude_columns.remove('fabric_item_name')
+
+				if "print_order" in self.group_by:
+					exclude_columns.remove('print_order')
+
+				if "process_item" in self.group_by:
+					exclude_columns.remove('process_item_name')
+
+				if "fabric_printer" in self.group_by:
+					exclude_columns.remove('fabric_printer')
+
+		if not self.show_customer_name:
+			exclude_columns.add('customer_name')
+
+		if not self.show_item_name:
+			exclude_columns.add('fabric_item_name')
+			exclude_columns.add('design_item_name')
+
+		columns = [c for c in columns if c['fieldname'] not in exclude_columns]
 
 		self.columns = columns
