@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
+# Copyright (c) 2023, ParaLogic and contributors
 # For license information, please see license.txt
 
 import frappe
@@ -9,10 +9,10 @@ from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import ge
 
 
 def execute(filters=None):
-	return PrintProductionRegister(filters).run()
+	return PretreatmentProductionRegister(filters).run()
 
 
-class PrintProductionRegister:
+class PretreatmentProductionRegister:
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
 		self.filters.from_date = getdate(filters.from_date)
@@ -39,12 +39,11 @@ class PrintProductionRegister:
 		self.data = frappe.db.sql("""
 			SELECT se.name as stock_entry, se.posting_date, se.posting_time,
 				timestamp(se.posting_date, se.posting_time) as posting_dt,
-				se.work_order, se.fabric_printer, se.fg_completed_qty as qty,
-				wo.print_order, wo.stock_uom as uom,
+				se.work_order, se.fg_completed_qty as qty,
+				wo.pretreatment_order, wo.stock_uom as uom,
 				wo.customer, wo.customer_name,
-				wo.production_item as design_item, wo.item_name as design_item_name,
-				wo.process_item, wo.process_item_name,
-				wo.fabric_item, wo.fabric_item_name,
+				wo.production_item as ready_fabric, wo.item_name as ready_fabric_name,
+				wo.fabric_item as greige_fabric, wo.fabric_item_name as greige_fabric_name,
 				item.net_weight_per_unit, item.weight_uom
 			FROM `tabStock Entry` se
 			INNER JOIN `tabWork Order` wo
@@ -54,20 +53,20 @@ class PrintProductionRegister:
 			WHERE se.docstatus = 1
 				AND se.posting_date between %(from_date)s AND %(to_date)s
 				AND se.purpose = 'Manufacture'
-				AND ifnull(wo.print_order, '') != ''
+				AND ifnull(wo.pretreatment_order, '') != ''
 				{conditions}
-			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
+			ORDER BY se.posting_date, se.posting_time
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
-		self.fabric_items = list(set([d.fabric_item for d in self.data]))
+		greige_fabrics = list(set([d.greige_fabric for d in self.data]))
 		self.square_meter_conversion = {}
 
-		if self.fabric_items:
+		if greige_fabrics:
 			self.square_meter_conversion = dict(frappe.db.sql("""
 				select parent, conversion_factor
 				from `tabUOM Conversion Detail`
 				where parenttype = 'Item' and parent in %s and uom = 'Square Meter'
-			""", [self.fabric_items]))
+			""", [greige_fabrics]))
 
 	def get_conditions(self):
 		conditions = []
@@ -78,8 +77,11 @@ class PrintProductionRegister:
 		if self.filters.customer:
 			conditions.append("wo.customer = %(customer)s")
 
-		if self.filters.fabric_item:
-			conditions.append("wo.fabric_item = %(fabric_item)s")
+		if self.filters.greige_fabric:
+			conditions.append("wo.fabric_item = %(greige_fabric)s")
+
+		if self.filters.ready_fabric:
+			conditions.append("wo.production_item = %(ready_fabric)s")
 
 		if self.filters.fabric_material:
 			conditions.append("item.fabric_material = %(fabric_material)s")
@@ -87,18 +89,12 @@ class PrintProductionRegister:
 		if self.filters.fabric_type:
 			conditions.append("item.fabric_type = %(fabric_type)s")
 
-		if self.filters.print_order:
-			if isinstance(self.filters.print_order, str):
-				self.filters.print_order = cstr(self.filters.print_order).strip()
-				self.filters.print_order = [d.strip() for d in self.filters.print_order.split(',') if d]
+		if self.filters.pretreatment_order:
+			if isinstance(self.filters.pretreatment_order, str):
+				self.filters.pretreatment_order = cstr(self.filters.pretreatment_order).strip()
+				self.filters.pretreatment_order = [d.strip() for d in self.filters.pretreatment_order.split(',') if d]
 
-			conditions.append("wo.print_order in %(print_order)s")
-
-		if self.filters.process_item:
-			conditions.append("wo.process_item = %(process_item)s")
-
-		if self.filters.fabric_printer:
-			conditions.append("se.fabric_printer = %(fabric_printer)s")
+			conditions.append("wo.pretreatment_order in %(pretreatment_order)s")
 
 		return "AND {}".format(" AND ".join(conditions)) if conditions else ""
 
@@ -111,8 +107,8 @@ class PrintProductionRegister:
 
 			d.length = d.qty * get_uom_conv_factor(d.uom, "Meter")
 
-			if self.square_meter_conversion.get(d.fabric_item):
-				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.fabric_item))
+			if self.square_meter_conversion.get(d.greige_fabric):
+				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.greige_fabric))
 
 			if d.net_weight_per_unit:
 				d.net_weight = flt(d.net_weight_per_unit) * flt(d.qty) * get_uom_conv_factor(d.weight_uom, "Kg")
@@ -153,8 +149,7 @@ class PrintProductionRegister:
 			totals.uom = list(uoms)[0]
 
 		group_reference_doctypes = {
-			"process_item": "Item",
-			"fabric_item": "Item",
+			"greige_fabric": "Item",
 		}
 
 		# set reference field
@@ -174,11 +169,8 @@ class PrintProductionRegister:
 
 		totals['disable_item_formatter'] = cint(self.show_item_name)
 
-		if totals.get('fabric_item'):
-			totals['fabric_item_name'] = data[0].fabric_item_name
-
-		if totals.get('process_item'):
-			totals['process_item_name'] = data[0].process_item_name
+		if totals.get('greige_fabric'):
+			totals['greige_fabric_name'] = data[0].greige_fabric_name
 
 		if totals.get('customer'):
 			totals['customer_name'] = data[0].customer_name
@@ -193,14 +185,10 @@ class PrintProductionRegister:
 			current_date = add_days(current_date, 1)
 
 		grand_totals = {}
-		process_totals = {}
 
 		for d in self.data:
 			grand_totals.setdefault(d.posting_date, 0)
 			grand_totals[d.posting_date] += d.length
-
-			process_totals.setdefault(d.process_item, {}).setdefault(d.posting_date, 0)
-			process_totals[d.process_item][d.posting_date] += d.length
 
 		labels = [frappe.format(d) for d in dates]
 
@@ -208,20 +196,12 @@ class PrintProductionRegister:
 		for current_date in dates:
 			total_dataset["values"].append(flt(grand_totals.get(current_date)))
 
-		process_datasets = {}
-		for process_item, process_total_dict in process_totals.items():
-			process_datasets.setdefault(process_item, {
-				"name": frappe.get_cached_value("Item", process_item, "item_name"), "values": []
-			})
-			for current_date in dates:
-				process_datasets[process_item]["values"].append(flt(process_total_dict.get(current_date)))
-
 		self.chart_data = {
 			"data": {
 				"labels": labels,
-				'datasets': [total_dataset] + list(process_datasets.values())
+				'datasets': [total_dataset]
 			},
-			"colors": ['purple', 'light-blue', 'light-pink'],
+			"colors": ['purple'],
 			"type": "line",
 			"fieldtype": "Float",
 		}
@@ -235,19 +215,6 @@ class PrintProductionRegister:
 				"fieldname": "posting_dt",
 				"fieldtype": "Datetime",
 				"width": 90
-			},
-			{
-				"label": _("Printer"),
-				"fieldname": "fabric_printer",
-				"fieldtype": "Link",
-				"options": "Fabric Printer",
-				"width": 80
-			},
-			{
-				"label": _("Process"),
-				"fieldname": "process_item_name",
-				"fieldtype": "Data",
-				"width": 100
 			},
 			{
 				"label": _("Length (Meter)"),
@@ -268,10 +235,10 @@ class PrintProductionRegister:
 				"width": 100
 			},
 			{
-				"label": _("Print Order"),
-				"fieldname": "print_order",
+				"label": _("Pretreatment Order"),
+				"fieldname": "pretreatment_order",
 				"fieldtype": "Link",
-				"options": "Print Order",
+				"options": "Pretreatment Order",
 				"width": 100
 			},
 			{
@@ -302,28 +269,28 @@ class PrintProductionRegister:
 				"width": 150
 			},
 			{
-				"label": _("Fabric Item"),
-				"fieldname": "fabric_item",
+				"label": _("Greige Fabric"),
+				"fieldname": "greige_fabric",
 				"fieldtype": "Link",
 				"options": "Item",
 				"width": 100 if self.show_item_name else 150
 			},
 			{
-				"label": _("Fabric Name"),
-				"fieldname": "fabric_item_name",
+				"label": _("Greige Fabric Name"),
+				"fieldname": "greige_fabric_name",
 				"fieldtype": "Data",
 				"width": 160
 			},
 			{
-				"label": _("Design Item"),
-				"fieldname": "design_item",
+				"label": _("Ready Fabric"),
+				"fieldname": "ready_fabric",
 				"fieldtype": "Link",
 				"options": "Item",
 				"width": 100 if self.show_item_name else 150
 			},
 			{
-				"label": _("Design Name"),
-				"fieldname": "design_item_name",
+				"label": _("Ready Fabric Name"),
+				"fieldname": "ready_fabric_name",
 				"fieldtype": "Data",
 				"width": 160
 			},
@@ -345,33 +312,27 @@ class PrintProductionRegister:
 			if self.filters.totals_only:
 				# potential empty columns
 				exclude_columns = exclude_columns.union({
-					'posting_dt', 'work_order', 'design_item', 'design_item_name', 'customer', 'customer_name',
-					'fabric_item', 'fabric_item_name', 'print_order', 'process_item_name', 'fabric_printer'
+					'posting_dt', 'pretreatment_order', 'work_order', 'customer', 'customer_name',
+					'greige_fabric', 'greige_fabric_name', 'ready_fabric', 'ready_fabric_name'
 				})
 
 				if "customer" in self.group_by:
 					exclude_columns.remove('customer')
 					exclude_columns.remove('customer_name')
 
-				if "fabric_item" in self.group_by:
-					exclude_columns.remove('fabric_item')
-					exclude_columns.remove('fabric_item_name')
+				if "greige_fabric" in self.group_by:
+					exclude_columns.remove('greige_fabric')
+					exclude_columns.remove('greige_fabric_name')
 
-				if "print_order" in self.group_by:
-					exclude_columns.remove('print_order')
-
-				if "process_item" in self.group_by:
-					exclude_columns.remove('process_item_name')
-
-				if "fabric_printer" in self.group_by:
-					exclude_columns.remove('fabric_printer')
+				if "pretreatment_order" in self.group_by:
+					exclude_columns.remove('pretreatment_order')
 
 		if not self.show_customer_name:
 			exclude_columns.add('customer_name')
 
 		if not self.show_item_name:
-			exclude_columns.add('fabric_item_name')
-			exclude_columns.add('design_item_name')
+			exclude_columns.add('greige_fabric_name')
+			exclude_columns.add('ready_fabric_name')
 
 		columns = [c for c in columns if c['fieldname'] not in exclude_columns]
 
