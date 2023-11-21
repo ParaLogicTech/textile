@@ -59,15 +59,15 @@ class PrintProductionRegister:
 			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
-		self.design_items = list(set([d.design_item for d in self.data]))
+		self.fabric_items = list(set([d.fabric_item for d in self.data]))
 		self.square_meter_conversion = {}
 
-		if self.design_items:
+		if self.fabric_items:
 			self.square_meter_conversion = dict(frappe.db.sql("""
 				select parent, conversion_factor
 				from `tabUOM Conversion Detail`
 				where parenttype = 'Item' and parent in %s and uom = 'Square Meter'
-			""", [self.design_items]))
+			""", [self.fabric_items]))
 
 	def get_conditions(self):
 		conditions = []
@@ -111,8 +111,8 @@ class PrintProductionRegister:
 
 			d.length = d.qty * get_uom_conv_factor(d.uom, "Meter")
 
-			if self.square_meter_conversion.get(d.design_item):
-				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.design_item))
+			if self.square_meter_conversion.get(d.fabric_item):
+				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.fabric_item))
 
 			if d.net_weight_per_unit:
 				d.net_weight = flt(d.net_weight_per_unit) * flt(d.qty) * get_uom_conv_factor(d.weight_uom, "Kg")

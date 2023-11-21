@@ -49,6 +49,20 @@ frappe.query_reports["Pretreatment Production Register"] = {
 			},
 		},
 		{
+			fieldname: "ready_fabric",
+			label: __("Ready Fabric"),
+			fieldtype: "Link",
+			options: "Item",
+			get_query: function() {
+				return {
+					query: "erpnext.controllers.queries.item_query",
+					filters: {
+						'textile_item_type': "Ready Fabric"
+					}
+				};
+			},
+		},
+		{
 			fieldname: "fabric_material",
 			label: __("Fabric Material"),
 			fieldtype: "Link",
@@ -86,18 +100,11 @@ frappe.query_reports["Pretreatment Production Register"] = {
 			label: __("Group By Level 1"),
 			fieldtype: "Select",
 			options: group_field_opts,
-			default: "Group by Customer"
+			default: "Group by Greige Fabric"
 		},
 		{
 			fieldname: "group_by_2",
 			label: __("Group By Level 2"),
-			fieldtype: "Select",
-			options: group_field_opts,
-			default: "Group by Greige Fabric"
-		},
-		{
-			fieldname: "group_by_3",
-			label: __("Group By Level 3"),
 			fieldtype: "Select",
 			options: group_field_opts,
 			default: ""

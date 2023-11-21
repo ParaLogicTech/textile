@@ -58,15 +58,15 @@ class PretreatmentProductionRegister:
 			ORDER BY se.posting_date, se.posting_time
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
-		ready_fabrics = list(set([d.ready_fabric for d in self.data]))
+		greige_fabrics = list(set([d.greige_fabric for d in self.data]))
 		self.square_meter_conversion = {}
 
-		if ready_fabrics:
+		if greige_fabrics:
 			self.square_meter_conversion = dict(frappe.db.sql("""
 				select parent, conversion_factor
 				from `tabUOM Conversion Detail`
 				where parenttype = 'Item' and parent in %s and uom = 'Square Meter'
-			""", [ready_fabrics]))
+			""", [greige_fabrics]))
 
 	def get_conditions(self):
 		conditions = []
@@ -79,6 +79,9 @@ class PretreatmentProductionRegister:
 
 		if self.filters.greige_fabric:
 			conditions.append("wo.fabric_item = %(greige_fabric)s")
+
+		if self.filters.ready_fabric:
+			conditions.append("wo.production_item = %(ready_fabric)s")
 
 		if self.filters.fabric_material:
 			conditions.append("item.fabric_material = %(fabric_material)s")
@@ -104,8 +107,8 @@ class PretreatmentProductionRegister:
 
 			d.length = d.qty * get_uom_conv_factor(d.uom, "Meter")
 
-			if self.square_meter_conversion.get(d.ready_fabric):
-				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.ready_fabric))
+			if self.square_meter_conversion.get(d.greige_fabric):
+				d.area = flt(d.qty) * flt(self.square_meter_conversion.get(d.greige_fabric))
 
 			if d.net_weight_per_unit:
 				d.net_weight = flt(d.net_weight_per_unit) * flt(d.qty) * get_uom_conv_factor(d.weight_uom, "Kg")
