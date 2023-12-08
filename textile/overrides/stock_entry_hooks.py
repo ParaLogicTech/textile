@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 
 
@@ -12,10 +13,12 @@ class StockEntryDP(StockEntry):
 	def on_submit(self):
 		super().on_submit()
 		self.update_print_order_fabric_transfer_status()
+		self.update_coating_order(validate_coating_order_qty=True)
 
 	def on_cancel(self):
 		super().on_cancel()
 		self.update_print_order_fabric_transfer_status()
+		self.update_coating_order()
 
 	def update_print_order_fabric_transfer_status(self):
 		if not self.get("print_order"):
@@ -29,6 +32,26 @@ class StockEntryDP(StockEntry):
 			print_order = frappe.get_doc("Print Order", self.print_order)
 			print_order.set_fabric_transfer_status(update=True)
 			print_order.notify_update()
+
+	def update_coating_order(self, validate_coating_order_qty=False):
+		if not self.coating_order:
+			return
+
+		coating_order_doc = frappe.get_doc("Coating Order", self.coating_order)
+
+		if coating_order_doc.docstatus != 1:
+			frappe.throw(_("Coating Order {0} must be submitted").format(self.coating_order))
+
+		if coating_order_doc.status == 'Stopped':
+			frappe.throw(_("Transaction not allowed against stopped Coating Order {0}").format(self.coating_order))
+
+		coating_order_doc.set_coating_status(update=True)
+
+		if validate_coating_order_qty:
+			coating_order_doc.validate_coating_order_qty(from_doctype=self.doctype)
+
+		coating_order_doc.set_status(update=True)
+		coating_order_doc.notify_update()
 
 	def validate_fabric_printer(self):
 		if self.purpose != "Manufacture":
@@ -53,6 +76,40 @@ class StockEntryDP(StockEntry):
 			frappe.throw(_("Fabric Printer {0} is not allowed to manufacture using Process {1} in {2}").format(
 				self.fabric_printer, work_order_process, frappe.get_desk_link("Work Order", self.work_order)
 			))
+
+	def get_bom_raw_materials(self, qty, scrap_qty=0):
+		item_dict = super().get_bom_raw_materials(qty, scrap_qty)
+
+		if self.coating_order:
+			fabric_details = frappe.db.get_value("Coating Order", self.coating_order, ["fabric_item", "fabric_warehouse", "uom"], as_dict=1)
+
+			item_dict = {
+				fabric_details.fabric_item: {
+					'item_code': fabric_details.fabric_item,
+					'from_warehouse': fabric_details.fabric_warehouse,
+					'uom': fabric_details.uom,
+					'qty': qty,
+				}, **item_dict
+			}
+
+		return item_dict
+
+	def add_finished_goods_items_from_bom(self):
+		if self.coating_order:
+			fabric_details = frappe.db.get_value("Coating Order", self.coating_order, ["fabric_item", "fg_warehouse"], as_dict=1)
+			item = frappe.get_cached_doc("Item", fabric_details.fabric_item)
+
+			self.add_to_stock_entry_detail({
+				item.name: {
+					"to_warehouse": fabric_details.fg_warehouse,
+					"qty": self.fg_completed_qty,
+					"item_name": item.item_name,
+					"description": item.description,
+					"stock_uom": item.stock_uom,
+				}
+			})
+		else:
+			super().add_finished_goods_items_from_bom()
 
 
 def update_stock_entry_from_work_order(stock_entry, work_order):
