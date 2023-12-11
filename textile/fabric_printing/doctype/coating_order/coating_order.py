@@ -50,7 +50,8 @@ class CoatingOrder(TextileOrder):
 		self.stock_qty = self.qty * conversion_factor
 
 	def set_default_coating_bom(self):
-		self.update(get_default_coating_bom(self.coating_item, throw=True))
+		if not self.coating_bom:
+			self.update(get_default_coating_bom(self.coating_item, throw=True))
 
 	def set_fabric_item_details(self):
 		details = get_fabric_item_details(self.fabric_item)
@@ -86,11 +87,11 @@ class CoatingOrder(TextileOrder):
 			self.db_set('status', self.status, update_modified=update_modified)
 
 	def set_coating_status(self, update=False, update_modified=True):
-		self.coated_qty = frappe.db.get_value("Stock Entry", filters={
+		self.coated_qty = flt(frappe.db.get_value("Stock Entry", filters={
 			'docstatus': 1,
 			'purpose': 'Manufacture',
 			'coating_order': self.name,
-		}, fieldname="sum(fg_completed_qty)")
+		}, fieldname="sum(fg_completed_qty)"))
 
 		self.per_coated = flt(self.coated_qty / self.stock_qty * 100 if self.stock_qty else 0, 3)
 		self.coating_status = self.get_completion_status('per_coated', 'Coat', not_applicable=self.status == "Stopped")
@@ -102,9 +103,9 @@ class CoatingOrder(TextileOrder):
 				'coating_status': self.coating_status,
 			}, update_modified=update_modified)
 
-	def validate_work_order_qty(self, from_doctype=None):
-		self.validate_completed_qty_for_row(self, 'work_order_qty', 'stock_qty',
-			allowance_type="production", from_doctype=from_doctype, item_field="ready_fabric_item")
+	def validate_coating_order_qty(self, from_doctype=None):
+		self.validate_completed_qty_for_row(self, 'coated_qty', 'stock_qty',
+			allowance_type="production", from_doctype=from_doctype, item_field="fabric_item")
 
 	def has_stock_entry(self):
 		return frappe.db.get_value("Stock Entry", {"coating_order": self.name, "docstatus": 1})
