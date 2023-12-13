@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.utils import flt
+from erpnext.stock.get_item_details import is_item_uom_convertible
 from textile.controllers.textile_order import TextileOrder
 from textile.fabric_printing.doctype.print_order.print_order import get_fabric_item_details
 from textile.utils import get_textile_conversion_factors, validate_textile_item
@@ -31,6 +32,10 @@ class CoatingOrder(TextileOrder):
 		self.set_coating_status()
 		self.set_status()
 
+	def on_submit(self):
+		self.validate_fabric_attributes()
+		self.validate_uom_convertibility()
+
 	def set_missing_values(self):
 		self.set_fabric_item_details()
 
@@ -43,6 +48,32 @@ class CoatingOrder(TextileOrder):
 	def validate_qty(self):
 		if flt(self.qty) <= 0:
 			frappe.throw(_("Qty must be greater than 0"))
+
+	def validate_fabric_attributes(self):
+		if self.coating_item_by_fabric_weight:
+			if not self.fabric_width:
+				frappe.throw(_("Fabric Width is mandatory for Coating Item {1}. Please set Fabric Pickup % in {2}").format(
+					frappe.bold(self.coating_item_name),
+					frappe.get_desk_link("Item", self.fabric_item)
+				))
+			if not self.fabric_gsm:
+				frappe.throw(_("Fabric GSM is mandatory for Coating Item {1}. Please set Fabric Pickup % in {2}").format(
+					frappe.bold(self.coating_item_name),
+					frappe.get_desk_link("Item", self.fabric_item)
+				))
+			if not self.fabric_per_pickup:
+				frappe.throw(_("Fabric Pickup % is mandatory for Coating Item {1}. Please set Fabric Pickup % in {2}").format(
+					frappe.bold(self.coating_item_name),
+					frappe.get_desk_link("Item", self.fabric_item)
+				))
+
+	def validate_uom_convertibility(self):
+		conversion_uom = "Gram" if self.coating_item_by_fabric_weight else self.stock_uom
+
+		if not is_item_uom_convertible(self.coating_item, conversion_uom):
+			frappe.throw(_("{0} is not convertible to UOM {1}").format(
+				frappe.get_desk_link("Item", self.fabric_item), frappe.bold(conversion_uom)
+			))
 
 	def calculate_totals(self):
 		self.round_floats_in(self)

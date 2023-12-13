@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from erpnext.stock.get_item_details import get_conversion_factor
 
 
 class StockEntryDP(StockEntry):
@@ -78,19 +79,32 @@ class StockEntryDP(StockEntry):
 			))
 
 	def get_bom_raw_materials(self, qty, scrap_qty=0):
-		item_dict = super().get_bom_raw_materials(qty, scrap_qty)
+		from textile.utils import gsm_to_grams
 
 		if self.coating_order:
-			fabric_details = frappe.db.get_value("Coating Order", self.coating_order, ["fabric_item", "fabric_warehouse", "uom"], as_dict=1)
+			coating_order_doc = frappe.get_doc("Coating Order", self.coating_order)
 
+			if coating_order_doc.coating_item_by_fabric_weight:
+				fabric_grams_per_meter = gsm_to_grams(coating_order_doc.fabric_gsm, coating_order_doc.fabric_width)
+				consumption_grams_per_meter = fabric_grams_per_meter * flt(coating_order_doc.fabric_per_pickup) / 100
+				cf_coating = get_conversion_factor(coating_order_doc.coating_item, "Gram").conversion_factor * consumption_grams_per_meter
+
+			else:
+				cf_coating = get_conversion_factor(coating_order_doc.coating_item, coating_order_doc.stock_uom).conversion_factor
+
+			coating_item_qty = qty * cf_coating
+			item_dict = super().get_bom_raw_materials(coating_item_qty, scrap_qty)
 			item_dict = {
-				fabric_details.fabric_item: {
-					'item_code': fabric_details.fabric_item,
-					'from_warehouse': fabric_details.fabric_warehouse,
-					'uom': fabric_details.uom,
+				coating_order_doc.fabric_item: {
+					'item_code': coating_order_doc.fabric_item,
+					'from_warehouse': coating_order_doc.fabric_warehouse,
+					'uom': coating_order_doc.stock_uom,
 					'qty': qty,
 				}, **item_dict
 			}
+
+		else:
+			item_dict = super().get_bom_raw_materials(qty, scrap_qty)
 
 		return item_dict
 
