@@ -13,18 +13,26 @@ import copy
 
 
 force_fields = ["customer_name", "fabric_item_name", "fabric_material",
-				"fabric_type", "fabric_width", "fabric_gsm", "fabric_per_pickup"]
+	"fabric_type", "fabric_width", "fabric_gsm", "fabric_per_pickup"]
 
 
 class CoatingOrder(TextileOrder):
+	@property
+	def fabric_stock_qty(self):
+		from erpnext.stock.get_item_details import get_bin_details
+		return get_bin_details(self.fabric_item, self.fabric_warehouse).get("actual_qty") or 0
+
 	def onload(self):
 		self.set_fabric_stock_qty()
+		if self.docstatus == 0:
+			self.set_missing_values()
+			self.calculate_totals()
 
 	def validate(self):
 		self.set_missing_values()
 		self.validate_dates()
 		self.validate_customer()
-		self.validate_fabric_item()
+		TextileOrder.validate_fabric_item("Ready Fabric")
 		self.validate_coating_item()
 		self.validate_qty()
 		self.calculate_totals()
@@ -39,11 +47,8 @@ class CoatingOrder(TextileOrder):
 	def set_missing_values(self):
 		self.set_fabric_item_details()
 
-	def validate_fabric_item(self):
-		validate_textile_item(self.fabric_item, "Ready Fabric")
-
 	def validate_coating_item(self):
-		validate_textile_item(self.coating_item, "Process Component")
+		validate_textile_item(self.coating_item, "Process Component", "Coating")
 
 	def validate_qty(self):
 		if flt(self.qty) <= 0:
@@ -187,7 +192,8 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 	if frappe.db.get_single_value("Manufacturing Settings", "auto_submit_manufacture_entry"):
 		try:
 			ste_copy = frappe.get_doc(copy.deepcopy(stock_entry))
-			stock_entry = ste_copy.submit()
+			ste_copy.submit()
+			stock_entry = ste_copy
 			frappe.msgprint(_("{0} submitted successfully for Coating ({1} {2})").format(
 				frappe.get_desk_link("Stock Entry", ste_copy.name),
 				stock_entry.get_formatted("fg_completed_qty"),

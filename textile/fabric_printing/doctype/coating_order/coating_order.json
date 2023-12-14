@@ -153,6 +153,7 @@
    "label": "Company",
    "options": "Company",
    "print_hide": 1,
+   "remember_last_selected_value": 1,
    "reqd": 1
   },
   {
@@ -179,7 +180,7 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:!doc.fabric_item || doc.fabric_item_name != doc.fabric_item",
+   "depends_on": "eval:doc.fabric_item && doc.fabric_item_name != doc.fabric_item",
    "fetch_from": "fabric_item.item_name",
    "fieldname": "fabric_item_name",
    "fieldtype": "Data",
@@ -312,7 +313,7 @@
   {
    "fieldname": "fg_warehouse",
    "fieldtype": "Link",
-   "label": "Coating Warehouse",
+   "label": "Coated Fabric Warehouse",
    "options": "Warehouse",
    "reqd": 1
   },
@@ -422,7 +423,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-08 15:05:51.953551",
+ "modified": "2023-12-14 18:42:44.822318",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",
@@ -430,6 +431,8 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -437,9 +440,50 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "System Manager",
+   "role": "Sales User",
    "share": 1,
+   "submit": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User (Read Only)",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1
+  },
+  {
+   "read": 1,
+   "role": "Packing User"
   }
  ],
  "sort_field": "modified",
