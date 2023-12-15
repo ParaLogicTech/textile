@@ -485,7 +485,7 @@
   },
   {
    "allow_on_submit": 1,
-   "depends_on": "eval:doc.fabric_item && doc.source_warehouse",
+   "depends_on": "eval:doc.fabric_item && doc.fabric_warehouse",
    "fieldname": "fabric_stock_qty",
    "fieldtype": "Float",
    "label": "Fabric Stock Qty",
@@ -752,7 +752,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-21 12:57:54.996535",
+ "modified": "2023-12-14 14:59:45.659892",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",
