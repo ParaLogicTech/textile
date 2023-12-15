@@ -45,6 +45,7 @@ class PretreatmentOrder(TextileOrder):
 		self.validate_fabric_items()
 		self.validate_process_items()
 		self.validate_qty()
+		self.clean_remarks()
 		self.calculate_totals()
 		self.set_existing_ready_fabric_bom()
 

@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import getdate, cstr, flt, cint
+from frappe.utils import getdate, cstr, flt, cint, clean_whitespace
 from erpnext.controllers.status_updater import StatusUpdater
 from erpnext.accounts.party import validate_party_frozen_disabled
 from textile.utils import validate_textile_item, gsm_to_grams, is_internal_customer
@@ -21,6 +21,12 @@ class TextileOrder(StatusUpdater):
 			fabric_material_abbr or "Xx",
 			cint(flt(qty, 0))
 		)
+
+	def clean_remarks(self):
+		fields = ['remarks', 'notes', 'po_no']
+		for f in fields:
+			if self.meta.has_field(f):
+				self.set(f, clean_whitespace(self.get(f)))
 
 	def validate_dates(self):
 		if self.get("delivery_date"):

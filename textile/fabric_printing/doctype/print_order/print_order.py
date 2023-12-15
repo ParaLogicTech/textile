@@ -58,6 +58,7 @@ class PrintOrder(TextileOrder):
 		self.validate_design_items()
 		self.validate_order_defaults()
 		self.validate_wastage()
+		self.clean_remarks()
 		self.calculate_totals()
 
 		if self.docstatus == 1:
