@@ -251,6 +251,7 @@ fixtures = [
 
 				'Stock Entry-pretreatment_order',
 				'Stock Entry-print_order',
+				'Stock Entry-coating_order',
 				'Stock Entry-fabric_printer',
 
 				'Purchase Order Item-pretreatment_order',
