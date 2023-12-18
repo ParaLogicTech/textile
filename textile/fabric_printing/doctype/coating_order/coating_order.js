@@ -31,10 +31,24 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	}
 
 	setup_buttons() {
-		if (this.frm.doc.docstatus == 1 && flt(this.frm.doc.per_coated) < 100) {
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Stopped" && flt(this.frm.doc.per_coated) < 100) {
 			let finish_button = this.frm.add_custom_button(__("Finish"), () => this.finish_coating_order());
 			finish_button.removeClass("btn-default").addClass("btn-primary");
 		}
+
+		// Stop / Resume
+		if (this.frm.doc.docstatus === 1) {
+			if (["Stopped", "Completed"].includes(this.frm.doc.status)) {
+				this.frm.add_custom_button(__("Stop"), () => {
+					this.stop_coating_order("Stopped");
+				}, __("Status"));
+			} else if (this.frm.doc.status == 'Stopped') {
+				this.frm.add_custom_button(__("Re-Open"), () => {
+					this.stop_coating_order("Resumed");
+				}, __("Status"));
+			}
+		}
+	}
 
 	set_default_warehouse() {
 		if (this.frm.is_new()) {
@@ -295,6 +309,21 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 				],
 			});
 		}
+	}
+
+	stop_coating_order(status) {
+		return frappe.call({
+			method: "stop_unstop",
+			args: {
+				coating_order: this.frm.doc.name,
+				status: status,
+			},
+			callback: (r) => {
+				if (r.message) {
+					this.frm.reload_doc();
+				}
+			}
+		});
 	}
 };
 

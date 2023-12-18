@@ -173,6 +173,24 @@ def get_default_coating_bom(coating_item, throw=False):
 
 
 @frappe.whitelist()
+def stop_unstop(coating_order, status):
+	""" Called from client side on Stop/Unstop event"""
+
+	if not frappe.has_permission("Coating Order", "write"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	doc = frappe.get_doc("Coating Order", coating_order)
+	doc.set_status(status)
+	doc.set_coating_status(update=True)
+	doc.set_status(status, update=True)
+	doc.notify_update()
+
+	frappe.msgprint(_("Coating Order has been {0}").format(frappe.bold(status)))
+
+	return doc.status
+
+
+@frappe.whitelist()
 def make_stock_entry_from_coating_order(coating_order_id, qty):
 	caoting_order_doc = frappe.get_doc("Coating Order", coating_order_id)
 	stock_entry = frappe.new_doc("Stock Entry")
