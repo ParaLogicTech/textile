@@ -32,7 +32,7 @@ class CoatingOrder(TextileOrder):
 		self.set_missing_values()
 		self.validate_dates()
 		self.validate_customer()
-		TextileOrder.validate_fabric_item("Ready Fabric")
+		self.validate_fabric_item("Ready Fabric")
 		self.validate_coating_item()
 		self.validate_qty()
 		self.calculate_totals()

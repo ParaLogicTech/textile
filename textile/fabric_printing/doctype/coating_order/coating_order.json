@@ -34,12 +34,12 @@
   "fabric_stock_qty",
   "process_details_section",
   "coating_item",
-  "coating_item_name",
-  "column_break_01imd",
   "coating_item_by_fabric_weight",
+  "column_break_01imd",
+  "coating_item_name",
   "column_break_iaijf",
   "coating_bom",
-  "warehouses_section",
+  "warehouse_section",
   "fabric_warehouse",
   "column_break_w1vrx",
   "source_warehouse",
@@ -284,11 +284,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "warehouses_section",
-   "fieldtype": "Section Break",
-   "label": "Warehouses"
-  },
-  {
    "fieldname": "fabric_warehouse",
    "fieldtype": "Link",
    "label": "Fabric Warehouse",
@@ -418,12 +413,18 @@
    "fieldtype": "Check",
    "label": "Is Internal Customer",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break",
+   "label": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-14 18:42:44.822318",
+ "modified": "2023-12-17 20:41:04.804227",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",
