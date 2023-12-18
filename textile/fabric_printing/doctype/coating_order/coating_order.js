@@ -7,6 +7,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	refresh() {
 		super.refresh();
 		this.setup_buttons();
+		this.set_default_warehouse();
 		this.show_progress_for_coating();
 	}
 
@@ -33,6 +34,23 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		if (this.frm.doc.docstatus == 1 && flt(this.frm.doc.per_coated) < 100) {
 			let finish_button = this.frm.add_custom_button(__("Finish"), () => this.finish_coating_order());
 			finish_button.removeClass("btn-default").addClass("btn-primary");
+		}
+
+	set_default_warehouse() {
+		if (this.frm.is_new()) {
+			const co_to_dps_warehouse_fn_map = {
+				'fabric_warehouse': 'default_printing_fabric_warehouse',
+				'source_warehouse': 'default_printing_source_warehouse',
+				'fg_warehouse': 'default_coating_fg_warehouse',
+			}
+
+			for (let [co_warehouse_fn, dps_warehouse_fn] of Object.entries(co_to_dps_warehouse_fn_map)) {
+				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
+				if (!this.frm.doc[co_warehouse_fn] && warehouse) {
+					this.frm.set_value(co_warehouse_fn, warehouse);
+				}
+
+			}
 		}
 	}
 
