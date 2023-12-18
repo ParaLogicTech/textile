@@ -426,6 +426,18 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.get_fabric_stock_qty();
 	}
 
+	coating_item_required() {
+		this.set_default_fabric_warehouse();
+	}
+
+	set_default_fabric_warehouse() {
+		if (!this.frm.doc.coating_item_required) return;
+		let warehouse = frappe.defaults.get_default('default_coating_fg_warehouse');
+		if (warehouse) {
+			this.frm.set_value("fabric_warehouse", warehouse);
+		}
+	}
+
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({
