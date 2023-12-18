@@ -36,6 +36,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
+		this.set_default_fabric_warehouse();
 		this.setup_progressbars();
 	}
 
@@ -431,7 +432,8 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 	}
 
 	set_default_fabric_warehouse() {
-		if (!this.frm.doc.coating_item_required) return;
+		if (!this.frm.is_new() || !this.frm.doc.coating_item_required) return;
+
 		let warehouse = frappe.defaults.get_default('default_coating_fg_warehouse');
 		if (warehouse) {
 			this.frm.set_value("fabric_warehouse", warehouse);
