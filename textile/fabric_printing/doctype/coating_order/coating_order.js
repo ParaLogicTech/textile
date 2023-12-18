@@ -163,7 +163,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 
 	finish_coating_order() {
 		let doc = this.frm.doc;
-		let max = flt(doc.stock_qty) - flt(doc.coated_qty);
+		let [max, max_with_allowance] = this.get_max_coatable_qty(doc);
 
 		let fields = [
 			{
@@ -248,8 +248,8 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 			static: true,
 			primary_action: function() {
 				let data = dialog.get_values();
-				if (flt(data.qty) > max) {
-					frappe.msgprint(__('Quantity can not be more than {0}', [format_number(max)]));
+				if (flt(data.qty) > max_with_allowance) {
+					frappe.msgprint(__('Quantity can not be more than {0}', [format_number(max_with_allowance)]));
 					return;
 				}
 				frappe.call({
@@ -309,6 +309,16 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 				],
 			});
 		}
+	}
+
+	get_max_coatable_qty(doc) {
+		let pending_qty = flt(doc.stock_qty) - flt(doc.coated_qty);
+		let producible_qty_with_allowance = erpnext.manufacturing.get_qty_with_allowance(doc.stock_qty, doc);
+
+		let pending_qty_with_allowance = producible_qty_with_allowance - flt(doc.coated_qty);
+
+		let qty_precision = erpnext.manufacturing.get_work_order_precision();
+		return [flt(pending_qty, qty_precision), flt(pending_qty_with_allowance, qty_precision)];
 	}
 
 	stop_coating_order(status) {

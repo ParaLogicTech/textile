@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.stock.get_item_details import is_item_uom_convertible
+from erpnext.controllers.status_updater import OverAllowanceError
 from textile.controllers.textile_order import TextileOrder
 from textile.fabric_printing.doctype.print_order.print_order import get_fabric_item_details
 from textile.utils import get_textile_conversion_factors, validate_textile_item
@@ -23,7 +24,6 @@ class CoatingOrder(TextileOrder):
 		return get_bin_details(self.fabric_item, self.fabric_warehouse).get("actual_qty") or 0
 
 	def onload(self):
-		self.set_fabric_stock_qty()
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
@@ -35,6 +35,7 @@ class CoatingOrder(TextileOrder):
 		self.validate_fabric_item("Ready Fabric")
 		self.validate_coating_item()
 		self.validate_qty()
+		self.clean_remarks()
 		self.calculate_totals()
 		self.set_default_coating_bom()
 		self.set_coating_status()
@@ -130,7 +131,20 @@ class CoatingOrder(TextileOrder):
 		}, fieldname="sum(fg_completed_qty)"))
 
 		self.per_coated = flt(self.coated_qty / self.stock_qty * 100 if self.stock_qty else 0, 3)
-		self.coating_status = self.get_completion_status('per_coated', 'Coat', not_applicable=self.status == "Stopped")
+
+		# Set coating status
+		if self.docstatus == 1:
+			under_production_allowance = flt(frappe.db.get_single_value("Manufacturing Settings", "under_production_allowance"))
+			min_coating_qty = flt(self.stock_qty - (self.stock_qty * under_production_allowance / 100), self.precision("qty"))
+
+			if self.coated_qty and (self.coated_qty >= min_coating_qty or self.status == "Stopped"):
+				self.coating_status = "Coated"
+			elif self.status == "Stopped":
+				self.coating_status = "Not Applicable"
+			else:
+				self.coating_status = "To Coat"
+		else:
+			self.coating_status = "Not Applicable"
 
 		if update:
 			self.db_set({
@@ -217,6 +231,9 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 				stock_entry.get_formatted("fg_completed_qty"),
 				caoting_order_doc.stock_uom,
 			), indicator="green")
+
+		except OverAllowanceError:
+			raise
 
 		except frappe.ValidationError:
 			frappe.db.rollback()
