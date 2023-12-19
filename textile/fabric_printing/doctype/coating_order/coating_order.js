@@ -38,7 +38,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 
 		// Stop / Resume
 		if (this.frm.doc.docstatus === 1) {
-			if (["Stopped", "Completed"].includes(this.frm.doc.status)) {
+			if (!["Stopped", "Completed"].includes(this.frm.doc.status)) {
 				this.frm.add_custom_button(__("Stop"), () => {
 					this.stop_coating_order("Stopped");
 				}, __("Status"));
@@ -322,7 +322,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 
 	stop_coating_order(status) {
 		return frappe.call({
-			method: "stop_unstop",
+			method: "textile.fabric_printing.doctype.coating_order.coating_order.stop_unstop",
 			args: {
 				coating_order: this.frm.doc.name,
 				status: status,

@@ -124,12 +124,14 @@ class CoatingOrder(TextileOrder):
 			self.db_set('status', self.status, update_modified=update_modified)
 
 	def set_coating_status(self, update=False, update_modified=True):
-		self.coated_qty = flt(frappe.db.get_value("Stock Entry", filters={
+		stock_entry_filters = {
 			'docstatus': 1,
 			'purpose': 'Manufacture',
 			'coating_order': self.name,
-		}, fieldname="sum(fg_completed_qty)"))
+		}
 
+		last_stock_entry_date = frappe.db.get_value("Stock Entry", stock_entry_filters, "posting_date", order_by="posting_date DESC")
+		self.coated_qty = flt(frappe.db.get_value("Stock Entry", stock_entry_filters, "sum(fg_completed_qty)"))
 		self.per_coated = flt(self.coated_qty / self.stock_qty * 100 if self.stock_qty else 0, 3)
 
 		# Set coating status
@@ -146,11 +148,14 @@ class CoatingOrder(TextileOrder):
 		else:
 			self.coating_status = "Not Applicable"
 
+		self.actual_finish_date = last_stock_entry_date if self.coating_status in ["Coated", "Stopped"] else None
+
 		if update:
 			self.db_set({
 				'coated_qty': self.coated_qty,
 				'per_coated': self.per_coated,
 				'coating_status': self.coating_status,
+				'actual_finish_date': self.actual_finish_date,
 			}, update_modified=update_modified)
 
 	def validate_coating_order_qty(self, from_doctype=None):
