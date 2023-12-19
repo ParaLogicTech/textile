@@ -287,6 +287,7 @@
    "depends_on": "eval:doc.greige_fabric_item && doc.source_warehouse",
    "fieldname": "greige_fabric_stock_qty",
    "fieldtype": "Float",
+   "is_virtual": 1,
    "label": "Greige Fabric Stock Qty",
    "read_only": 1
   },
@@ -663,7 +664,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-18 14:23:24.669330",
+ "modified": "2023-12-18 19:34:22.868213",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

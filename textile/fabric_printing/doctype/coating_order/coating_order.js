@@ -110,25 +110,6 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		this.frm.refresh_fields();
 	}
 
-	get_fabric_stock_qty() {
-		if (this.frm.doc.fabric_item && this.frm.doc.fabric_warehouse) {
-			return this.frm.call({
-				method: "erpnext.stock.get_item_details.get_bin_details",
-				args: {
-					item_code: this.frm.doc.fabric_item,
-					warehouse: this.frm.doc.fabric_warehouse,
-				},
-				callback: (r) => {
-					if (r.message) {
-						this.frm.set_value("fabric_stock_qty", flt(r.message.actual_qty));
-					}
-				}
-			});
-		} else {
-			this.frm.set_value('fabric_stock_qty', 0);
-		}
-	}
-
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({

@@ -307,28 +307,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		this.get_fabric_stock_qty("greige_");
 	}
 
-	get_fabric_stock_qty(prefix) {
-		let fabric_field = cstr(prefix) + "fabric_item";
-		let qty_field = cstr(prefix) + "fabric_stock_qty";
-
-		if (this.frm.doc[fabric_field] && this.frm.doc.fabric_warehouse) {
-			return this.frm.call({
-				method: "erpnext.stock.get_item_details.get_bin_details",
-				args: {
-					item_code: this.frm.doc[fabric_field],
-					warehouse: this.frm.doc.fabric_warehouse,
-				},
-				callback: (r) => {
-					if (r.message) {
-						this.frm.set_value(qty_field, flt(r.message.actual_qty));
-					}
-				}
-			});
-		} else {
-			this.frm.set_value(qty_field, 0);
-		}
-	}
-
 	get_fabric_item_details(prefix, get_ready_fabric, get_greige_fabric, get_default_process) {
 		let fabric_field = cstr(prefix) + "fabric_item";
 

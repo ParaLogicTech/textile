@@ -20,8 +20,7 @@ force_fields = ["customer_name", "fabric_item_name", "fabric_material",
 class CoatingOrder(TextileOrder):
 	@property
 	def fabric_stock_qty(self):
-		from erpnext.stock.get_item_details import get_bin_details
-		return get_bin_details(self.fabric_item, self.fabric_warehouse).get("actual_qty") or 0
+		return self.get_fabric_stock_qty(self.fabric_item, self.fabric_warehouse)
 
 	def onload(self):
 		if self.docstatus == 0:

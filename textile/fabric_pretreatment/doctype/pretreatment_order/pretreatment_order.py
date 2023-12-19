@@ -23,6 +23,10 @@ force_fields = force_customer_fields + force_fabric_fields + force_process_compo
 
 
 class PretreatmentOrder(TextileOrder):
+	@property
+	def greige_fabric_stock_qty(self):
+		return self.get_fabric_stock_qty(self.greige_fabric_item, self.fabric_warehouse)
+
 	def get_feed(self):
 		if self.get("title"):
 			return self.title
@@ -35,8 +39,6 @@ class PretreatmentOrder(TextileOrder):
 			self.set_work_order_onload()
 			self.set_progress_data_onload()
 			self.set_onload('disallow_on_submit', self.get_disallow_on_submit_fields())
-
-		self.set_fabric_stock_qty()
 
 	def validate(self):
 		self.set_missing_values()
@@ -145,9 +147,6 @@ class PretreatmentOrder(TextileOrder):
 		for k, v in ready_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
-
-	def set_fabric_stock_qty(self, prefix=None):
-		super().set_fabric_stock_qty(prefix or "greige_")
 
 	def validate_fabric_items(self):
 		self.validate_fabric_item("Greige Fabric", "greige_")
