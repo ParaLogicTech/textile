@@ -32,6 +32,10 @@ force_fields = force_customer_fields + force_fabric_fields + force_process_field
 
 
 class PrintOrder(TextileOrder):
+	@property
+	def fabric_stock_qty(self):
+		return self.get_fabric_stock_qty(self.fabric_item, self.fabric_warehouse)
+
 	def get_feed(self):
 		if self.get("title"):
 			return self.title
@@ -40,8 +44,6 @@ class PrintOrder(TextileOrder):
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
-
-		self.set_fabric_stock_qty()
 
 	@frappe.whitelist()
 	def on_upload_complete(self):
@@ -1084,7 +1086,6 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 
 	fabric_transfer_qty = flt(fabric_transfer_qty, precision=doc.precision("total_fabric_length"))
 
-	doc.set_fabric_stock_qty()
 	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
 		frappe.throw(_("Not enough Ready Fabric Item {0} in Fabric Warehouse ({1} Meter in stock)").format(
 			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")

@@ -14,7 +14,8 @@ class FabricPrintingSettings(Document):
 			"default_printing_fabric_warehouse",
 			"default_printing_source_warehouse",
 			"default_printing_wip_warehouse",
-			"default_printing_fg_warehouse"
+			"default_printing_fg_warehouse",
+			"default_coating_fg_warehouse",
 		]
 
 		for fn in global_default_fields:

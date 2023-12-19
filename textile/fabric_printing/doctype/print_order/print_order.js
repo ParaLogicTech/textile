@@ -391,8 +391,8 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				if (!this.frm.doc[po_warehouse_fn] && warehouse) {
 					this.frm.set_value(po_warehouse_fn, warehouse);
 				}
-
 			}
+			this.set_default_fabric_warehouse();
 		}
 	}
 
@@ -426,6 +426,18 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.get_fabric_stock_qty();
 	}
 
+	process_item() {
+		this.set_default_fabric_warehouse();
+	}
+
+	set_default_fabric_warehouse() {
+		let warehouse_fn = this.frm.doc.coating_item_required ? 'default_coating_fg_warehouse': 'default_printing_fabric_warehouse';
+		let warehouse = frappe.defaults.get_default(warehouse_fn);
+		if (warehouse) {
+			this.frm.set_value("fabric_warehouse", warehouse);
+		}
+	}
+
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({
@@ -440,25 +452,6 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 					}
 				}
 			});
-		}
-	}
-
-	get_fabric_stock_qty() {
-		if (this.frm.doc.fabric_item && this.frm.doc.fabric_warehouse) {
-			return this.frm.call({
-				method: "erpnext.stock.get_item_details.get_bin_details",
-				args: {
-					item_code: this.frm.doc.fabric_item,
-					warehouse: this.frm.doc.fabric_warehouse,
-				},
-				callback: (r) => {
-					if (r.message) {
-						this.frm.set_value("fabric_stock_qty", flt(r.message.actual_qty));
-					}
-				}
-			});
-		} else {
-			this.frm.set_value('fabric_stock_qty', 0);
 		}
 	}
 

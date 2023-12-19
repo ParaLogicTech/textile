@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.stock.get_item_details import is_item_uom_convertible
+from erpnext.controllers.status_updater import OverAllowanceError
 from textile.controllers.textile_order import TextileOrder
 from textile.fabric_printing.doctype.print_order.print_order import get_fabric_item_details
 from textile.utils import get_textile_conversion_factors, validate_textile_item
@@ -19,11 +20,9 @@ force_fields = ["customer_name", "fabric_item_name", "fabric_material",
 class CoatingOrder(TextileOrder):
 	@property
 	def fabric_stock_qty(self):
-		from erpnext.stock.get_item_details import get_bin_details
-		return get_bin_details(self.fabric_item, self.fabric_warehouse).get("actual_qty") or 0
+		return self.get_fabric_stock_qty(self.fabric_item, self.fabric_warehouse)
 
 	def onload(self):
-		self.set_fabric_stock_qty()
 		if self.docstatus == 0:
 			self.set_missing_values()
 			self.calculate_totals()
@@ -35,6 +34,7 @@ class CoatingOrder(TextileOrder):
 		self.validate_fabric_item("Ready Fabric")
 		self.validate_coating_item()
 		self.validate_qty()
+		self.clean_remarks()
 		self.calculate_totals()
 		self.set_default_coating_bom()
 		self.set_coating_status()
@@ -123,20 +123,35 @@ class CoatingOrder(TextileOrder):
 			self.db_set('status', self.status, update_modified=update_modified)
 
 	def set_coating_status(self, update=False, update_modified=True):
-		self.coated_qty = flt(frappe.db.get_value("Stock Entry", filters={
+		self.coated_qty, last_stock_entry_date = frappe.db.get_value("Stock Entry", filters={
 			'docstatus': 1,
 			'purpose': 'Manufacture',
 			'coating_order': self.name,
-		}, fieldname="sum(fg_completed_qty)"))
-
+		}, fieldname=["sum(fg_completed_qty)", "max(posting_date)"])
 		self.per_coated = flt(self.coated_qty / self.stock_qty * 100 if self.stock_qty else 0, 3)
-		self.coating_status = self.get_completion_status('per_coated', 'Coat', not_applicable=self.status == "Stopped")
+
+		# Set coating status
+		if self.docstatus == 1:
+			under_production_allowance = flt(frappe.db.get_single_value("Manufacturing Settings", "under_production_allowance"))
+			min_coating_qty = flt(self.stock_qty - (self.stock_qty * under_production_allowance / 100), self.precision("qty"))
+
+			if self.coated_qty and (self.coated_qty >= min_coating_qty or self.status == "Stopped"):
+				self.coating_status = "Coated"
+			elif self.status == "Stopped":
+				self.coating_status = "Not Applicable"
+			else:
+				self.coating_status = "To Coat"
+		else:
+			self.coating_status = "Not Applicable"
+
+		self.actual_end_date = last_stock_entry_date if self.coating_status in ["Coated", "Stopped"] else None
 
 		if update:
 			self.db_set({
 				'coated_qty': self.coated_qty,
 				'per_coated': self.per_coated,
 				'coating_status': self.coating_status,
+				'actual_end_date': self.actual_end_date,
 			}, update_modified=update_modified)
 
 	def validate_coating_order_qty(self, from_doctype=None):
@@ -173,6 +188,24 @@ def get_default_coating_bom(coating_item, throw=False):
 
 
 @frappe.whitelist()
+def stop_unstop(coating_order, status):
+	""" Called from client side on Stop/Unstop event"""
+
+	if not frappe.has_permission("Coating Order", "write"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	doc = frappe.get_doc("Coating Order", coating_order)
+	doc.set_status(status)
+	doc.set_coating_status(update=True)
+	doc.set_status(status, update=True)
+	doc.notify_update()
+
+	frappe.msgprint(_("Coating Order has been {0}").format(frappe.bold(status)))
+
+	return doc.status
+
+
+@frappe.whitelist()
 def make_stock_entry_from_coating_order(coating_order_id, qty):
 	caoting_order_doc = frappe.get_doc("Coating Order", coating_order_id)
 	stock_entry = frappe.new_doc("Stock Entry")
@@ -199,6 +232,9 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 				stock_entry.get_formatted("fg_completed_qty"),
 				caoting_order_doc.stock_uom,
 			), indicator="green")
+
+		except OverAllowanceError:
+			raise
 
 		except frappe.ValidationError:
 			frappe.db.rollback()

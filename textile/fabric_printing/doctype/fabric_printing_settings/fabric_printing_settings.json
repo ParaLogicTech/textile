@@ -14,7 +14,8 @@
   "default_printing_fabric_warehouse",
   "default_printing_source_warehouse",
   "default_printing_wip_warehouse",
-  "default_printing_fg_warehouse"
+  "default_printing_fg_warehouse",
+  "default_coating_fg_warehouse"
  ],
  "fields": [
   {
@@ -62,12 +63,18 @@
    "fieldtype": "Link",
    "label": "Default Ready Fabric Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_coating_fg_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Coated Fabric Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-09-12 13:55:41.000876",
+ "modified": "2023-12-18 13:22:21.215433",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",

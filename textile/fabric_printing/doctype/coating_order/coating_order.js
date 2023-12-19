@@ -7,6 +7,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	refresh() {
 		super.refresh();
 		this.setup_buttons();
+		this.set_default_warehouse();
 		this.show_progress_for_coating();
 	}
 
@@ -30,9 +31,40 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	}
 
 	setup_buttons() {
-		if (this.frm.doc.docstatus == 1 && flt(this.frm.doc.per_coated) < 100) {
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Stopped" && flt(this.frm.doc.per_coated) < 100) {
 			let finish_button = this.frm.add_custom_button(__("Finish"), () => this.finish_coating_order());
 			finish_button.removeClass("btn-default").addClass("btn-primary");
+		}
+
+		// Stop / Resume
+		if (this.frm.doc.docstatus === 1) {
+			if (!["Stopped", "Completed"].includes(this.frm.doc.status)) {
+				this.frm.add_custom_button(__("Stop"), () => {
+					this.stop_coating_order("Stopped");
+				}, __("Status"));
+			} else if (this.frm.doc.status == 'Stopped') {
+				this.frm.add_custom_button(__("Re-Open"), () => {
+					this.stop_coating_order("Resumed");
+				}, __("Status"));
+			}
+		}
+	}
+
+	set_default_warehouse() {
+		if (this.frm.is_new()) {
+			const co_to_dps_warehouse_fn_map = {
+				'fabric_warehouse': 'default_printing_fabric_warehouse',
+				'source_warehouse': 'default_printing_source_warehouse',
+				'fg_warehouse': 'default_coating_fg_warehouse',
+			}
+
+			for (let [co_warehouse_fn, dps_warehouse_fn] of Object.entries(co_to_dps_warehouse_fn_map)) {
+				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
+				if (!this.frm.doc[co_warehouse_fn] && warehouse) {
+					this.frm.set_value(co_warehouse_fn, warehouse);
+				}
+
+			}
 		}
 	}
 
@@ -43,7 +75,6 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	company() {
 		this.get_is_internal_customer();
 	}
-
 
 	fabric_item() {
 		this.get_fabric_stock_qty();
@@ -79,25 +110,6 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		this.frm.refresh_fields();
 	}
 
-	get_fabric_stock_qty() {
-		if (this.frm.doc.fabric_item && this.frm.doc.fabric_warehouse) {
-			return this.frm.call({
-				method: "erpnext.stock.get_item_details.get_bin_details",
-				args: {
-					item_code: this.frm.doc.fabric_item,
-					warehouse: this.frm.doc.fabric_warehouse,
-				},
-				callback: (r) => {
-					if (r.message) {
-						this.frm.set_value("fabric_stock_qty", flt(r.message.actual_qty));
-					}
-				}
-			});
-		} else {
-			this.frm.set_value('fabric_stock_qty', 0);
-		}
-	}
-
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({
@@ -131,7 +143,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 
 	finish_coating_order() {
 		let doc = this.frm.doc;
-		let max = flt(doc.stock_qty) - flt(doc.coated_qty);
+		let [max, max_with_allowance] = this.get_max_coatable_qty(doc);
 
 		let fields = [
 			{
@@ -216,8 +228,8 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 			static: true,
 			primary_action: function() {
 				let data = dialog.get_values();
-				if (flt(data.qty) > max) {
-					frappe.msgprint(__('Quantity can not be more than {0}', [format_number(max)]));
+				if (flt(data.qty) > max_with_allowance) {
+					frappe.msgprint(__('Quantity can not be more than {0}', [format_number(max_with_allowance)]));
 					return;
 				}
 				frappe.call({
@@ -277,6 +289,31 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 				],
 			});
 		}
+	}
+
+	get_max_coatable_qty(doc) {
+		let pending_qty = flt(doc.stock_qty) - flt(doc.coated_qty);
+		let producible_qty_with_allowance = erpnext.manufacturing.get_qty_with_allowance(doc.stock_qty, doc);
+
+		let pending_qty_with_allowance = producible_qty_with_allowance - flt(doc.coated_qty);
+
+		let qty_precision = erpnext.manufacturing.get_work_order_precision();
+		return [flt(pending_qty, qty_precision), flt(pending_qty_with_allowance, qty_precision)];
+	}
+
+	stop_coating_order(status) {
+		return frappe.call({
+			method: "textile.fabric_printing.doctype.coating_order.coating_order.stop_unstop",
+			args: {
+				coating_order: this.frm.doc.name,
+				status: status,
+			},
+			callback: (r) => {
+				if (r.message) {
+					this.frm.reload_doc();
+				}
+			}
+		});
 	}
 };
 
