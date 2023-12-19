@@ -19,7 +19,7 @@
   "column_break_kpcqf",
   "transaction_date",
   "delivery_date",
-  "actual_finish_date",
+  "actual_end_date",
   "naming_series",
   "company",
   "amended_from",
@@ -422,9 +422,9 @@
    "label": "Warehouse"
   },
   {
-   "fieldname": "actual_finish_date",
+   "fieldname": "actual_end_date",
    "fieldtype": "Date",
-   "label": "Actual Finish Date",
+   "label": "Actual End Date",
    "no_copy": 1,
    "read_only": 1
   }
@@ -432,7 +432,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-19 14:07:22.176113",
+ "modified": "2023-12-19 14:56:37.968921",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",
