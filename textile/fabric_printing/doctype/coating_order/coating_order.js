@@ -76,7 +76,6 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		this.get_is_internal_customer();
 	}
 
-
 	fabric_item() {
 		this.get_fabric_stock_qty();
 		this.get_fabric_item_details();

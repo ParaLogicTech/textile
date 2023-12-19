@@ -36,7 +36,6 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
-		this.set_default_fabric_warehouse();
 		this.setup_progressbars();
 	}
 
@@ -392,8 +391,8 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				if (!this.frm.doc[po_warehouse_fn] && warehouse) {
 					this.frm.set_value(po_warehouse_fn, warehouse);
 				}
-
 			}
+			this.set_default_fabric_warehouse();
 		}
 	}
 
@@ -427,14 +426,13 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.get_fabric_stock_qty();
 	}
 
-	coating_item_required() {
+	process_item() {
 		this.set_default_fabric_warehouse();
 	}
 
 	set_default_fabric_warehouse() {
-		if (!this.frm.is_new() || !this.frm.doc.coating_item_required) return;
-
-		let warehouse = frappe.defaults.get_default('default_coating_fg_warehouse');
+		let warehouse_fn = this.frm.doc.coating_item_required ? 'default_coating_fg_warehouse': 'default_printing_fabric_warehouse';
+		let warehouse = frappe.defaults.get_default(warehouse_fn);
 		if (warehouse) {
 			this.frm.set_value("fabric_warehouse", warehouse);
 		}

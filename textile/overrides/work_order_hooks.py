@@ -25,7 +25,7 @@ class WorkOrderDP(WorkOrder):
 		self.update_pretreatment_order()
 		self.update_print_order()
 
-	def update_print_order(self, validate_work_order_qty=False):
+	def update_pretreatment_order(self, validate_work_order_qty=False):
 		if self.get('pretreatment_order') and not frappe.flags.skip_pretreatment_order_status_update:
 			doc = frappe.get_doc("Pretreatment Order", self.pretreatment_order)
 			doc.set_production_packing_status(update=True)
@@ -36,7 +36,7 @@ class WorkOrderDP(WorkOrder):
 			doc.set_status(update=True)
 			doc.notify_update()
 
-	def update_pretreatment_order(self, validate_work_order_qty=False):
+	def update_print_order(self, validate_work_order_qty=False):
 		if self.get('print_order') and self.get('print_order_item') and not frappe.flags.skip_print_order_status_update:
 			doc = frappe.get_doc("Print Order", self.print_order)
 			doc.set_production_packing_status(update=True)
