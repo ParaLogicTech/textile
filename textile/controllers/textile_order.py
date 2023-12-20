@@ -1,13 +1,13 @@
 import frappe
 from frappe import _
 from frappe.utils import getdate, cstr, flt, cint, clean_whitespace
-from erpnext.controllers.status_updater import StatusUpdater
+from erpnext.controllers.status_updater import StatusUpdaterERP
 from erpnext.accounts.party import validate_party_frozen_disabled
 from textile.utils import validate_textile_item, gsm_to_grams, is_internal_customer
 from erpnext.stock.get_item_details import get_bin_details, is_item_uom_convertible
 
 
-class TextileOrder(StatusUpdater):
+class TextileOrder(StatusUpdaterERP):
 	def set_title(self, fabric_material, qty):
 		fabric_material_abbr = None
 		if fabric_material:

@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.stock.get_item_details import is_item_uom_convertible
-from erpnext.controllers.status_updater import OverAllowanceError
+from frappe.utils.status_updater import OverAllowanceError
 from textile.controllers.textile_order import TextileOrder
 from textile.fabric_printing.doctype.print_order.print_order import get_fabric_item_details
 from textile.utils import get_textile_conversion_factors, validate_textile_item
