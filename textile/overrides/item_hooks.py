@@ -140,6 +140,9 @@ class ItemDP(Item):
 			for component_item_field in printing_components:
 				self.set(f"{component_item_field}_required", 0)
 
+		if self.textile_item_type == "Print Process" and self.coating_item_separate_process:
+			self.coating_item_required = 0
+
 		if self.textile_item_type != "Process Component":
 			self.process_component = None
 			self.consumption_by_fabric_weight = 0

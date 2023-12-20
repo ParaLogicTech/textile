@@ -7,10 +7,9 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "title",
   "customer",
   "customer_name",
-  "po_no",
-  "po_date",
   "is_fabric_provided_by_customer",
   "is_internal_customer",
   "column_break_m7kuw",
@@ -18,7 +17,7 @@
   "notes",
   "column_break_kpcqf",
   "transaction_date",
-  "delivery_date",
+  "planned_end_date",
   "actual_end_date",
   "naming_series",
   "company",
@@ -66,6 +65,7 @@
    "in_standard_filter": 1,
    "label": "Customer",
    "options": "Customer",
+   "reqd": 1,
    "search_index": 1
   },
   {
@@ -75,20 +75,6 @@
    "fieldtype": "Data",
    "label": "Customer Name",
    "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "po_no",
-   "fieldtype": "Data",
-   "in_standard_filter": 1,
-   "label": "Customer's Purchase Order Reference"
-  },
-  {
-   "allow_on_submit": 1,
-   "depends_on": "po_no",
-   "fieldname": "po_date",
-   "fieldtype": "Date",
-   "label": "Customer's Purchase Order Date"
   },
   {
    "default": "0",
@@ -127,13 +113,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Order Date",
-   "no_copy": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "delivery_date",
-   "fieldtype": "Date",
-   "label": "Planned Delivery Date",
    "no_copy": 1,
    "reqd": 1
   },
@@ -427,12 +406,27 @@
    "label": "Actual End Date",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "planned_end_date",
+   "fieldtype": "Date",
+   "label": "Planned End Date",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "no_copy": 1,
+   "print_hide": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-19 14:56:37.968921",
+ "modified": "2023-12-20 14:35:09.375422",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",
@@ -495,9 +489,12 @@
    "role": "Packing User"
   }
  ],
- "sort_field": "modified",
+ "search_fields": "customer, customer_name, transaction_date, fabric_item_name, coating_item_name",
+ "sort_field": "transaction_date",
  "sort_order": "DESC",
  "states": [],
+ "timeline_field": "customer",
+ "title_field": "title",
  "track_changes": 1,
  "track_seen": 1
 }

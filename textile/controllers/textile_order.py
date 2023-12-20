@@ -33,6 +33,9 @@ class TextileOrder(StatusUpdaterERP):
 			if self.get("transaction_date") and getdate(self.delivery_date) < getdate(self.transaction_date):
 				frappe.throw(_("Planned Delivery Date cannot be before Order Date"))
 
+			if self.get("planned_end_date") and getdate(self.planned_end_date) < getdate(self.transaction_date):
+				frappe.throw(_("Planned End Date cannot be before Order Date"))
+
 			if self.get("po_date") and getdate(self.delivery_date) < getdate(self.po_date):
 				frappe.throw(_("Planned Delivery Date cannot be before Customer's Purchase Order Date"))
 

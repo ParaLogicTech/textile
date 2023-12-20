@@ -26,7 +26,7 @@ class PrintProcessRule(Document):
 			validate_textile_item(self.process_item, "Print Process")
 
 		for component_item_field, component_type in printing_components.items():
-			if self.get(f"{component_item_field}_required"):
+			if self.get(f"{component_item_field}_required") or self.get(f"{component_item_field}_separate_process"):
 				if self.get(component_item_field):
 					validate_textile_item(self.get(component_item_field), "Process Component", component_type)
 			else:
@@ -135,7 +135,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 	if values.get("process_item"):
 		process_item_doc = frappe.get_cached_doc("Item", values.process_item)
 		for component_item_field in printing_components:
-			if not process_item_doc.get(f"{component_item_field}_required"):
+			if not process_item_doc.get(f"{component_item_field}_required") and not process_item_doc.get(f"{component_item_field}_separate_process"):
 				values.pop(component_item_field, None)
 				values.pop(f"{component_item_field}_name", None)
 

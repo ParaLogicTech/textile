@@ -16,14 +16,15 @@
   "process_details_section",
   "process_item",
   "process_item_name",
-  "coating_item_required",
-  "softener_item_required",
   "column_break_sioio",
   "coating_item",
   "coating_item_name",
+  "coating_item_required",
+  "coating_item_separate_process",
   "column_break_8qvrk",
   "softener_item",
-  "softener_item_name"
+  "softener_item_name",
+  "softener_item_required"
  ],
  "fields": [
   {
@@ -86,7 +87,7 @@
    "fieldname": "coating_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Coating Selection",
+   "label": "Coating Required",
    "read_only": 1
   },
   {
@@ -95,7 +96,7 @@
    "fieldname": "softener_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Softener Selection",
+   "label": "Softener Required",
    "read_only": 1
   },
   {
@@ -103,7 +104,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "coating_item_required",
+   "depends_on": "eval:doc.coating_item_required || doc.coating_item_separate_process",
    "fieldname": "coating_item",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -112,7 +113,7 @@
    "options": "Item"
   },
   {
-   "depends_on": "eval:doc.coating_item_required && doc.coating_item && doc.coating_item_name != doc.coating_item",
+   "depends_on": "eval:(doc.coating_item_required || doc.coating_item_separate_process) && doc.coating_item && doc.coating_item_name != doc.coating_item",
    "fetch_from": "coating_item.item_name",
    "fieldname": "coating_item_name",
    "fieldtype": "Data",
@@ -139,11 +140,20 @@
    "fieldtype": "Data",
    "label": "Softener Item Name",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.coating_item_separate_process",
+   "fieldname": "coating_item_separate_process",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Coating Using Coating Order",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-09-12 23:16:19.736261",
+ "modified": "2023-12-20 14:25:52.016069",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Process Rule",

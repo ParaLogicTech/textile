@@ -18,6 +18,9 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 			let filters = {
 				'textile_item_type': 'Ready Fabric',
 			}
+			if (this.frm.doc.is_fabric_provided_by_customer) {
+				filters.customer = this.frm.doc.customer;
+			}
 			return erpnext.queries.item(filters);
 		});
 
@@ -113,10 +116,10 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({
-				method: "textile.fabric_printing.doctype.print_order.print_order.get_fabric_item_details",
+				method: "textile.fabric_printing.doctype.coating_order.coating_order.get_fabric_item_details",
 				args: {
 					fabric_item: this.frm.doc.fabric_item,
-					get_default_process: 1
+					get_coating_item: 1
 				},
 				callback: (r) => {
 					if (r.message) {
@@ -135,7 +138,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 			},
 			callback: (r) => {
 				if (r.message) {
-					this.frm.set_value(r.message);
+					this.frm.set_value("coating_bom", r.message);
 				}
 			}
 		});

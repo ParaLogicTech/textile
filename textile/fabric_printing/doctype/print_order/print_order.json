@@ -37,22 +37,23 @@
   "process_details_section",
   "process_item",
   "process_item_name",
-  "coating_item_required",
-  "softener_item_required",
-  "sublimation_paper_item_required",
-  "protection_paper_item_required",
   "column_break_o7rkb",
   "coating_item",
   "coating_item_name",
+  "coating_item_required",
+  "coating_item_separate_process",
   "coating_item_by_fabric_weight",
   "sublimation_paper_item",
   "sublimation_paper_item_name",
+  "sublimation_paper_item_required",
   "column_break_nzetq",
   "softener_item",
   "softener_item_name",
+  "softener_item_required",
   "softener_item_by_fabric_weight",
   "protection_paper_item",
   "protection_paper_item_name",
+  "protection_paper_item_required",
   "warehouse_section",
   "fabric_warehouse",
   "column_break_dczul",
@@ -91,7 +92,6 @@
   "fabric_transfer_status",
   "fabric_transfer_qty",
   "section_break_2pbh5",
-  "column_break_rwkru",
   "production_status",
   "per_produced",
   "column_break_r0yyq",
@@ -443,10 +443,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_rwkru",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "per_packed",
    "fieldtype": "Percent",
    "label": "% Packed",
@@ -525,7 +521,7 @@
    "fieldname": "coating_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Coating Selection",
+   "label": "Coating Required",
    "read_only": 1
   },
   {
@@ -534,7 +530,7 @@
    "fieldname": "softener_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Softener Selection",
+   "label": "Softener Required",
    "read_only": 1
   },
   {
@@ -543,7 +539,7 @@
    "fieldname": "sublimation_paper_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Sublimation Paper Selection",
+   "label": "Sublimation Paper Required",
    "read_only": 1
   },
   {
@@ -552,11 +548,11 @@
    "fieldname": "protection_paper_item_required",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Require Protection Paper Selection",
+   "label": "Protection Paper Required",
    "read_only": 1
   },
   {
-   "depends_on": "coating_item_required",
+   "depends_on": "eval:doc.coating_item_required",
    "fieldname": "coating_item",
    "fieldtype": "Link",
    "label": "Coating Item",
@@ -748,12 +744,21 @@
    "fieldtype": "Check",
    "label": "Is Internal Customer",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "process_item.coating_item_separate_process",
+   "fieldname": "coating_item_separate_process",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Coating Using Coating Order",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-18 14:43:06.564087",
+ "modified": "2023-12-20 14:25:40.476013",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

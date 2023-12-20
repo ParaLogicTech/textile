@@ -3,13 +3,11 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from erpnext.stock.get_item_details import is_item_uom_convertible
 from frappe.utils.status_updater import OverAllowanceError
 from textile.controllers.textile_order import TextileOrder
-from textile.fabric_printing.doctype.print_order.print_order import get_fabric_item_details
 from textile.utils import get_textile_conversion_factors, validate_textile_item
-
 import copy
 
 
@@ -34,15 +32,20 @@ class CoatingOrder(TextileOrder):
 		self.validate_fabric_item("Ready Fabric")
 		self.validate_coating_item()
 		self.validate_qty()
+		self.set_default_coating_bom()
 		self.clean_remarks()
 		self.calculate_totals()
-		self.set_default_coating_bom()
 		self.set_coating_status()
 		self.set_status()
+
+		self.set_title(self.fabric_material, self.stock_qty)
 
 	def on_submit(self):
 		self.validate_fabric_attributes()
 		self.validate_uom_convertibility()
+
+	def before_update_after_submit(self):
+		self.validate_dates()
 
 	def set_missing_values(self):
 		self.set_fabric_item_details()
@@ -86,11 +89,10 @@ class CoatingOrder(TextileOrder):
 		self.stock_qty = self.qty * conversion_factor
 
 	def set_default_coating_bom(self):
-		if not self.coating_bom:
-			self.update(get_default_coating_bom(self.coating_item, throw=True))
+		self.coating_bom = get_default_coating_bom(self.coating_item, throw=self.docstatus == 1)
 
 	def set_fabric_item_details(self):
-		details = get_fabric_item_details(self.fabric_item)
+		details = get_fabric_item_details(self.fabric_item, get_coating_item=False)
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -123,11 +125,17 @@ class CoatingOrder(TextileOrder):
 			self.db_set('status', self.status, update_modified=update_modified)
 
 	def set_coating_status(self, update=False, update_modified=True):
-		self.coated_qty, last_stock_entry_date = frappe.db.get_value("Stock Entry", filters={
-			'docstatus': 1,
-			'purpose': 'Manufacture',
-			'coating_order': self.name,
-		}, fieldname=["sum(fg_completed_qty)", "max(posting_date)"])
+		production_data = None
+		if self.docstatus == 1:
+			production_data = frappe.db.sql("""
+				select sum(fg_completed_qty) as coated_qty, max(posting_date) as actual_end_date
+				from `tabStock Entry`
+				where docstatus = 1 and purpose = 'Manufacture' and coating_order = %s
+			""", self.name, as_dict=1)
+
+		self.coated_qty = flt(production_data[0].coated_qty) if production_data else 0
+		last_stock_entry_date = flt(production_data[0].actual_end_date) if production_data else 0
+
 		self.per_coated = flt(self.coated_qty / self.stock_qty * 100 if self.stock_qty else 0, 3)
 
 		# Set coating status
@@ -170,21 +178,41 @@ class CoatingOrder(TextileOrder):
 
 
 @frappe.whitelist()
+def get_fabric_item_details(fabric_item, get_coating_item=True):
+	from textile.utils import get_fabric_item_details
+	from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values
+
+	out = get_fabric_item_details(fabric_item)
+
+	out.coating_item = None
+	out.coating_item_name = None
+	if fabric_item and cint(get_coating_item):
+		print_process_defaults = get_print_process_values(fabric_item)
+		out.coating_item = print_process_defaults.coating_item
+		out.coating_item_name = print_process_defaults.coating_item_name
+
+	return out
+
+
+@frappe.whitelist()
 def get_default_coating_bom(coating_item, throw=False):
-	filters = {"item": coating_item, "is_default": 1}
-	coating_bom = frappe.db.get_value("BOM", filters)
+	coating_bom = None
 
-	if not coating_bom:
-		variant_of = frappe.db.get_value("Item", coating_item, "variant_of")
+	if coating_item:
+		filters = {"item": coating_item, "is_default": 1}
+		coating_bom = frappe.db.get_value("BOM", filters)
 
-		if variant_of:
-			filters['item'] = variant_of
-			coating_bom = frappe.db.get_value("BOM", filters)
+		if not coating_bom:
+			variant_of = frappe.db.get_value("Item", coating_item, "variant_of")
 
-	if not coating_bom and throw:
+			if variant_of:
+				filters['item'] = variant_of
+				coating_bom = frappe.db.get_value("BOM", filters)
+
+	if not coating_bom and cint(throw):
 		frappe.throw(_("Default BOM for {0} not found").format(frappe.get_desk_link("Item", coating_item)))
 
-	return {'coating_bom': coating_bom}
+	return coating_bom
 
 
 @frappe.whitelist()

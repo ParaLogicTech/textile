@@ -161,6 +161,7 @@ fixtures = [
 				'Item-softener_item_required',
 				'Item-column_break_wdop0',
 				'Item-coating_item_required',
+				'Item-coating_item_separate_process',
 				'Item-column_break_ceseq',
 				'Item-sublimation_paper_item_required',
 				'Item-column_break_0brhk',

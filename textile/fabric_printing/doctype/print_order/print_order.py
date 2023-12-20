@@ -22,7 +22,11 @@ default_fields_map = {
 
 force_customer_fields = ["customer_name"]
 force_fabric_fields = ["fabric_item_name", "fabric_material", "fabric_type", "fabric_width", "fabric_gsm", "fabric_per_pickup"]
-force_process_fields = ["process_item_name"] + [f"{component_item_field}_required" for component_item_field in printing_components]
+force_process_fields = (
+	["process_item_name"]
+	+ [f"{component_item_field}_required" for component_item_field in printing_components]
+	+ [f"{component_item_field}_separate_process" for component_item_field in printing_components]
+)
 force_process_component_fields = (
 	[f"{component_item_field}_name" for component_item_field in printing_components]
 	+ [f"{component_item_field}_by_fabric_weight" for component_item_field in printing_components]
@@ -1373,6 +1377,7 @@ def get_default_print_process(fabric_item):
 		out[component_item_field] = None
 		out[f"{component_item_field}_name"] = None
 		out[f"{component_item_field}_required"] = 0
+		out[f"{component_item_field}_separate_process"] = 0
 
 	# Set process and component from rules
 	print_process_defaults = get_print_process_values(fabric_doc.name)
@@ -1393,6 +1398,7 @@ def get_process_item_details(process_item, fabric_item=None, get_default_paper=T
 
 	for component_item_field in printing_components:
 		out[f"{component_item_field}_required"] = process_doc.get(f"{component_item_field}_required")
+		out[f"{component_item_field}_separate_process"] = process_doc.get(f"{component_item_field}_separate_process")
 
 	if fabric_item and process_item and cint(get_default_paper):
 		out.update(get_default_paper_items(fabric_item, process_item))
