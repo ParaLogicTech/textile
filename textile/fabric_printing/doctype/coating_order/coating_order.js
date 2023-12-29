@@ -271,7 +271,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 				frm: me.frm,
 				as_html: !me.frm,
 				title: __('Coating Status'),
-				total_qty: me.frm.doc.qty,
+				total_qty: me.frm.doc.stock_qty,
 				progress_bars: [
 					{
 						title: __("<b>Coated:</b> {0} / {1} {2} ({3}%)", [
