@@ -22,6 +22,8 @@ class FabricPrintingSummary:
 			"no_of_orders_delivered",
 			"delivered_qty",
 			"fabrics_created",
+			"customer_fabric_qty",
+			"own_fabric_qty",
 		]
 
 	zero_fields = frappe._dict({field: 0 for field in sum_fields})
@@ -128,6 +130,18 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
+		self.total_fabric_qty_data = frappe.db.sql("""
+			SELECT fabric_material,
+				SUM(CASE WHEN is_customer_provided_item = 1 THEN sle.actual_qty ELSE 0 END) AS customer_fabric_qty,
+				SUM(CASE WHEN is_customer_provided_item = 0 THEN sle.actual_qty ELSE 0 END) AS own_fabric_qty
+			FROM `tabStock Ledger Entry` sle
+			INNER JOIN  `tabItem` i ON i.name = sle.item_code
+			WHERE textile_item_type IN ('Ready Fabric', 'Greige Fabric')
+				AND posting_date <= %s
+			GROUP BY i.fabric_material
+		""", [self.filters.to_date], as_dict=1)
+
+
 	def get_grouped_data(self):
 		data_bank = [
 			self.order_data,
@@ -136,6 +150,7 @@ class FabricPrintingSummary:
 			self.packing_data,
 			self.delivery_data,
 			self.fabrics_created,
+			self.total_fabric_qty_data,
 		]
 
 		self.grouped_data = {}
@@ -282,6 +297,18 @@ class FabricPrintingSummary:
 				"fieldtype": "Link",
 				"options": "Customer",
 				"width": 200,
+			},
+			{
+				"label": _("Customer Fabric Qty"),
+				"fieldname": "customer_fabric_qty",
+				"fieldtype": "Float",
+				"width": 140,
+			},
+			{
+				"label": _("Own Fabric Qty"),
+				"fieldname": "own_fabric_qty",
+				"fieldtype": "Float",
+				"width": 140,
 			},
 		]
 
