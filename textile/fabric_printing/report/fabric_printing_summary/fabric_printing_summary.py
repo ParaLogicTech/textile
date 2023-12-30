@@ -24,6 +24,7 @@ class FabricPrintingSummary:
 			"fabrics_created",
 			"customer_fabric_qty",
 			"own_fabric_qty",
+			"total_fabric_qty",
 		]
 
 	zero_fields = frappe._dict({field: 0 for field in sum_fields})
@@ -130,17 +131,31 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
-		self.total_fabric_qty_data = frappe.db.sql("""
-			SELECT fabric_material,
-				SUM(CASE WHEN is_customer_provided_item = 1 THEN sle.actual_qty ELSE 0 END) AS customer_fabric_qty,
-				SUM(CASE WHEN is_customer_provided_item = 0 THEN sle.actual_qty ELSE 0 END) AS own_fabric_qty
-			FROM `tabStock Ledger Entry` sle
-			INNER JOIN  `tabItem` i ON i.name = sle.item_code
-			WHERE textile_item_type IN ('Ready Fabric', 'Greige Fabric')
-				AND posting_date <= %s
-			GROUP BY i.fabric_material
-		""", [self.filters.to_date], as_dict=1)
+		wip_warehouses = []
 
+		printing_wip_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_printing_wip_warehouse")
+		if printing_wip_warehouse:
+			wip_warehouses.append(printing_wip_warehouse)
+
+		pretreatment_wip_warehouse = frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_wip_warehouse")
+		if pretreatment_wip_warehouse:
+			wip_warehouses.append(pretreatment_wip_warehouse)
+
+		wip_warehouse_condition = ""
+		if wip_warehouses:
+			wip_warehouse_condition = " and sle.warehouse not in %(wip_warehouses)s"
+
+		self.total_fabric_qty_data = frappe.db.sql(f"""
+			SELECT i.fabric_material,
+				SUM(CASE WHEN is_customer_provided_item = 1 THEN sle.actual_qty ELSE 0 END) AS customer_fabric_qty,
+				SUM(CASE WHEN is_customer_provided_item = 0 THEN sle.actual_qty ELSE 0 END) AS own_fabric_qty,
+				SUM(sle.actual_qty) AS total_fabric_qty
+			FROM `tabStock Ledger Entry` sle
+			INNER JOIN `tabItem` i ON i.name = sle.item_code
+			WHERE i.textile_item_type IN ('Ready Fabric', 'Greige Fabric') AND sle.posting_date <= %(to_date)s
+				{wip_warehouse_condition}
+			GROUP BY i.fabric_material
+		""", {"to_date": self.filters.to_date, "wip_warehouses": wip_warehouses}, as_dict=1)
 
 	def get_grouped_data(self):
 		data_bank = [
@@ -267,6 +282,24 @@ class FabricPrintingSummary:
 				"width": 105
 			},
 			{
+				"label": _("Total Fabric Stock"),
+				"fieldname": "total_fabric_qty",
+				"fieldtype": "Float",
+				"width": 115,
+			},
+			{
+				"label": _("Customer Fabric Stock"),
+				"fieldname": "customer_fabric_qty",
+				"fieldtype": "Float",
+				"width": 135,
+			},
+			{
+				"label": _("Own Fabric Stock"),
+				"fieldname": "own_fabric_qty",
+				"fieldtype": "Float",
+				"width": 110,
+			},
+			{
 				"label": _("Fabrics Created"),
 				"fieldname": "fabrics_created",
 				"fieldtype": "Int",
@@ -297,18 +330,6 @@ class FabricPrintingSummary:
 				"fieldtype": "Link",
 				"options": "Customer",
 				"width": 200,
-			},
-			{
-				"label": _("Customer Fabric Qty"),
-				"fieldname": "customer_fabric_qty",
-				"fieldtype": "Float",
-				"width": 140,
-			},
-			{
-				"label": _("Own Fabric Qty"),
-				"fieldname": "own_fabric_qty",
-				"fieldtype": "Float",
-				"width": 140,
 			},
 		]
 
