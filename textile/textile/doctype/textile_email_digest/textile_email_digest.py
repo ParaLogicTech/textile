@@ -7,6 +7,7 @@ from frappe import _, STANDARD_USERS
 from frappe.utils import cint, cstr, getdate, get_datetime, add_days, validate_email_address
 from textile.fabric_printing.report.fabric_printing_summary.fabric_printing_summary import FabricPrintingSummary
 from textile.utils import get_rotated_image
+from urllib.parse import quote
 
 
 class TextileEmailDigest(Document):
@@ -80,16 +81,13 @@ class TextileEmailDigest(Document):
 		if not self.email_template:
 			frappe.throw(_("Please set Email Template first"))
 
-		context = self.get_context(date=date)
+		context = self.get_context(date=date, for_preview=True)
 		email_template = frappe.get_cached_doc("Email Template", self.email_template)
 		formatted_template = email_template.get_formatted_email(context)
 
-		if "embed=" in formatted_template["message"]:
-			formatted_template["message"] = formatted_template["message"].replace("embed=", "src=")
-
 		return formatted_template
 
-	def get_context(self, date=None):
+	def get_context(self, date=None, for_preview=False):
 		context = frappe._dict({})
 
 		if not date:
@@ -108,9 +106,15 @@ class TextileEmailDigest(Document):
 		filters["from_date"] = filters["to_date"]
 		context["daily_by_material"], context["daily_totals"] = FabricPrintingSummary(filters).get_data_for_digest()
 
-		if context.daily_totals.most_produced_item:
-			context.daily_totals["most_produced_item_image_rotated"] = get_rotated_image(
-				context.daily_totals.most_produced_item_image, get_path=True) if context.daily_totals.most_produced_item_image else None
+		if context.daily_totals.most_produced_item and context.daily_totals.most_produced_item_image:
+			if for_preview:
+				context.daily_totals["most_produced_item_image_rotated"] = "/api/method/textile.utils.get_rotated_image?file={0}".format(
+					quote(context.daily_totals.most_produced_item_image)
+				)
+				context.daily_totals["most_produced_item_image_src"] = f"src='{context.daily_totals.most_produced_item_image_rotated}'"
+			else:
+				context.daily_totals["most_produced_item_image_rotated"] = get_rotated_image(context.daily_totals.most_produced_item_image, get_path=True)
+				context.daily_totals["most_produced_item_image_src"] = f"embed='{context.daily_totals.most_produced_item_image_rotated}'"
 
 		return context
 
