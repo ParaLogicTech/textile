@@ -11,7 +11,7 @@ def execute(filters=None):
 
 
 class FabricPrintingSummary:
-	sum_fields = [
+	transaction_fields = [
 			"received_qty",
 			"no_of_orders",
 			"ordered_qty",
@@ -21,6 +21,9 @@ class FabricPrintingSummary:
 			"packed_qty",
 			"no_of_orders_delivered",
 			"delivered_qty",
+		]
+
+	sum_fields = transaction_fields + [
 			"fabrics_created",
 			"customer_fabric_qty",
 			"own_fabric_qty",
@@ -193,6 +196,14 @@ class FabricPrintingSummary:
 		for d in self.grouped_data.values():
 			for f in self.sum_fields:
 				totals_row[f] += d[f]
+
+		totals_row.has_transactions = False
+		for d in self.grouped_data.values():
+			if not totals_row.has_transactions:
+				for key in self.transaction_fields:
+					if d.get(key):
+						totals_row.has_transactions = True
+						break
 
 		if self.most_produced_items.get(None):
 			totals_row.update(self.most_produced_items.get(None))
