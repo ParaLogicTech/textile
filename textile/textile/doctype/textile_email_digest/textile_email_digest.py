@@ -76,23 +76,27 @@ class TextileEmailDigest(Document):
 		)
 
 	@frappe.whitelist()
-	def get_preview_html(self):
+	def get_preview_html(self, date=None):
 		if not self.email_template:
 			frappe.throw(_("Please set Email Template first"))
 
-		context = self.get_context()
+		context = self.get_context(date=date)
 		email_template = frappe.get_cached_doc("Email Template", self.email_template)
 		formatted_template = email_template.get_formatted_email(context)
 
 		return formatted_template
 
-	def get_context(self):
+	def get_context(self, date=None):
 		context = frappe._dict({})
-		yesterday = add_days(getdate(), -1)
+
+		if not date:
+			date = add_days(getdate(), -1)
+
+		date = getdate(date)
 
 		filters = {
-			"from_date": yesterday.replace(day=1),
-			"to_date": yesterday,
+			"from_date": date.replace(day=1),
+			"to_date": date,
 		}
 		context.update(filters)
 

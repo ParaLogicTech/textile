@@ -16,20 +16,27 @@ frappe.ui.form.on('Textile Email Digest', {
 	},
 
 	preview: function(frm) {
-		frm.call({
-			method: "get_preview_html",
-			doc: frm.doc,
-			callback: (r) => {
-				const fields = [{
-					fieldname: "preview_html", fieldtype: "HTML", options: r.message.message
-				}];
+		frappe.prompt([{
+			label: __("Date"), fieldname: "date", fieldtype: "Date", default: "Today",
+		}], (r) => {
+			frm.call({
+				method: "get_preview_html",
+				doc: frm.doc,
+				args: {
+					date: r.date,
+				},
+				callback: (r) => {
+					const fields = [{
+						fieldname: "preview_html", fieldtype: "HTML", options: r.message.message
+					}];
 
-				let dialog = new frappe.ui.Dialog({
-					title: r.message.subject, fields: fields, size: "medium",
-				});
-				dialog.show();
-			}
-		});
+					let dialog = new frappe.ui.Dialog({
+						title: r.message.subject, fields: fields, size: "medium",
+					});
+					dialog.show();
+				}
+			});
+		}, __("Select Reporting Date"));
 	},
 
 	addremove_recipients: function(frm) {
