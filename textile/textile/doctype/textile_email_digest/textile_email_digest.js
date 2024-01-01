@@ -3,7 +3,8 @@
 
 frappe.ui.form.on('Textile Email Digest', {
 	refresh: function(frm) {
-		me.frm.add_custom_button(__("Send Now"), () => frm.trigger('send_now'));
+		frm.add_custom_button(__("Send Now"), () => frm.trigger('send_now'));
+		frm.add_custom_button(__("Preview"), () => frm.trigger('preview'));
 	},
 
 	send_now: function(frm) {
@@ -11,6 +12,23 @@ frappe.ui.form.on('Textile Email Digest', {
 			method: "send",
 			doc: frm.doc,
 			freeze: 1,
+		});
+	},
+
+	preview: function(frm) {
+		frm.call({
+			method: "get_preview_html",
+			doc: frm.doc,
+			callback: (r) => {
+				const fields = [{
+					fieldname: "preview_html", fieldtype: "HTML", options: r.message.message
+				}];
+
+				let dialog = new frappe.ui.Dialog({
+					title: r.message.subject, fields: fields, size: "medium",
+				});
+				dialog.show();
+			}
 		});
 	},
 

@@ -75,6 +75,17 @@ class TextileEmailDigest(Document):
 			unsubscribe_message=_("Unsubscribe"),
 		)
 
+	@frappe.whitelist()
+	def get_preview_html(self):
+		if not self.email_template:
+			frappe.throw(_("Please set Email Template first"))
+
+		context = self.get_context()
+		email_template = frappe.get_cached_doc("Email Template", self.email_template)
+		formatted_template = email_template.get_formatted_email(context)
+
+		return formatted_template
+
 	def get_context(self):
 		context = frappe._dict({})
 		yesterday = add_days(getdate(), -1)
