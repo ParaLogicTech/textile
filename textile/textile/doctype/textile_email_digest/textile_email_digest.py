@@ -84,6 +84,9 @@ class TextileEmailDigest(Document):
 		email_template = frappe.get_cached_doc("Email Template", self.email_template)
 		formatted_template = email_template.get_formatted_email(context)
 
+		if "embed=" in formatted_template["message"]:
+			formatted_template["message"] = formatted_template["message"].replace("embed=", "src=")
+
 		return formatted_template
 
 	def get_context(self, date=None):
