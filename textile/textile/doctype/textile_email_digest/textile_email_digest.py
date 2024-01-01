@@ -58,7 +58,7 @@ class TextileEmailDigest(Document):
 
 		context = self.get_context()
 
-		if is_background and self.do_not_send_if_no_transaction and not context.get("daily_by_material"):
+		if is_background and self.do_not_send_if_no_transaction and not context.get("daily_totals", {}).get("has_transactions"):
 			return
 
 		email_template = frappe.get_cached_doc("Email Template", self.email_template)
