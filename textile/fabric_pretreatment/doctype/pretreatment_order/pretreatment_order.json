@@ -56,14 +56,15 @@
   "bleaching_item",
   "bleaching_item_name",
   "bleaching_item_by_fabric_weight",
+  "settings_tab",
   "warehouse_section",
   "fabric_warehouse",
-  "column_break_prxxl",
   "source_warehouse",
-  "column_break_6wauy",
+  "column_break_prxxl",
   "wip_warehouse",
-  "column_break_2iwkk",
   "fg_warehouse",
+  "more_information_section",
+  "cost_center",
   "tab_status",
   "status",
   "column_break_zltke",
@@ -305,7 +306,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "collapsible": 1,
    "fieldname": "warehouse_section",
    "fieldtype": "Section Break",
    "label": "Warehouse"
@@ -318,19 +318,11 @@
    "reqd": 1
   },
   {
-   "fieldname": "column_break_6wauy",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "wip_warehouse",
    "fieldtype": "Link",
    "label": "Work In Progress Warehouse",
    "options": "Warehouse",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_2iwkk",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "fg_warehouse",
@@ -659,12 +651,28 @@
    "label": "Subcontractable Qty",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "more_information_section",
+   "fieldtype": "Section Break",
+   "label": "More Information"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-18 19:34:22.868213",
+ "modified": "2024-01-03 12:43:32.738554",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

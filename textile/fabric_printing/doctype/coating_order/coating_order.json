@@ -39,18 +39,21 @@
   "coating_item_name",
   "column_break_iaijf",
   "coating_bom",
-  "warehouse_section",
-  "fabric_warehouse",
-  "column_break_w1vrx",
-  "source_warehouse",
-  "column_break_eexdg",
-  "fg_warehouse",
   "quantity_section",
   "qty",
   "stock_qty",
   "column_break_nfyea",
   "uom",
   "stock_uom",
+  "settings_tab",
+  "warehouse_section",
+  "fabric_warehouse",
+  "column_break_w1vrx",
+  "source_warehouse",
+  "column_break_eexdg",
+  "fg_warehouse",
+  "section_break_i32hq",
+  "cost_center",
   "status_tab",
   "status",
   "section_break_4xwhq",
@@ -395,7 +398,6 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "warehouse_section",
    "fieldtype": "Section Break",
    "label": "Warehouse"
@@ -421,12 +423,27 @@
    "label": "Title",
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "section_break_i32hq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-20 14:35:09.375422",
+ "modified": "2024-01-03 12:45:27.576298",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",

@@ -92,11 +92,17 @@ class PrintOrder(TextileOrder):
 		self.update_status_on_cancel()
 
 	def set_missing_values(self, get_default_process=False):
+		self.set_default_cost_center()
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
 		self.set_fabric_item_details(get_default_process=get_default_process)
 		self.set_process_item_details()
 		self.set_process_component_details()
+
+	def set_default_cost_center(self):
+		if not self.get("cost_center"):
+			self.cost_center = frappe.db.get_single_value("Fabric Printing Settings",
+			"default_printing_cost_center")
 
 	def attach_unlinked_item_images(self):
 		filters = {
@@ -454,6 +460,7 @@ class PrintOrder(TextileOrder):
 				"production_qty": pending_qty,
 				"customer": self.customer,
 				"customer_name": self.customer_name,
+				"cost_center": self.get("cost_center"),
 			}
 
 			wo_list += create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
@@ -859,6 +866,9 @@ class PrintOrder(TextileOrder):
 			"default_material_request_type": "Manufacture",
 		})
 
+		if item_doc.meta.has_field("cost_center") and self.get("cost_center"):
+			item_doc.cost_center = self.get("cost_center")
+
 		item_doc.append("uom_conversion_graph", {
 			"from_uom": "Panel",
 			"from_qty": 1,
@@ -881,6 +891,9 @@ class PrintOrder(TextileOrder):
 			"item": design_item_row.item_code,
 			"quantity": 1,
 		})
+
+		if bom_doc.meta.has_field("cost_center") and self.get("cost_center"):
+			bom_doc.cost_center = self.get("cost_center")
 
 		self.validate_item_convertible_to_uom(self.fabric_item, "Meter")
 		bom_doc.append("items", {
@@ -1129,6 +1142,9 @@ def make_sales_order(source_name, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	def set_missing_values(source, target):
+		if target.meta.has_field("cost_center") and source.get("cost_center"):
+			target.cost_center = source.get("cost_center")
+
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
 		target.run_method("set_payment_schedule")
@@ -1214,6 +1230,9 @@ def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit
 	row.uom = "Meter"
 
 	stock_entry.set_stock_entry_type()
+
+	if stock_entry.meta.has_field("cost_center") and doc.get("cost_center"):
+		stock_entry.cost_center = doc.get("cost_center")
 
 	if not for_submit:
 		stock_entry.run_method("set_missing_values")

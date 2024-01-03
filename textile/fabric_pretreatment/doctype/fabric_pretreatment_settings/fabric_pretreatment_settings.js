@@ -6,5 +6,13 @@ frappe.ui.form.on('Fabric Pretreatment Settings', {
 		erpnext.queries.setup_queries(frm, "Warehouse", function(fieldname) {
 			return erpnext.queries.warehouse(frm.doc);
 		});
+
+		frm.set_query("default_pretreatment_cost_center", function(doc) {
+			return {
+				filters: {
+					"is_group": 0
+				}
+			};
+		});
 	}
 });

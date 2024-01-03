@@ -54,14 +54,6 @@
   "protection_paper_item",
   "protection_paper_item_name",
   "protection_paper_item_required",
-  "warehouse_section",
-  "fabric_warehouse",
-  "column_break_dczul",
-  "source_warehouse",
-  "column_break_6wauy",
-  "wip_warehouse",
-  "column_break_2iwkk",
-  "fg_warehouse",
   "order_defaults_section",
   "default_uom",
   "column_break_zafpu",
@@ -82,6 +74,15 @@
   "total_fabric_length",
   "column_break_ufxoo",
   "total_panel_qty",
+  "settings_tab",
+  "warehouse_section",
+  "fabric_warehouse",
+  "source_warehouse",
+  "column_break_dczul",
+  "wip_warehouse",
+  "fg_warehouse",
+  "more_information_section",
+  "cost_center",
   "tab_status",
   "status",
   "items_created",
@@ -458,19 +459,11 @@
    "label": "Packing Slip Required for Delivery"
   },
   {
-   "fieldname": "column_break_6wauy",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "wip_warehouse",
    "fieldtype": "Link",
    "label": "Work In Progress Warehouse",
    "options": "Warehouse",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_2iwkk",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "source_warehouse",
@@ -496,7 +489,6 @@
    "reqd": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "warehouse_section",
    "fieldtype": "Section Break",
    "label": "Warehouse"
@@ -753,12 +745,28 @@
    "hidden": 1,
    "label": "Coating Using Coating Order",
    "read_only": 1
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "more_information_section",
+   "fieldtype": "Section Break",
+   "label": "More Information"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-12-20 14:25:40.476013",
+ "modified": "2024-01-03 12:40:20.569180",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

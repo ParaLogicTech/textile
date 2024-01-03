@@ -18,6 +18,15 @@ textile.TextileOrder = class TextileOrder extends frappe.ui.form.Controller {
 				return erpnext.queries.warehouse(this.frm.doc);
 			});
 		}
+
+		this.frm.set_query('cost_center', () => {
+			return {
+				filters: {
+					"company": this.frm.doc.company,
+					"is_group": 0
+				}
+			};
+		});
 	}
 
 	get_is_internal_customer() {

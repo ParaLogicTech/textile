@@ -135,7 +135,13 @@ class PretreatmentOrder(TextileOrder):
 		return self.flags.disallow_on_submit or []
 
 	def set_missing_values(self):
+		self.set_default_cost_center()
 		self.set_fabric_item_details()
+
+	def set_default_cost_center(self):
+		if not self.get("cost_center"):
+			self.cost_center = frappe.db.get_single_value("Fabric Pretreatment Settings",
+			"default_pretreatment_cost_center")
 
 	def set_fabric_item_details(self):
 		ready_details = get_fabric_item_details(self.greige_fabric_item, prefix="greige_", get_default_process=False)
@@ -297,6 +303,9 @@ class PretreatmentOrder(TextileOrder):
 			"quantity": 1,
 		})
 
+		if bom_doc.meta.has_field("cost_center") and self.get("cost_center"):
+			bom_doc.cost_center = self.get("cost_center")
+
 		self.validate_item_convertible_to_uom(self.greige_fabric_item, "Meter")
 		bom_doc.append("items", {
 			"item_code": self.greige_fabric_item,
@@ -410,6 +419,7 @@ class PretreatmentOrder(TextileOrder):
 			"production_qty": pending_qty,
 			"customer": self.customer,
 			"customer_name": self.customer_name,
+			"cost_center": self.get("cost_center"),
 		}
 
 		return create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
@@ -900,6 +910,9 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			row = frappe.new_doc("Sales Order Item")
 			update_item(row, source, target)
 			target.append("items", row)
+
+		if target.meta.has_field("cost_center") and source.get("cost_center"):
+			target.cost_center = source.get("cost_center")
 
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")

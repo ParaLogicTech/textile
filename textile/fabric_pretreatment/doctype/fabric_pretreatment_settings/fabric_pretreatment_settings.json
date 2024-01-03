@@ -8,11 +8,14 @@
  "engine": "InnoDB",
  "field_order": [
   "default_package_type_for_ready_fabrics",
+  "column_break_5r6mx",
+  "default_pretreatment_cost_center",
   "singeing_mandatory",
   "desizing_mandatory",
-  "column_break_yc3wg",
+  "section_break_h7i6g",
   "default_pretreatment_fabric_warehouse",
   "default_pretreatment_source_warehouse",
+  "column_break_yc3wg",
   "default_pretreatment_wip_warehouse",
   "default_pretreatment_fg_warehouse"
  ],
@@ -62,12 +65,26 @@
    "fieldtype": "Link",
    "label": "Default Greige Fabric Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "section_break_h7i6g",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_5r6mx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_pretreatment_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Pretreatment Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-09-12 13:55:17.953935",
+ "modified": "2024-01-03 11:34:41.388583",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment Settings",

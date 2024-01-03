@@ -14,7 +14,8 @@ class FabricPretreatmentSettings(Document):
 			"default_pretreatment_fabric_warehouse",
 			"default_pretreatment_source_warehouse",
 			"default_pretreatment_wip_warehouse",
-			"default_pretreatment_fg_warehouse"
+			"default_pretreatment_fg_warehouse",
+			"default_pretreatment_cost_center",
 		]
 
 		for fn in global_default_fields:

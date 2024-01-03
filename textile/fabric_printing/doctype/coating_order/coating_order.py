@@ -48,7 +48,13 @@ class CoatingOrder(TextileOrder):
 		self.validate_dates()
 
 	def set_missing_values(self):
+		self.set_default_cost_center()
 		self.set_fabric_item_details()
+
+	def set_default_cost_center(self):
+		if not self.get("cost_center"):
+			self.cost_center = frappe.db.get_single_value("Fabric Printing Settings",
+			"default_printing_cost_center")
 
 	def validate_coating_item(self):
 		validate_textile_item(self.coating_item, "Process Component", "Coating")
@@ -235,17 +241,20 @@ def stop_unstop(coating_order, status):
 
 @frappe.whitelist()
 def make_stock_entry_from_coating_order(coating_order_id, qty):
-	caoting_order_doc = frappe.get_doc("Coating Order", coating_order_id)
+	coating_order_doc = frappe.get_doc("Coating Order", coating_order_id)
 	stock_entry = frappe.new_doc("Stock Entry")
 
 	stock_entry.purpose = "Manufacture"
-	stock_entry.company = caoting_order_doc.company
-	stock_entry.coating_order = caoting_order_doc.name
-	stock_entry.bom_no = caoting_order_doc.coating_bom
+	stock_entry.company = coating_order_doc.company
+	stock_entry.coating_order = coating_order_doc.name
+	stock_entry.bom_no = coating_order_doc.coating_bom
 	stock_entry.from_bom = 1
 	stock_entry.use_multi_level_bom = 1
 	stock_entry.fg_completed_qty = flt(qty)
-	stock_entry.to_warehouse = caoting_order_doc.fg_warehouse
+	stock_entry.to_warehouse = coating_order_doc.fg_warehouse
+
+	if coating_order_doc.get("cost_center"):
+		stock_entry.cost_center = coating_order_doc.get("cost_center")
 
 	stock_entry.set_stock_entry_type()
 	stock_entry.get_items()
@@ -258,7 +267,7 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 			frappe.msgprint(_("{0} submitted successfully for Coating ({1} {2})").format(
 				frappe.get_desk_link("Stock Entry", ste_copy.name),
 				stock_entry.get_formatted("fg_completed_qty"),
-				caoting_order_doc.stock_uom,
+				coating_order_doc.stock_uom,
 			), indicator="green")
 
 		except OverAllowanceError:

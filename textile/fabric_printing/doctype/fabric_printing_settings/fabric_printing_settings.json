@@ -9,13 +9,17 @@
  "field_order": [
   "default_item_group_for_printed_design_item",
   "default_package_type_for_printed_fabrics",
+  "column_break_qidqn",
+  "default_printing_cost_center",
   "wastage_mandatory",
-  "column_break_ao9pt",
+  "warehouse_section",
   "default_printing_fabric_warehouse",
   "default_printing_source_warehouse",
+  "column_break_ao9pt",
   "default_printing_wip_warehouse",
-  "default_printing_fg_warehouse",
-  "default_coating_fg_warehouse"
+  "default_coating_fg_warehouse",
+  "column_break_s3mwh",
+  "default_printing_fg_warehouse"
  ],
  "fields": [
   {
@@ -69,12 +73,31 @@
    "fieldtype": "Link",
    "label": "Default Coated Fabric Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break",
+   "label": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_s3mwh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_qidqn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_printing_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Printing Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-12-18 13:22:21.215433",
+ "modified": "2024-01-03 11:33:39.143581",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",

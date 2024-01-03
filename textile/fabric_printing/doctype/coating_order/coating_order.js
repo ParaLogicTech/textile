@@ -8,6 +8,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		super.refresh();
 		this.setup_buttons();
 		this.set_default_warehouse();
+		this.set_default_cost_center();
 		this.show_progress_for_coating();
 	}
 
@@ -67,6 +68,15 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 					this.frm.set_value(co_warehouse_fn, warehouse);
 				}
 
+			}
+		}
+	}
+
+	set_default_cost_center() {
+		if (this.frm.is_new()) {
+			let default_cost_center = frappe.defaults.get_default("default_printing_cost_center");
+			if (default_cost_center && !this.frm.doc.cost_center) {
+			this.frm.set_value("cost_center", default_cost_center);
 			}
 		}
 	}

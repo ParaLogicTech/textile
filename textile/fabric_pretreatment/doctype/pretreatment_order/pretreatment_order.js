@@ -22,6 +22,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		this.setup_buttons();
 		this.setup_route_options();
 		this.set_default_warehouse();
+		this.set_default_cost_center();
 		this.frm.trigger('set_disallow_on_submit_fields_read_only');
 		this.setup_progressbars();
 	}
@@ -181,6 +182,15 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				if (!this.frm.doc[order_field] && warehouse) {
 					this.frm.set_value(order_field, warehouse);
 				}
+			}
+		}
+	}
+
+	set_default_cost_center() {
+		if (this.frm.is_new()) {
+			let default_cost_center = frappe.defaults.get_default("default_pretreatment_cost_center");
+			if (default_cost_center && !this.frm.doc.cost_center) {
+				this.frm.set_value("cost_center", default_cost_center);
 			}
 		}
 	}
