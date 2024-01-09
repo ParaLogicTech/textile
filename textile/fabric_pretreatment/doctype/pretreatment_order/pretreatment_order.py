@@ -586,7 +586,8 @@ class PretreatmentOrder(TextileOrder):
 
 		within_allowance = self.per_ordered >= 100 and self.per_delivered > 0 and not data.has_incomplete_delivery
 		self.delivery_status = self.get_completion_status('per_delivered', 'Deliver',
-			not_applicable=not self.delivery_required or self.status == "Closed", within_allowance=within_allowance)
+			not_applicable=not self.delivery_required or self.status == "Closed" or (not self.per_ordered and not self.per_work_ordered),
+			within_allowance=within_allowance)
 
 		if update:
 			self.db_set({
