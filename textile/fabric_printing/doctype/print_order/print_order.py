@@ -56,6 +56,7 @@ class PrintOrder(TextileOrder):
 
 	def validate(self):
 		self.set_missing_values()
+		self.set_skip_transfer()
 		self.validate_dates()
 		self.validate_customer()
 		self.validate_pretreatment_order()
@@ -173,6 +174,9 @@ class PrintOrder(TextileOrder):
 			new_values_to_update[customer_fn] = self.get(print_order_fn)
 
 		frappe.db.set_value("Customer", self.customer, new_values_to_update, notify=True)
+
+	def set_skip_transfer(self):
+		self.skip_transfer = cint(self.coating_item_separate_process)
 
 	def update_status_on_cancel(self):
 		self.db_set({
@@ -550,7 +554,7 @@ class PrintOrder(TextileOrder):
 		self.fabric_transfer_qty = self.get_fabric_transfer_qty()
 		rounded_transfer_qty = flt(self.fabric_transfer_qty, self.precision("fabric_transfer_qty"))
 
-		if self.status == "Closed" and rounded_transfer_qty <= 0:
+		if self.skip_transfer or (self.status == "Closed" and rounded_transfer_qty <= 0):
 			self.fabric_transfer_status = "Not Applicable"
 		elif rounded_transfer_qty >= self.total_print_length or self.status == "Closed":
 			self.fabric_transfer_status = "Transferred"
@@ -739,7 +743,7 @@ class PrintOrder(TextileOrder):
 			self._create_design_items_and_boms(publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
 
 		# Fabric Transfer
-		if flt(fabric_transfer_qty) > 0:
+		if flt(fabric_transfer_qty) > 0 and not self.skip_transfer:
 			if publish_progress:
 				publish_print_order_progress(self.name, "Transferring Fabric", 0, 1)
 
@@ -1099,15 +1103,14 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 	if doc.status == "Closed":
 		frappe.throw(_("Print Order {0} is Closed").format(doc.name))
 
-	if fabric_transfer_qty is None:
-		fabric_transfer_qty = max(doc.total_fabric_length - doc.fabric_transfer_qty, 0)
-
-	fabric_transfer_qty = flt(fabric_transfer_qty, precision=doc.precision("total_fabric_length"))
-
-	if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
-		frappe.throw(_("Not enough Ready Fabric Item {0} in Fabric Warehouse ({1} Meter in stock)").format(
-			frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
-		))
+	if doc.skip_transfer:
+		fabric_transfer_qty = None
+	else:
+		fabric_transfer_qty = flt(fabric_transfer_qty, precision=doc.precision("total_fabric_length"))
+		if fabric_transfer_qty > 0 and fabric_transfer_qty > doc.fabric_stock_qty and not get_allow_negative_stock():
+			frappe.throw(_("Not enough Ready Fabric Item {0} in Fabric Warehouse ({1} Meter in stock)").format(
+				frappe.utils.get_link_to_form("Item", doc.fabric_item), doc.get_formatted("fabric_stock_qty")
+			))
 
 	if len(doc.items) > 5:
 		doc.queue_action("_background_start_print_order", fabric_transfer_qty=fabric_transfer_qty, timeout=1800)
@@ -1209,6 +1212,9 @@ def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit
 
 	if not all(d.item_code and d.design_bom for d in doc.items):
 		frappe.throw(_("Create Items and BOMs first"))
+
+	if doc.skip_transfer:
+		frappe.throw(_("Fabric Transfer not required against Print Order {0}").format(doc.name))
 
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.purpose = "Material Transfer for Manufacture"

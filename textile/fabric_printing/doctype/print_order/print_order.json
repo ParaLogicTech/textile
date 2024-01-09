@@ -83,6 +83,7 @@
   "fg_warehouse",
   "more_information_section",
   "cost_center",
+  "skip_transfer",
   "tab_status",
   "status",
   "items_created",
@@ -761,12 +762,19 @@
    "fieldtype": "Link",
    "label": "Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "default": "0",
+   "fieldname": "skip_transfer",
+   "fieldtype": "Check",
+   "label": "Skip Fabric Transfer to WIP Warehouse",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-01-03 12:40:20.569180",
+ "modified": "2024-01-09 23:27:54.775320",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",

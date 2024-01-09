@@ -344,7 +344,10 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 						__("Create"));
 				}
 
-				if (doc.fabric_transfer_status == "To Transfer" || doc.delivery_status == "To Deliver") {
+				if (
+					!doc.skip_transfer
+					&& (doc.fabric_transfer_status == "To Transfer" || doc.delivery_status == "To Deliver")
+				) {
 					this.frm.add_custom_button(__('Fabric Transfer Entry'), () => this.make_fabric_transfer_entry(),
 						__("Create"));
 				}
@@ -403,6 +406,8 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		if (warehouse) {
 			this.frm.set_value("fabric_warehouse", warehouse);
 		}
+
+		this.frm.set_value("skip_transfer", this.frm.doc.coating_item_separate_process);
 	}
 
 	set_default_cost_center() {
@@ -704,9 +709,15 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 	}
 
 	start_print_order() {
-		this.show_fabric_transfer_qty_prompt((data) => {
-			return this._start_print_order(data.fabric_transfer_qty);
-		}, __("Quick starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"));
+		if (this.frm.doc.skip_transfer) {
+			frappe.confirm(__("Quick starting will create Design Items and BOMs, Sales Order and Work Orders"), () => {
+				return this._start_print_order(0);
+			});
+		} else {
+			this.show_fabric_transfer_qty_prompt((data) => {
+				return this._start_print_order(data.fabric_transfer_qty);
+			}, __("Quick starting will create Design Items and BOMs, Fabric Transfer Entry, Sales Order and Work Orders"));
+		}
 	}
 
 	_start_print_order(fabric_transfer_qty) {
@@ -777,18 +788,33 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 					}
 				}
 			});
-		});
+		}, null, true);
 	}
 
-	show_fabric_transfer_qty_prompt(callback, qty_description) {
+	show_fabric_transfer_qty_prompt(callback, qty_description, suggest_qty) {
 		let remaining_transfer_qty = Math.max(flt(this.frm.doc.total_fabric_length) - flt(this.frm.doc.fabric_transfer_qty), 0);
 		return frappe.prompt([
 			{
 				label: __("Fabric Transfer Qty"),
 				fieldname: "fabric_transfer_qty",
 				fieldtype: "Float",
-				default: remaining_transfer_qty,
-				description: qty_description
+				default: suggest_qty ? remaining_transfer_qty : null,
+				description: qty_description,
+				reqd: 1,
+			},
+			{
+				label: __("Ordered Print Qty"),
+				fieldname: "total_print_length",
+				fieldtype: "Float",
+				default: this.frm.doc.total_print_length,
+				read_only: 1,
+			},
+			{
+				label: __("Required Fabric Qty"),
+				fieldname: "total_fabric_length",
+				fieldtype: "Float",
+				default: this.frm.doc.total_fabric_length,
+				read_only: 1,
 			},
 			{
 				label: __("Fabric Qty In Stock"),

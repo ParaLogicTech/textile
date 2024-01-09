@@ -52,10 +52,10 @@ class WorkOrderDP(WorkOrder):
 		super().set_required_items(reset_only_qty)
 
 		if not reset_only_qty and self.get("print_order"):
-			fabric_item = frappe.db.get_value("Print Order", self.print_order, "fabric_item", cache=1)
+			order = get_print_order_details(self.print_order)
 			for d in self.get("required_items"):
-				if d.item_code == fabric_item:
-					d.source_warehouse = self.wip_warehouse
+				if d.item_code == order.fabric_item:
+					d.source_warehouse = order.fabric_warehouse if order.skip_transfer else order.wip_warehouse
 
 		if not reset_only_qty and self.get("pretreatment_order"):
 			order = frappe.db.get_value("Pretreatment Order", self.pretreatment_order,
@@ -67,14 +67,6 @@ class WorkOrderDP(WorkOrder):
 
 
 def update_work_order_on_create(work_order, args=None):
-	def get_pretreatment_order_details():
-		fields = ["packing_slip_required", "delivery_required"] + greige_fabric_fields + warehouse_fields
-		return frappe.db.get_value("Pretreatment Order", work_order.pretreatment_order, fields, as_dict=1)
-
-	def get_print_order_details():
-		fields = ["packing_slip_required", "is_internal_customer"] + fabric_fields + print_process_fields + warehouse_fields
-		return frappe.db.get_value("Print Order", work_order.print_order, fields, as_dict=1)
-
 	if args and args.get("pretreatment_order"):
 		work_order.pretreatment_order = args.get("pretreatment_order")
 	if args and args.get("print_order"):
@@ -93,7 +85,7 @@ def update_work_order_on_create(work_order, args=None):
 
 	# Set Preatreatment Order related values
 	if work_order.get('pretreatment_order'):
-		pretreatment_order_details = get_pretreatment_order_details()
+		pretreatment_order_details = get_pretreatment_order_details(work_order.pretreatment_order)
 
 		work_order.skip_transfer = 0
 		work_order.from_wip_warehouse = 0
@@ -111,8 +103,7 @@ def update_work_order_on_create(work_order, args=None):
 
 	# Set Print Order related values
 	if work_order.get('print_order'):
-		print_order_details = frappe.local_cache("print_order_details_wo_from_so", work_order.print_order,
-			get_print_order_details)
+		print_order_details = get_print_order_details(work_order.print_order)
 
 		work_order.skip_transfer = 1
 		work_order.from_wip_warehouse = 0
@@ -132,6 +123,19 @@ def update_work_order_on_create(work_order, args=None):
 	if work_order.get('print_order_item'):
 		work_order.max_qty = flt(frappe.db.get_value("Print Order Item", work_order.print_order_item,
 			"stock_fabric_length", cache=1))
+
+
+def get_pretreatment_order_details(pretreatment_order):
+	fields = ["packing_slip_required", "delivery_required"] + greige_fabric_fields + warehouse_fields
+	return frappe.db.get_value("Pretreatment Order", pretreatment_order, fields, as_dict=1)
+
+
+def get_print_order_details(print_order):
+	def generator():
+		fields = ["packing_slip_required", "is_internal_customer", "skip_transfer"] + fabric_fields + print_process_fields + warehouse_fields
+		return frappe.db.get_value("Print Order", print_order, fields, as_dict=1)
+
+	return frappe.local_cache("print_order_details_wo_from_so", print_order, generator)
 
 
 def update_job_card_on_create(job_card):
