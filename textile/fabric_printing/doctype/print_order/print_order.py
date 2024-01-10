@@ -56,7 +56,7 @@ class PrintOrder(TextileOrder):
 
 	def validate(self):
 		self.set_missing_values()
-		self.set_skip_transfer()
+		self.set_values_for_coated_fabric()
 		self.validate_dates()
 		self.validate_customer()
 		self.validate_pretreatment_order()
@@ -175,8 +175,12 @@ class PrintOrder(TextileOrder):
 
 		frappe.db.set_value("Customer", self.customer, new_values_to_update, notify=True)
 
-	def set_skip_transfer(self):
+	def set_values_for_coated_fabric(self):
 		self.skip_transfer = cint(self.coating_item_separate_process)
+
+		coated_fabric_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_coating_fg_warehouse")
+		if self.coating_item_separate_process and coated_fabric_warehouse:
+			self.fabric_warehouse = coated_fabric_warehouse
 
 	def update_status_on_cancel(self):
 		self.db_set({

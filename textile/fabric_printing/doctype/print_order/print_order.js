@@ -401,8 +401,14 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 	}
 
 	set_default_fabric_warehouse() {
-		let warehouse_fn = this.frm.doc.coating_item_separate_process ? 'default_coating_fg_warehouse': 'default_printing_fabric_warehouse';
-		let warehouse = frappe.defaults.get_default(warehouse_fn);
+		let printing_fabric_warehouse = frappe.defaults.get_global_default("default_printing_fabric_warehouse");
+		let coated_fabric_warehouse = frappe.defaults.get_global_default("default_coating_fg_warehouse");
+
+		let warehouse = printing_fabric_warehouse;
+		if (this.frm.doc.coating_item_separate_process) {
+			warehouse = coated_fabric_warehouse || warehouse;
+		}
+
 		if (warehouse) {
 			this.frm.set_value("fabric_warehouse", warehouse);
 		}
