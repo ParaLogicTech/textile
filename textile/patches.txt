@@ -8,6 +8,7 @@ textile.patches.change_print_order_status_not_started
 textile.patches.refactor_fabric_printing
 textile.patches.set_is_sub_contracted #1
 textile.patches.set_printed_design_material_request_type
+textile.patches.delivery_status_not_applicable_for_not_started_orders
 
 [post_model_sync]
 textile.patches.set_panel_based_qty

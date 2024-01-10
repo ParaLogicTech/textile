@@ -24,11 +24,13 @@ class FabricPrintingSummary:
 	]
 
 	sum_fields = transaction_fields + [
+		"production_backlog_qty",
+		"packing_backlog_qty",
+		"delivery_backlog_qty",
 		"fabrics_created",
 		"customer_fabric_qty",
 		"own_fabric_qty",
 		"total_fabric_qty",
-		"production_backlog_qty",
 	]
 
 	zero_fields = frappe._dict({field: 0 for field in sum_fields})
@@ -98,6 +100,20 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
+		self.production_backlog_data = frappe.db.sql("""
+			SELECT item.fabric_material,
+				SUM(poi.stock_print_length - poi.produced_qty) as production_backlog_qty
+			FROM `tabPrint Order Item` poi
+			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
+			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
+			WHERE pro.docstatus = 1
+				and pro.production_status != 'Produced'
+				and pro.status != 'Closed'
+				and pro.transaction_date <= %(to_date)s
+				and poi.produced_qty < poi.stock_print_length
+			GROUP BY item.fabric_material
+		""", self.filters, as_dict=1)
+
 		self.packing_data = frappe.db.sql("""
 			SELECT item.fabric_material,
 				SUM(psi.stock_qty) AS packed_qty,
@@ -109,6 +125,20 @@ class FabricPrintingSummary:
 				AND ps.posting_date BETWEEN %(from_date)s AND %(to_date)s
 				AND ifnull(psi.print_order, '') != ''
 				AND ifnull(psi.source_packing_slip, '') = ''
+			GROUP BY item.fabric_material
+		""", self.filters, as_dict=1)
+
+		self.packing_backlog_data = frappe.db.sql("""
+			SELECT item.fabric_material,
+				SUM(poi.produced_qty - poi.packed_qty) as packing_backlog_qty
+			FROM `tabPrint Order Item` poi
+			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
+			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
+			WHERE pro.docstatus = 1 and pro.packing_slip_required = 1
+				and pro.packing_status = 'To Pack'
+				and pro.status != 'Closed'
+				and pro.transaction_date <= %(to_date)s
+				and poi.packed_qty < poi.produced_qty
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
@@ -124,6 +154,27 @@ class FabricPrintingSummary:
 				AND dn.is_return = 0
 				AND ifnull(dni.print_order, '') != ''
 				AND dni.is_return_fabric = 0
+			GROUP BY item.fabric_material
+		""", self.filters, as_dict=1)
+
+		self.delivery_backlog_data = frappe.db.sql("""
+			SELECT item.fabric_material,
+				SUM(IF(
+					pro.packing_slip_required = 1,
+					poi.packed_qty - poi.delivered_qty,
+					poi.produced_qty - poi.delivered_qty
+				)) as delivery_backlog_qty
+			FROM `tabPrint Order Item` poi
+			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
+			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
+			WHERE pro.docstatus = 1
+				and pro.delivery_status = 'To Deliver'
+				and pro.status != 'Closed'
+				and pro.transaction_date <= %(to_date)s
+				and (
+					(pro.packing_slip_required = 1 and poi.delivered_qty < poi.packed_qty)
+					or (pro.packing_slip_required = 0 and poi.delivered_qty < poi.produced_qty)
+				)
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
@@ -166,8 +217,11 @@ class FabricPrintingSummary:
 			self.order_data,
 			self.fabric_received_data,
 			self.production_data,
+			self.production_backlog_data,
 			self.packing_data,
+			self.packing_backlog_data,
 			self.delivery_data,
+			self.delivery_backlog_data,
 			self.fabrics_created,
 			self.total_fabric_qty_data,
 		]
@@ -270,6 +324,12 @@ class FabricPrintingSummary:
 				"width": 105
 			},
 			{
+				"label": _("Production Backlog Qty"),
+				"fieldname": "production_backlog_qty",
+				"fieldtype": "Float",
+				"width": 135
+			},
+			{
 				"label": _("Orders Packed"),
 				"fieldname": "no_of_orders_produced",
 				"fieldtype": "Int",
@@ -282,6 +342,12 @@ class FabricPrintingSummary:
 				"width": 105
 			},
 			{
+				"label": _("Packing Backlog Qty"),
+				"fieldname": "packing_backlog_qty",
+				"fieldtype": "Float",
+				"width": 115
+			},
+			{
 				"label": _("Orders Delivered"),
 				"fieldname": "no_of_orders_delivered",
 				"fieldtype": "Int",
@@ -292,6 +358,12 @@ class FabricPrintingSummary:
 				"fieldname": "delivered_qty",
 				"fieldtype": "Float",
 				"width": 105
+			},
+			{
+				"label": _("Delivery Backlog Qty"),
+				"fieldname": "delivery_backlog_qty",
+				"fieldtype": "Float",
+				"width": 120
 			},
 			{
 				"label": _("Total Fabric Stock"),
