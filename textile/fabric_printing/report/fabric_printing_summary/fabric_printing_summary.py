@@ -12,23 +12,24 @@ def execute(filters=None):
 
 class FabricPrintingSummary:
 	transaction_fields = [
-			"received_qty",
-			"no_of_orders",
-			"ordered_qty",
-			"no_of_orders_produced",
-			"produced_qty",
-			"no_of_orders_packed",
-			"packed_qty",
-			"no_of_orders_delivered",
-			"delivered_qty",
-		]
+		"received_qty",
+		"no_of_orders",
+		"ordered_qty",
+		"no_of_orders_produced",
+		"produced_qty",
+		"no_of_orders_packed",
+		"packed_qty",
+		"no_of_orders_delivered",
+		"delivered_qty",
+	]
 
 	sum_fields = transaction_fields + [
-			"fabrics_created",
-			"customer_fabric_qty",
-			"own_fabric_qty",
-			"total_fabric_qty",
-		]
+		"fabrics_created",
+		"customer_fabric_qty",
+		"own_fabric_qty",
+		"total_fabric_qty",
+		"production_backlog_qty",
+	]
 
 	zero_fields = frappe._dict({field: 0 for field in sum_fields})
 
@@ -134,31 +135,31 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
-		wip_warehouses = []
+		fabric_warehouses = []
 
-		printing_wip_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_printing_wip_warehouse")
-		if printing_wip_warehouse:
-			wip_warehouses.append(printing_wip_warehouse)
+		printing_fabric_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_printing_fabric_warehouse")
+		if printing_fabric_warehouse:
+			fabric_warehouses.append(printing_fabric_warehouse)
 
-		pretreatment_wip_warehouse = frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_wip_warehouse")
-		if pretreatment_wip_warehouse:
-			wip_warehouses.append(pretreatment_wip_warehouse)
+		pretreatment_fabric_warehouse = frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_fabric_warehouse")
+		if pretreatment_fabric_warehouse:
+			fabric_warehouses.append(pretreatment_fabric_warehouse)
 
-		wip_warehouse_condition = ""
-		if wip_warehouses:
-			wip_warehouse_condition = " and sle.warehouse not in %(wip_warehouses)s"
+		warehouse_condition = ""
+		if fabric_warehouses:
+			warehouse_condition = " and sle.warehouse in %(fabric_warehouses)s"
 
 		self.total_fabric_qty_data = frappe.db.sql(f"""
 			SELECT i.fabric_material,
-				SUM(CASE WHEN is_customer_provided_item = 1 THEN sle.actual_qty ELSE 0 END) AS customer_fabric_qty,
-				SUM(CASE WHEN is_customer_provided_item = 0 THEN sle.actual_qty ELSE 0 END) AS own_fabric_qty,
+				SUM(CASE WHEN i.is_customer_provided_item = 1 THEN sle.actual_qty ELSE 0 END) AS customer_fabric_qty,
+				SUM(CASE WHEN i.is_customer_provided_item = 0 THEN sle.actual_qty ELSE 0 END) AS own_fabric_qty,
 				SUM(sle.actual_qty) AS total_fabric_qty
 			FROM `tabStock Ledger Entry` sle
 			INNER JOIN `tabItem` i ON i.name = sle.item_code
 			WHERE i.textile_item_type IN ('Ready Fabric', 'Greige Fabric') AND sle.posting_date <= %(to_date)s
-				{wip_warehouse_condition}
+				{warehouse_condition}
 			GROUP BY i.fabric_material
-		""", {"to_date": self.filters.to_date, "wip_warehouses": wip_warehouses}, as_dict=1)
+		""", {"to_date": self.filters.to_date, "fabric_warehouses": fabric_warehouses}, as_dict=1)
 
 	def get_grouped_data(self):
 		data_bank = [
