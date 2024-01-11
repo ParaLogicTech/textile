@@ -671,6 +671,52 @@ class PretreatmentOrder(TextileOrder):
 		self.notify_update()
 		clear_doctype_notifications(self)
 
+	def close_linked_documents(self):
+		from erpnext.manufacturing.doctype.work_order.work_order import stop_unstop
+		from erpnext.selling.doctype.sales_order.sales_order import update_status as update_sales_order_status
+
+		work_orders = frappe.get_all("Work Order", filters={
+			"pretreatment_order": self.name,
+			"docstatus": 1,
+			"status": ["not in", ("Stopped", "Completed")]
+		}, pluck="name")
+
+		for name in work_orders:
+			stop_unstop(name, "Stopped")
+
+		sales_orders = frappe.db.sql_list("""
+			select distinct so.name
+			from `tabSales Order` so
+			inner join `tabSales Order Item` i on i.parent = so.name
+			where so.docstatus = 1 and i.pretreatment_order = %s and so.status != 'Closed' and so.delivery_status = 'To Deliver'
+		""", self.name)
+
+		for name in sales_orders:
+			update_sales_order_status("Closed", name)
+
+	def reopen_linked_documents(self):
+		from erpnext.manufacturing.doctype.work_order.work_order import stop_unstop
+		from erpnext.selling.doctype.sales_order.sales_order import update_status as update_sales_order_status
+
+		work_orders = frappe.get_all("Work Order", filters={
+			"pretreatment_order": self.name,
+			"docstatus": 1,
+			"status": ["=", "Stopped"]
+		}, pluck="name")
+
+		for name in work_orders:
+			stop_unstop(name, "Resumed")
+
+		sales_orders = frappe.db.sql_list("""
+			select distinct so.name
+			from `tabSales Order` so
+			inner join `tabSales Order Item` i on i.parent = so.name
+			where so.docstatus = 1 and i.pretreatment_order = %s and so.status = 'Closed'
+		""", self.name)
+
+		for name in sales_orders:
+			update_sales_order_status("Re-Opened", name)
+
 	def cant_change_delivery_required(self):
 		if self.status == "Closed" or self.is_internal_customer:
 			return True
@@ -768,7 +814,7 @@ def validate_transaction_against_pretreatment_order(doc):
 				d.idx, frappe.get_desk_link("Pretreatment Order", order_details.name)
 			))
 
-		if order_details.status == "Closed" and not doc.get("is_return"):
+		if order_details.status == "Closed" and not doc.get("is_return") and doc.doctype != "Sales Invoice":
 			frappe.throw(_("Row #{0}: {1} is {2}").format(
 				d.idx,
 				frappe.get_desk_link("Pretreatment Order", order_details.name),
@@ -870,6 +916,24 @@ def get_default_pretreatment_process(fabric_item):
 	out.update(print_process_defaults)
 
 	return out
+
+
+@frappe.whitelist()
+def update_status(pretreatment_order, status):
+	if not frappe.has_permission("Pretreatment Order", "submit"):
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	doc = frappe.get_doc("Pretreatment Order", pretreatment_order)
+
+	if doc.docstatus != 1:
+		return
+
+	if status == "Closed":
+		doc.close_linked_documents()
+	elif status != "Closed" and doc.status == "Closed":
+		doc.reopen_linked_documents()
+
+	doc.run_method("update_status", status)
 
 
 @frappe.whitelist()

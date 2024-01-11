@@ -293,10 +293,14 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		let doc = this.frm.doc;
 
 		if (doc.docstatus == 1) {
+			if (doc.per_work_ordered > 0) {
+				this.frm.add_custom_button(__("Work Order List"), () => this.show_work_orders());
+			}
+
 			if (this.frm.has_perm("submit")) {
 				if (doc.status == "Closed") {
-					this.frm.add_custom_button(__('Re-Open'), () => this.update_status("Draft"), __("Status"));
-				} else if(flt(doc.per_ordered, 6) < 100) {
+					this.frm.add_custom_button(__('Re-Open'), () => this.update_status("Re-Opened"), __("Status"));
+				} else if(doc.status != "Completed") {
 					this.frm.add_custom_button(__('Close'), () => this.update_status("Closed"), __("Status"));
 				}
 			}
@@ -325,10 +329,6 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 			});
 
 			if (!has_missing_item && doc.status != "Closed") {
-				if (doc.per_work_ordered > 0) {
-					this.frm.add_custom_button(__("Work Order List"), () => this.show_work_orders());
-				}
-
 				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
 					can_create_sales_order = true;
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),

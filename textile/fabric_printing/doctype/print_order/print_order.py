@@ -229,6 +229,52 @@ class PrintOrder(TextileOrder):
 		self.notify_update()
 		clear_doctype_notifications(self)
 
+	def close_linked_documents(self):
+		from erpnext.manufacturing.doctype.work_order.work_order import stop_unstop
+		from erpnext.selling.doctype.sales_order.sales_order import update_status as update_sales_order_status
+
+		work_orders = frappe.get_all("Work Order", filters={
+			"print_order": self.name,
+			"docstatus": 1,
+			"status": ["not in", ("Stopped", "Completed")]
+		}, pluck="name")
+
+		for name in work_orders:
+			stop_unstop(name, "Stopped")
+
+		sales_orders = frappe.db.sql_list("""
+			select distinct so.name
+			from `tabSales Order` so
+			inner join `tabSales Order Item` i on i.parent = so.name
+			where so.docstatus = 1 and i.print_order = %s and so.status != 'Closed' and so.delivery_status = 'To Deliver'
+		""", self.name)
+
+		for name in sales_orders:
+			update_sales_order_status("Closed", name)
+
+	def reopen_linked_documents(self):
+		from erpnext.manufacturing.doctype.work_order.work_order import stop_unstop
+		from erpnext.selling.doctype.sales_order.sales_order import update_status as update_sales_order_status
+
+		work_orders = frappe.get_all("Work Order", filters={
+			"print_order": self.name,
+			"docstatus": 1,
+			"status": ["=", "Stopped"]
+		}, pluck="name")
+
+		for name in work_orders:
+			stop_unstop(name, "Resumed")
+
+		sales_orders = frappe.db.sql_list("""
+			select distinct so.name
+			from `tabSales Order` so
+			inner join `tabSales Order Item` i on i.parent = so.name
+			where so.docstatus = 1 and i.print_order = %s and so.status = 'Closed'
+		""", self.name)
+
+		for name in sales_orders:
+			update_sales_order_status("Re-Opened", name)
+
 	def validate_order_defaults(self):
 		validate_uom_and_qty_type(self)
 
@@ -1004,7 +1050,7 @@ def validate_transaction_against_print_order(doc):
 				d.idx, frappe.get_desk_link("Print Order", order_details.name)
 			))
 
-		if order_details.status == "Closed" and not doc.get("is_return"):
+		if order_details.status == "Closed" and not doc.get("is_return") and doc.doctype != "Sales Invoice":
 			frappe.throw(_("Row #{0}: {1} is {2}").format(
 				d.idx,
 				frappe.get_desk_link("Print Order", order_details.name),
@@ -1081,8 +1127,11 @@ def update_status(print_order, status):
 
 	if doc.docstatus != 1:
 		return
-	if status == "Closed" and doc.per_ordered == 100:
-		return
+
+	if status == "Closed":
+		doc.close_linked_documents()
+	elif status != "Closed" and doc.status == "Closed":
+		doc.reopen_linked_documents()
 
 	doc.run_method("update_status", status)
 
