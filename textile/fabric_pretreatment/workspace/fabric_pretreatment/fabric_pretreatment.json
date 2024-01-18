@@ -231,7 +231,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-11-21 21:58:41.740589",
+ "modified": "2024-01-18 13:27:14.471189",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment",
@@ -257,7 +257,20 @@
  "parent_page": "",
  "public": 1,
  "quick_lists": [],
- "roles": [],
+ "roles": [
+  {
+   "role": "Sales User (Read Only)"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Manufacturing User"
+  },
+  {
+   "role": "Delivery User"
+  }
+ ],
  "sequence_id": 20.0,
  "shortcuts": [
   {

@@ -291,7 +291,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-12-21 13:33:46.084379",
+ "modified": "2024-01-18 13:26:58.324661",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
@@ -317,7 +317,20 @@
  "parent_page": "",
  "public": 1,
  "quick_lists": [],
- "roles": [],
+ "roles": [
+  {
+   "role": "Sales User (Read Only)"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Manufacturing User"
+  },
+  {
+   "role": "Delivery User"
+  }
+ ],
  "sequence_id": 10.0,
  "shortcuts": [
   {
