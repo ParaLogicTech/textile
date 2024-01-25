@@ -99,6 +99,7 @@ class PrintPricingRule(Document):
 
 	def get_rule_match_dict(self, match_filters):
 		rule_dict = frappe._dict({
+			"name": self.name,
 			"type": self.type,
 			"value": flt(self.value),
 			"required_filters": match_filters,
