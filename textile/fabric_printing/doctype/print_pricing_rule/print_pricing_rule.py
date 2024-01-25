@@ -19,7 +19,10 @@ filter_fields = (
 
 class PrintPricingRule(Document):
 	def validate(self):
-		self.validate_value("value", ">", 0, raise_exception=True)
+		if self.type == "Add/Subtract":
+			self.validate_value("value", "!=", 0, raise_exception=True)
+		else:
+			self.validate_value("value", ">", 0, raise_exception=True)
 
 	def on_change(self):
 		clear_print_pricing_rule_cache()
