@@ -142,11 +142,6 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 	return values
 
 
-def get_applicable_rules(fabric_item):
-	filters = get_filters_dict(fabric_item)
-	return get_applicable_rules_for_filters(filters)
-
-
 def get_filters_dict(fabric_item):
 	if not fabric_item:
 		fabric_item = {}

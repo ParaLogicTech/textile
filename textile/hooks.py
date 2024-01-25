@@ -133,6 +133,7 @@ update_sales_purchase_return_mapper = [
 
 delete_file_data_content = "textile.rotated_image.delete_file_data_content"
 
+get_price_list_rate = "textile.overrides.pricing_hooks.get_price_list_rate"
 
 scheduler_events = {
 	"hourly_long": [
@@ -148,10 +149,13 @@ fixtures = [
 				'File-rotated_image',
 
 				'Customer-printing_tab',
+				'Customer-printing_cb_1',
+				'Customer-printing_cb_2',
 				'Customer-default_printing_uom',
 				'Customer-default_printing_gap',
 				'Customer-default_printing_qty_type',
 				'Customer-default_printing_length_uom',
+				'Customer-base_printing_rate',
 
 				'Item-textile_item_type',
 				'Item-process_component',

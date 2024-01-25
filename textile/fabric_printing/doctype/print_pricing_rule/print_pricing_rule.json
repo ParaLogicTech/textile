@@ -1,0 +1,164 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:print_pricing_rule_name",
+ "creation": "2024-01-24 00:24:44.968906",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "print_pricing_rule_name",
+  "filter_criteria_section",
+  "price_list",
+  "customer_group",
+  "column_break_jdhll",
+  "fabric_material",
+  "fabric_type",
+  "column_break_qefhw",
+  "fabric_width_lower_limit",
+  "fabric_width_upper_limit",
+  "column_break_auf3m",
+  "fabric_gsm_lower_limit",
+  "fabric_gsm_upper_limit",
+  "pricing_section",
+  "type",
+  "column_break_jq8di",
+  "value"
+ ],
+ "fields": [
+  {
+   "fieldname": "print_pricing_rule_name",
+   "fieldtype": "Data",
+   "label": "Print Pricing Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "filter_criteria_section",
+   "fieldtype": "Section Break",
+   "label": "Filter Criteria"
+  },
+  {
+   "fieldname": "fabric_material",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Fabric Material",
+   "options": "Fabric Material"
+  },
+  {
+   "fieldname": "fabric_type",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Fabric Type",
+   "options": "Fabric Type"
+  },
+  {
+   "fieldname": "column_break_qefhw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fabric_gsm_lower_limit",
+   "fieldtype": "Float",
+   "label": "Fabric GSM Lower Limit",
+   "non_negative": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "fabric_gsm_upper_limit",
+   "fieldtype": "Float",
+   "label": "Fabric GSM Upper Limit",
+   "non_negative": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "column_break_auf3m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fabric_width_lower_limit",
+   "fieldtype": "Float",
+   "label": "Fabric Width Lower Limit",
+   "non_negative": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "fabric_width_upper_limit",
+   "fieldtype": "Float",
+   "label": "Fabric Width Upper Limit",
+   "non_negative": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "pricing_section",
+   "fieldtype": "Section Break",
+   "label": "Pricing"
+  },
+  {
+   "fieldname": "column_break_jq8di",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Value",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jdhll",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Customer Group",
+   "options": "Customer Group"
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Price List",
+   "options": "Price List",
+   "reqd": 1
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "\nBase Rate\nAdd/Subtract\nMultiply",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-25 01:26:21.373547",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "Print Pricing Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
