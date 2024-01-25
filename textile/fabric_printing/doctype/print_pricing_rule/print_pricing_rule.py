@@ -117,7 +117,8 @@ def get_printing_rate_rule(design_item, price_list, customer=None):
 	applicable_rules = get_applicable_rules_for_filters(filters)
 
 	base_rate_rule = get_base_rate_rule(applicable_rules, customer)
-	printing_rate = flt(base_rate_rule.value) if base_rate_rule else 0
+	base_printing_rate = flt(base_rate_rule.value) if base_rate_rule else 0
+	printing_rate = base_printing_rate
 
 	additions = []
 	for rule in applicable_rules:
@@ -133,6 +134,7 @@ def get_printing_rate_rule(design_item, price_list, customer=None):
 
 	return frappe._dict({
 		"printing_rate": printing_rate,
+		"base_printing_rate": base_printing_rate,
 		"base_rate_rule": base_rate_rule,
 		"addition_rules": additions,
 		"multiplier_rules": multipliers,
