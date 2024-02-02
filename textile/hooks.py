@@ -71,7 +71,7 @@ update_item_override_fields = [
 ]
 
 calculate_taxes_and_totals = [
-	"textile.overrides.taxes_and_totals_hooks.calculate_panel_qty_for_taxes_and_totals"
+	"textile.overrides.taxes_and_totals_hooks.calculate_taxes_and_totals"
 ]
 
 update_work_order_on_create = [
@@ -133,7 +133,11 @@ update_sales_purchase_return_mapper = [
 
 delete_file_data_content = "textile.rotated_image.delete_file_data_content"
 
-get_price_list_rate = "textile.overrides.pricing_hooks.get_price_list_rate"
+get_item_details = "textile.overrides.item_details_hooks.get_item_details"
+packing_slip_get_item_details = "textile.overrides.item_details_hooks.packing_slip_get_item_details"
+stock_entry_get_item_details = "textile.overrides.item_details_hooks.stock_entry_get_item_details"
+
+get_price_list_rate = "textile.overrides.item_details_hooks.get_price_list_rate"
 
 scheduler_events = {
 	"hourly_long": [
@@ -202,6 +206,9 @@ fixtures = [
 				'Item Source-textile_item_type',
 				'Brand-textile_item_type',
 
+				'Sales Order Item-fabric_item',
+				'Sales Order Item-fabric_item_name',
+				'Sales Order Item-is_printed_fabric',
 				'Sales Order Item-pretreatment_order',
 				'Sales Order Item-print_order',
 				'Sales Order Item-print_order_item',
@@ -209,6 +216,9 @@ fixtures = [
 				'Sales Order Item-panel_qty',
 				'Sales Order Item-panel_based_qty',
 
+				'Delivery Note Item-fabric_item',
+				'Delivery Note Item-fabric_item_name',
+				'Delivery Note Item-is_printed_fabric',
 				'Delivery Note Item-pretreatment_order',
 				'Delivery Note Item-print_order',
 				'Delivery Note Item-print_order_item',
@@ -217,6 +227,12 @@ fixtures = [
 				'Delivery Note Item-panel_based_qty',
 				'Delivery Note Item-is_return_fabric',
 
+				'Sales Invoice-sec_printed_fabrics',
+				'Sales Invoice-printed_fabrics',
+
+				'Sales Invoice Item-fabric_item',
+				'Sales Invoice Item-fabric_item_name',
+				'Sales Invoice Item-is_printed_fabric',
 				'Sales Invoice Item-pretreatment_order',
 				'Sales Invoice Item-print_order',
 				'Sales Invoice Item-print_order_item',
@@ -225,6 +241,8 @@ fixtures = [
 				'Sales Invoice Item-panel_based_qty',
 				'Sales Invoice Item-is_return_fabric',
 
+				'Packing Slip Item-fabric_item',
+				'Packing Slip Item-fabric_item_name',
 				'Packing Slip Item-pretreatment_order',
 				'Packing Slip Item-print_order',
 				'Packing Slip Item-print_order_item',
@@ -258,6 +276,9 @@ fixtures = [
 				'Stock Entry-print_order',
 				'Stock Entry-coating_order',
 				'Stock Entry-fabric_printer',
+
+				'Stock Entry Detail-fabric_item',
+				'Stock Entry Detail-fabric_item_name',
 
 				'Purchase Order Item-pretreatment_order',
 				'Purchase Receipt Item-pretreatment_order',

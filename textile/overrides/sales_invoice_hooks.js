@@ -9,3 +9,11 @@ frappe.ui.form.on("Sales Invoice Item", {
 		frm.cscript.calculate_taxes_and_totals();
 	},
 });
+
+frappe.ui.form.on("Printed Fabric Detail", {
+	fabric_rate: function(frm, cdt, cdn) {
+		let row = frappe.get_doc(cdt, cdn);
+		textile.set_printed_fabric_rate(frm, row);
+		frm.cscript.calculate_taxes_and_totals();
+	},
+});

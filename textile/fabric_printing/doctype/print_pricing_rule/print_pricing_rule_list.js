@@ -8,7 +8,7 @@ frappe.listview_settings["Print Pricing Rule"] = {
 			const get_price = () => {
 				if (doc.price_list && doc.fabric_item) {
 					return frappe.call({
-						method: "textile.overrides.pricing_hooks.get_design_item_price_breakup",
+						method: "textile.overrides.item_details_hooks.get_design_item_price_breakup",
 						args: {
 							price_list: doc.price_list,
 							item_code: doc.fabric_item,

@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-02-02 10:47:06.247981",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "fabric_item",
+  "fabric_item_name",
+  "fabric_qty",
+  "fabric_rate",
+  "fabric_amount"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "fabric_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fabric Item",
+   "options": "Item",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 4,
+   "fetch_from": "fabric_item.item_name",
+   "fieldname": "fabric_item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Fabric Item Name",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "fabric_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "fabric_rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate",
+   "options": "currency"
+  },
+  {
+   "columns": 2,
+   "fieldname": "fabric_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "options": "currency",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-02-02 10:50:13.680426",
+ "modified_by": "Administrator",
+ "module": "Fabric Printing",
+ "name": "Printed Fabric Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

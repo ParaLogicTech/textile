@@ -6,6 +6,10 @@ from textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order i
 
 
 class SalesOrderDP(SalesOrder):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.force_item_fields += ["fabric_item", "fabric_item_name", "is_printed_fabric"]
+
 	def validate_with_previous_doc(self):
 		super().validate_with_previous_doc()
 		validate_transaction_against_pretreatment_order(self)

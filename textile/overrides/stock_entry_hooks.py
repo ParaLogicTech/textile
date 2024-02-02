@@ -6,6 +6,10 @@ from erpnext.stock.get_item_details import get_conversion_factor
 
 
 class StockEntryDP(StockEntry):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.force_item_fields += ["fabric_item", "fabric_item_name"]
+
 	def validate(self):
 		super().validate()
 		self.validate_fabric_printer()
