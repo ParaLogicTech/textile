@@ -6,6 +6,7 @@ from textile.textile.doctype.fabric_material.fabric_material import update_item_
 def execute():
 	frappe.reload_doc("textile", "doctype", "fabric_tariff_number")
 	frappe.reload_doc("textile", "doctype", "fabric_material")
+	frappe.reload_doc("stock", "doctype", "customs_tariff_number")
 
 	populate_customs_tariff_number()
 	populate_fabric_material(overwrite=True)
