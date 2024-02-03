@@ -909,7 +909,6 @@ class PrintOrder(TextileOrder):
 			"textile_item_type": "Printed Design",
 			"item_name": design_item_row.design_name,
 			"stock_uom": design_item_row.stock_uom,
-			"sales_uom": design_item_row.length_uom,
 			"fabric_item": self.fabric_item,
 			"image": design_item_row.design_image,
 			"design_width": design_item_row.design_width,

@@ -11,6 +11,7 @@ textile.patches.set_printed_design_material_request_type
 textile.patches.delivery_status_not_applicable_for_not_started_orders
 textile.patches.set_line_fabric_item_details
 textile.patches.change_panel_sales_uom_to_meter
+textile.patches.unset_sales_uom_for_printed_design_items
 
 [post_model_sync]
 textile.patches.set_panel_based_qty
