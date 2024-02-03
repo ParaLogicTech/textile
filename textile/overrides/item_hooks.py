@@ -17,6 +17,7 @@ class ItemDP(Item):
 		self.validate_design_properties()
 		self.validate_process_properties()
 		self.calculate_net_weight_per_unit()
+		self.set_fabric_tariff_number()
 		self.validate_fabric_uoms()
 
 	def on_trash(self):
@@ -192,6 +193,15 @@ class ItemDP(Item):
 
 			self.gross_weight_per_unit = 0
 			self.weight_uom = "Gram"
+
+	def set_fabric_tariff_number(self):
+		if not self.fabric_material:
+			return
+
+		material_doc = frappe.get_cached_doc("Fabric Material", self.fabric_material)
+		tariff_number = material_doc.get_tariff_number(self.textile_item_type, self.fabric_gsm)
+		if tariff_number:
+			self.customs_tariff_number = tariff_number
 
 	_printed_design_cant_change_fields = [
 		"fabric_item", "design_width", "design_height", "image", "is_customer_provided_item", "customer"

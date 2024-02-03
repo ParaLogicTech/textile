@@ -9,7 +9,11 @@
  "engine": "InnoDB",
  "field_order": [
   "fabric_material",
-  "abbreviation"
+  "abbreviation",
+  "customs_tariff_number_section",
+  "greige_fabric_tariff",
+  "ready_fabric_tariff",
+  "printed_fabric_tariff"
  ],
  "fields": [
   {
@@ -25,6 +29,29 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Abbreviation"
+  },
+  {
+   "fieldname": "customs_tariff_number_section",
+   "fieldtype": "Section Break",
+   "label": "Customs Tariff Number"
+  },
+  {
+   "fieldname": "greige_fabric_tariff",
+   "fieldtype": "Table",
+   "label": "Greige Fabric Tariff Numbers",
+   "options": "Fabric Tariff Number"
+  },
+  {
+   "fieldname": "ready_fabric_tariff",
+   "fieldtype": "Table",
+   "label": "Ready Fabric Tariff Numbers",
+   "options": "Fabric Tariff Number"
+  },
+  {
+   "fieldname": "printed_fabric_tariff",
+   "fieldtype": "Table",
+   "label": "Printed Fabric Tariff Numbers",
+   "options": "Fabric Tariff Number"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -35,7 +62,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2023-06-08 01:29:33.667007",
+ "modified": "2024-02-03 15:03:16.859805",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Material",

@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-02-03 15:01:42.251516",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "customs_tariff_number",
+  "gsm_low",
+  "gsm_high"
+ ],
+ "fields": [
+  {
+   "fieldname": "customs_tariff_number",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customs Tariff Number",
+   "options": "Customs Tariff Number",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "gsm_low",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "GSM Lower Limit",
+   "non_negative": 1,
+   "precision": "1"
+  },
+  {
+   "columns": 2,
+   "fieldname": "gsm_high",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "GSM Upper Limit",
+   "non_negative": 1,
+   "precision": "1"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-02-03 15:04:51.193616",
+ "modified_by": "Administrator",
+ "module": "Textile",
+ "name": "Fabric Tariff Number",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
