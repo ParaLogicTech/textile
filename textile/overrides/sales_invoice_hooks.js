@@ -1,5 +1,13 @@
 frappe.provide("textile");
 
+frappe.ui.form.on("Sales Invoice", {
+	setup: function (frm) {
+		if (frm.fields_dict.printed_fabrics?.grid) {
+			frm.fields_dict.printed_fabrics.grid.cannot_add_rows = 1;
+		}
+	}
+});
+
 frappe.ui.form.on("Sales Invoice Item", {
 	panel_qty: function(frm, cdt, cdn) {
 		textile.calculate_panel_length_meter(frm, cdt, cdn);

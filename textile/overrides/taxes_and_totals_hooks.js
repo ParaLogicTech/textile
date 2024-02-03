@@ -83,7 +83,7 @@ textile.set_printed_fabric_details = function () {
 	}
 
 	// Reset removed fabrics rows
-	for (let printed_fabric_row of this.frm.doc.printed_fabrics) {
+	for (let printed_fabric_row of this.frm.doc.printed_fabrics || []) {
 		if (!fabric_summary[printed_fabric_row.fabric_item]) {
 			printed_fabric_row.fabric_qty = 0;
 			printed_fabric_row.fabric_rate = 0;
