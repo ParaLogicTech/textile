@@ -92,12 +92,16 @@ class StockEntryDP(StockEntry):
 				fabric_grams_per_meter = gsm_to_grams(coating_order_doc.fabric_gsm, coating_order_doc.fabric_width)
 				consumption_grams_per_meter = fabric_grams_per_meter * flt(coating_order_doc.fabric_per_pickup) / 100
 				cf_coating = get_conversion_factor(coating_order_doc.coating_item, "Gram").conversion_factor * consumption_grams_per_meter
-
 			else:
 				cf_coating = get_conversion_factor(coating_order_doc.coating_item, coating_order_doc.stock_uom).conversion_factor
 
+			# Add raw materials
 			coating_item_qty = qty * cf_coating
 			item_dict = super().get_bom_raw_materials(coating_item_qty, scrap_qty)
+			for d in item_dict.values():
+				d.from_warehouse = coating_order_doc.source_warehouse
+
+			# Add fabric item
 			item_dict = {
 				coating_order_doc.fabric_item: {
 					'item_code': coating_order_doc.fabric_item,
