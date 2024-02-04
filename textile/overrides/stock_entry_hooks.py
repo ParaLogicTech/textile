@@ -97,24 +97,24 @@ class StockEntryDP(StockEntry):
 
 			# Add raw materials
 			coating_item_qty = qty * cf_coating
-			item_dict = super().get_bom_raw_materials(coating_item_qty, scrap_qty)
-			for d in item_dict.values():
+			items_dict = super().get_bom_raw_materials(coating_item_qty, scrap_qty)
+			for d in items_dict.values():
 				d.from_warehouse = coating_order_doc.source_warehouse
 
 			# Add fabric item
-			item_dict = {
+			items_dict = {
 				coating_order_doc.fabric_item: {
 					'item_code': coating_order_doc.fabric_item,
 					'from_warehouse': coating_order_doc.fabric_warehouse,
 					'uom': coating_order_doc.stock_uom,
 					'qty': qty,
-				}, **item_dict
+				}, **items_dict
 			}
 
 		else:
-			item_dict = super().get_bom_raw_materials(qty, scrap_qty)
+			items_dict = super().get_bom_raw_materials(qty, scrap_qty)
 
-		return item_dict
+		return items_dict
 
 	def add_finished_goods_items_from_bom(self):
 		if self.coating_order:
