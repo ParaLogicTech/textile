@@ -62,8 +62,9 @@ class PackingSlipDP(PackingSlip):
 				})
 
 		for name in print_orders:
-			order_details = frappe.db.get_value("Print Order", name,
-				["fabric_item", "fabric_item_name", "default_length_uom", "wip_warehouse"], as_dict=1)
+			order_details = frappe.db.get_value("Print Order", name, [
+				"fabric_item", "fabric_item_name", "default_length_uom", "wip_warehouse", "fabric_warehouse", "skip_transfer",
+			], as_dict=1)
 
 			if not self.has_return_fabric(order_details.fabric_item):
 				self.append('items', {
@@ -71,7 +72,7 @@ class PackingSlipDP(PackingSlip):
 					"item_name": "{0} ({1})".format(order_details.fabric_item_name, _("Return Fabric")),
 					"qty": 0,
 					"uom": order_details.default_length_uom,
-					"source_warehouse": order_details.wip_warehouse,
+					"source_warehouse": order_details.fabric_warehouse if order_details.skip_transfer else order_details.wip_warehouse,
 					"print_order": name,
 					"is_return_fabric": 1,
 				})
