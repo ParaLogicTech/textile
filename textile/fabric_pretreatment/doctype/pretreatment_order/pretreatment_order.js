@@ -110,7 +110,8 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			let can_create_work_order = false;
 
 			let bom_created = doc.ready_fabric_bom;
-			if (!bom_created) {
+			let can_create_bom = frappe.model.can_create("Sales Order") || frappe.model.can_create("Work Order");
+			if (!bom_created && can_create_bom) {
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
 					__("Create"));
 			}
@@ -127,14 +128,16 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				&& (!doc.packing_slip_required || flt(doc.delivered_qty, qty_precision) < flt(doc.packed_qty, qty_precision));
 
 			if (doc.status != "Closed") {
-				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
+				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100 && frappe.model.can_create("Sales Order")) {
 					can_create_sales_order = true;
 					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
 						__("Create"));
 				}
 
 				if (
-					bom_created && (
+					frappe.model.can_create("Work Order")
+					&& bom_created
+					&& (
 						(!doc.is_internal_customer && doc.per_ordered && doc.per_work_ordered < doc.per_ordered)
 						|| (doc.is_internal_customer && flt(doc.per_work_ordered) < 100)
 					)
@@ -144,14 +147,14 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 						__("Create"));
 				}
 
-				if (is_unpacked) {
+				if (is_unpacked && frappe.model.can_create("Packing Slip")) {
 					let packing_slip_btn = this.frm.add_custom_button(__("Packing Slip"), () => this.make_packing_slip());
 					if (doc.packing_status != "Packed") {
 						$(packing_slip_btn).removeClass("btn-default").addClass("btn-primary");
 					}
 				}
 
-				if (is_undelivered) {
+				if (is_undelivered && frappe.model.can_create("Delivery Note")) {
 					let delivery_note_btn = this.frm.add_custom_button(__("Delivery Note"), () => this.make_delivery_note());
 
 					if (
@@ -163,13 +166,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				}
 			}
 
-			if (doc.status != "Closed") {
+			if (doc.status != "Closed" && can_create_bom) {
 				if (!bom_created || can_create_sales_order || can_create_work_order) {
 					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_pretreatment_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 
-				if (!this.frm.doc.is_internal_customer) {
+				if (!this.frm.doc.is_internal_customer && frappe.model.can_create("Print Order")) {
 					this.frm.add_custom_button(__("Print Order"), () => this.make_print_order(), __("Create"));
 				}
 			}
