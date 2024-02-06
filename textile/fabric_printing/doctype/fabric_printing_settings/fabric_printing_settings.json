@@ -19,13 +19,19 @@
   "default_printing_wip_warehouse",
   "default_coating_fg_warehouse",
   "column_break_s3mwh",
-  "default_printing_fg_warehouse"
+  "default_printing_fg_warehouse",
+  "stock_entry_type_section",
+  "stock_entry_type_for_fabric_transfer",
+  "column_break_x00kc",
+  "stock_entry_type_for_print_production",
+  "column_break_5kn2h",
+  "stock_entry_type_for_fabric_coating"
  ],
  "fields": [
   {
    "fieldname": "default_item_group_for_printed_design_item",
    "fieldtype": "Link",
-   "label": "Default Item Group For Printed Design Item",
+   "label": "Item Group For Printed Design Items",
    "options": "Item Group"
   },
   {
@@ -92,12 +98,43 @@
    "fieldtype": "Link",
    "label": "Default Printing Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "fieldname": "stock_entry_type_section",
+   "fieldtype": "Section Break",
+   "label": "Stock Entry Type"
+  },
+  {
+   "fieldname": "stock_entry_type_for_fabric_transfer",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Fabric Transfer",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "column_break_x00kc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_entry_type_for_print_production",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Print Production",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "column_break_5kn2h",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_entry_type_for_fabric_coating",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Fabric Coating",
+   "options": "Stock Entry Type"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-01-03 11:33:39.143581",
+ "modified": "2024-02-07 01:24:12.007364",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",

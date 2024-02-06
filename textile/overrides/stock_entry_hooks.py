@@ -25,6 +25,34 @@ class StockEntryDP(StockEntry):
 		self.update_print_order_fabric_transfer_status()
 		self.update_coating_order()
 
+	def set_stock_entry_type(self):
+		printing_settings = frappe.get_cached_doc("Fabric Printing Settings", None)
+		pretreatment_settings = frappe.get_cached_doc("Fabric Pretreatment Settings", None)
+
+		ste_type = None
+		if self.get("print_order"):
+			if self.purpose == "Manufacture":
+				ste_type = printing_settings.stock_entry_type_for_print_production
+			elif self.purpose == "Material Transfer for Manufacture":
+				ste_type = printing_settings.stock_entry_type_for_fabric_transfer
+
+		elif self.get("coating_order"):
+			if self.purpose == "Manufacture":
+				ste_type = printing_settings.stock_entry_type_for_fabric_coating
+
+		elif self.get("pretreatment_order"):
+			if self.purpose == "Manufacture":
+				ste_type = pretreatment_settings.stock_entry_type_for_pretreatment_prodution
+			elif self.purpose == "Material Transfer for Manufacture":
+				ste_type = pretreatment_settings.stock_entry_type_for_fabric_transfer
+			elif self.purpose == "Material Consumption for Manufacture":
+				ste_type = pretreatment_settings.stock_entry_type_for_operation_consumption
+
+		if ste_type:
+			self.stock_entry_type = ste_type
+		else:
+			super().set_stock_entry_type()
+
 	def update_print_order_fabric_transfer_status(self):
 		if not self.get("print_order"):
 			return

@@ -17,7 +17,13 @@
   "default_pretreatment_source_warehouse",
   "column_break_yc3wg",
   "default_pretreatment_wip_warehouse",
-  "default_pretreatment_fg_warehouse"
+  "default_pretreatment_fg_warehouse",
+  "stock_entry_type_section",
+  "stock_entry_type_for_fabric_transfer",
+  "column_break_r8ba8",
+  "stock_entry_type_for_operation_consumption",
+  "column_break_n8lzz",
+  "stock_entry_type_for_pretreatment_prodution"
  ],
  "fields": [
   {
@@ -79,12 +85,43 @@
    "fieldtype": "Link",
    "label": "Default Pretreatment Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "fieldname": "stock_entry_type_section",
+   "fieldtype": "Section Break",
+   "label": "Stock Entry Type"
+  },
+  {
+   "fieldname": "stock_entry_type_for_fabric_transfer",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Fabric Transfer",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "column_break_r8ba8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_entry_type_for_operation_consumption",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Operation Consumption",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "column_break_n8lzz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_entry_type_for_pretreatment_prodution",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type for Pretreatment Prodution",
+   "options": "Stock Entry Type"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-01-03 11:34:41.388583",
+ "modified": "2024-02-07 01:26:56.375350",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment Settings",

@@ -1,5 +1,14 @@
 import frappe
 
+stock_entry_types = [
+	("Fabric Transfer for Printing", "Material Transfer for Manufacture"),
+	("Fabric Transfer for Pretreatment", "Material Transfer for Manufacture"),
+	("Fabric Coating", "Manufacture"),
+	("Fabric Printing", "Manufacture"),
+	("Fabric Pretreatment", "Manufacture"),
+	("Pretreatment Operation", "Material Consumption for Manufacture"),
+]
+
 customs_tariff_numbers = [
 	{
 		"tariff_number": "5208.1100",
@@ -198,11 +207,36 @@ fabric_types = [
 def after_install():
 	from textile.utils import update_conversion_factor_global_defaults
 
+	populate_stock_entry_types()
 	populate_customs_tariff_number()
 	populate_fabric_material()
 	populate_fabric_type()
 	create_printing_uom()
 	update_conversion_factor_global_defaults()
+
+
+def populate_stock_entry_types():
+	for name, purpose in stock_entry_types:
+		if not frappe.db.exists("Stock Entry Type", name):
+
+			doc = frappe.get_doc({
+				"doctype": "Stock Entry Type",
+				"purpose": purpose,
+			})
+			doc.__newname = name
+			doc.save()
+
+	frappe.db.set_single_value("Fabric Pretreatment Settings", {
+		"stock_entry_type_for_fabric_transfer": "Fabric Transfer for Pretreatment",
+		"stock_entry_type_for_operation_consumption": "Pretreatment Operation",
+		"stock_entry_type_for_pretreatment_prodution": "Fabric Pretreatment",
+	})
+
+	frappe.db.set_single_value("Fabric Printing Settings", {
+		"stock_entry_type_for_fabric_transfer": "Fabric Transfer for Printing",
+		"stock_entry_type_for_print_production": "Fabric Printing",
+		"stock_entry_type_for_fabric_coating": "Fabric Coating",
+	})
 
 
 def populate_customs_tariff_number():
