@@ -241,6 +241,8 @@ def stop_unstop(coating_order, status):
 
 @frappe.whitelist()
 def make_stock_entry_from_coating_order(coating_order_id, qty):
+	frappe.has_permission("Coating Order", "write", throw=True)
+
 	coating_order_doc = frappe.get_doc("Coating Order", coating_order_id)
 	stock_entry = frappe.new_doc("Stock Entry")
 
@@ -262,6 +264,7 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 	if frappe.db.get_single_value("Manufacturing Settings", "auto_submit_manufacture_entry"):
 		try:
 			ste_copy = frappe.get_doc(copy.deepcopy(stock_entry))
+			ste_copy.flags.ignore_permissions = True
 			ste_copy.submit()
 			stock_entry = ste_copy
 			frappe.msgprint(_("{0} submitted successfully for Coating ({1} {2})").format(

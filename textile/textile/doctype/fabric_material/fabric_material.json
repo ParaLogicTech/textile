@@ -62,7 +62,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2024-02-03 15:03:16.859805",
+ "modified": "2024-02-06 21:19:55.582155",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Material",
@@ -113,6 +113,11 @@
    "read": 1,
    "report": 1,
    "role": "Sales User (Read Only)"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Sales Master (Read Only)"
   },
   {
    "read": 1,
