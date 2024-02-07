@@ -1,5 +1,13 @@
 import frappe
 
+textile_item_types = [
+	("Greige Fabric", 1),
+	("Ready Fabric", 2),
+	("Printed Design", 3),
+	("Print Process", 4),
+	("Process Component", 5),
+]
+
 stock_entry_types = [
 	("Fabric Transfer for Printing", "Material Transfer for Manufacture"),
 	("Fabric Transfer for Pretreatment", "Material Transfer for Manufacture"),
@@ -207,12 +215,27 @@ fabric_types = [
 def after_install():
 	from textile.utils import update_conversion_factor_global_defaults
 
+	populate_textile_item_types()
 	populate_stock_entry_types()
 	populate_customs_tariff_number()
 	populate_fabric_material()
 	populate_fabric_type()
 	create_printing_uom()
 	update_conversion_factor_global_defaults()
+
+
+def populate_textile_item_types():
+	for name, sorting_idx in textile_item_types:
+		exists = frappe.db.exists("Textile Item Type", name)
+
+		if exists:
+			doc = frappe.get_doc("Textile Item Type", name)
+		else:
+			doc = frappe.new_doc("Textile Item Type")
+			doc.textile_item_type_name = name
+
+		doc.sorting_idx = sorting_idx
+		doc.save()
 
 
 def populate_stock_entry_types():
