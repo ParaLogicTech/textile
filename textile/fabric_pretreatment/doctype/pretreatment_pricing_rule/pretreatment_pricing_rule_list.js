@@ -1,6 +1,6 @@
-frappe.listview_settings["Print Pricing Rule"] = {
+frappe.listview_settings["Pretreatment Pricing Rule"] = {
 	onload: function(listview) {
-		listview.page.add_menu_item(__("Check Printing Rate"), () => {
+		listview.page.add_menu_item(__("Check Pretreatment Rate"), () => {
 			let doc = {
 				price_list: frappe.defaults.get_global_default("selling_price_list"),
 				applied_rules: [],
@@ -9,7 +9,7 @@ frappe.listview_settings["Print Pricing Rule"] = {
 			const get_price = () => {
 				if (doc.price_list && doc.fabric_item) {
 					return frappe.call({
-						method: "textile.fabric_printing.doctype.print_pricing_rule.print_pricing_rule.get_printing_rate_breakup",
+						method: "textile.fabric_pretreatment.doctype.pretreatment_pricing_rule.pretreatment_pricing_rule.get_pretreatment_rate_breakup",
 						args: {
 							item_code: doc.fabric_item,
 							price_list: doc.price_list,
@@ -17,8 +17,8 @@ frappe.listview_settings["Print Pricing Rule"] = {
 						},
 						callback: (r) => {
 							if (r.message) {
-								doc.base_printing_rate = r.message.base_rate;
-								doc.printing_rate = r.message.rule_rate;
+								doc.base_pretreatment_rate = r.message.base_rate;
+								doc.pretreatment_rate = r.message.rule_rate;
 								doc.fabric_rate = r.message.fabric_rate;
 								doc.price_list_rate = r.message.price_list_rate;
 								doc.applied_rules = r.message.applied_rules || [];
@@ -27,8 +27,8 @@ frappe.listview_settings["Print Pricing Rule"] = {
 						}
 					});
 				} else {
-					doc.base_printing_rate = null;
-					doc.printing_rate = null;
+					doc.base_pretreatment_rate = null;
+					doc.pretreatment_rate = null;
 					doc.fabric_rate = null;
 					doc.price_list_rate = null;
 					doc.applied_rules = [];
@@ -61,7 +61,7 @@ frappe.listview_settings["Print Pricing Rule"] = {
 			}
 
 			const dialog = new frappe.ui.Dialog({
-				title: __("Check Printing Rate"),
+				title: __("Check Pretreatment Rate"),
 				fields: [
 					{
 						label: __("Fabric Item Code"),
@@ -121,14 +121,14 @@ frappe.listview_settings["Print Pricing Rule"] = {
 						fieldtype: "Section Break",
 					},
 					{
-						label: __("Base Printing Rate"),
-						fieldname: "base_printing_rate",
+						label: __("Base Pretreatment Rate"),
+						fieldname: "base_pretreatment_rate",
 						fieldtype: "Currency",
 						read_only: 1,
 					},
 					{
-						label: __("Printing Rate"),
-						fieldname: "printing_rate",
+						label: __("Pretreatment Rate"),
+						fieldname: "pretreatment_rate",
 						fieldtype: "Currency",
 						read_only: 1,
 					},
@@ -160,7 +160,7 @@ frappe.listview_settings["Print Pricing Rule"] = {
 								label: __("Rule"),
 								fieldname: "rule",
 								fieldtype: "Link",
-								options: "Print Pricing Rule",
+								options: "Pretreatment Pricing Rule",
 								read_only: 1,
 								in_list_view: 1
 							},

@@ -1,7 +1,7 @@
 {
  "charts": [],
  "content": "[{\"id\":\"wnqL5KZOgb\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Fabric Pretreatment</span>\",\"col\":12}},{\"id\":\"gbTLWTXQj1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pretreatment Order\",\"col\":3}},{\"id\":\"H5--diJpnT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Work Order\",\"col\":3}},{\"id\":\"kpnzD9QMbL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"CrmQaUl-rU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"GVD6W4cyef\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"Ha9hr_hlVg\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Packing Slip\",\"col\":3}},{\"id\":\"lB1QHO0buz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"R-em3zHWHO\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"YQXzfwYdPt\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pretreatment Orders To Confirm\",\"col\":3}},{\"id\":\"DnWeUIt6KM\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pretreatment Orders In Production\",\"col\":3}},{\"id\":\"8AiAGm80wJ\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pretreatment Orders To Pack\",\"col\":3}},{\"id\":\"yTsRhT0XBC\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pretreatment Orders To Deliver\",\"col\":3}},{\"id\":\"sfERbwXWTq\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Otfps9F9a8\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Fabric Pretreatment Documents</b></span>\",\"col\":12}},{\"id\":\"L8rG5ifCi8\",\"type\":\"card\",\"data\":{\"card_name\":\"Order\",\"col\":3}},{\"id\":\"DTOba1OLe7\",\"type\":\"card\",\"data\":{\"card_name\":\"Production\",\"col\":3}},{\"id\":\"H4HSiEH9mE\",\"type\":\"card\",\"data\":{\"card_name\":\"Fulfilment\",\"col\":3}},{\"id\":\"Wy_lJwaXfl\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":3}},{\"id\":\"euZJ1vg0er\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":3}},{\"id\":\"yfe7iYtiaN\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":3}}]",
- "creation": "2023-08-21 02:36:57.836241",
+ "creation": "2024-01-25 15:24:37.832960",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -167,34 +167,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 2,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fabric Pretreatment Settings",
-   "link_count": 0,
-   "link_to": "Fabric Pretreatment Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Pretreatment Process Rule",
-   "link_count": 0,
-   "link_to": "Pretreatment Process Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Reports",
    "link_count": 3,
    "onboard": 0,
@@ -229,9 +201,47 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fabric Pretreatment Settings",
+   "link_count": 0,
+   "link_to": "Fabric Pretreatment Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pretreatment Process Rule",
+   "link_count": 0,
+   "link_to": "Pretreatment Process Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pretreatment Pricing Rule",
+   "link_count": 0,
+   "link_to": "Pretreatment Pricing Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2024-01-25 15:20:10.085850",
+ "modified": "2024-02-09 12:40:49.655301",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment",
