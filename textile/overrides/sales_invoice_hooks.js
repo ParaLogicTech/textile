@@ -5,6 +5,17 @@ frappe.ui.form.on("Sales Invoice", {
 		if (frm.fields_dict.printed_fabrics?.grid) {
 			frm.fields_dict.printed_fabrics.grid.cannot_add_rows = 1;
 		}
+	},
+
+	refresh: function (frm) {
+		frm.add_custom_button(__('Pretreatment Order'), function() {
+			textile.get_items_from_pretreatment_order(
+				frm,
+				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_invoice",
+				null,
+				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.get_pretreatment_orders_to_be_billed"
+			);
+		}, __("Get Items From"));
 	}
 });
 

@@ -10,6 +10,8 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders, get_subcontractable_qty
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
+from frappe.desk.reportview import get_match_cond, get_filters_cond
+from erpnext.controllers.queries import get_fields
 
 
 force_customer_fields = ["customer_name"]
@@ -1075,6 +1077,40 @@ def make_delivery_note(source_name, target_doc=None):
 
 
 @frappe.whitelist()
+def make_sales_invoice(source_name, target_doc=None):
+	from erpnext.controllers.queries import _get_sales_orders_to_be_billed, _get_delivery_notes_to_be_billed
+	from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice as invoice_from_sales_order
+	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice as invoice_from_delivery_note
+
+	doc = frappe.get_doc("Pretreatment Order", source_name)
+
+	if doc.delivery_required:
+		dn_items = frappe.get_all("Delivery Note Item", filters={"pretreatment_order": doc.name}, fields=["name", "parent"])
+		dn_names = list(set([d.parent for d in dn_items]))
+		if not dn_names:
+			frappe.throw(_("There are no Delivery Notes to be delivered"))
+
+		frappe.flags.selected_children = {"items": [d.name for d in dn_items]}
+
+		delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
+		for d in delivery_notes:
+			target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
+	else:
+		so_items = frappe.get_all("Sales Order Item", filters={"pretreatment_order": doc.name}, fields=["name", "parent"])
+		so_names = list(set([d.parent for d in so_items]))
+		if not so_names:
+			frappe.throw(_("There are no Sales Orders to be delivered"))
+
+		frappe.flags.selected_children = {"items": [d.name for d in so_items]}
+
+		sales_orders = _get_sales_orders_to_be_billed(filters={"name": ["in", so_names]})
+		for d in sales_orders:
+			target_doc = invoice_from_sales_order(d.name, target_doc=target_doc)
+
+	return target_doc
+
+
+@frappe.whitelist()
 def make_print_order(source_name):
 	pretreatment_order = frappe.get_doc('Pretreatment Order', source_name)
 
@@ -1128,9 +1164,6 @@ def get_pretreatment_orders_to_be_delivered(doctype, txt, searchfield, start, pa
 
 def _get_pretreatment_orders_to_be_delivered(doctype="Pretreatment Order", txt="", searchfield="name", start=0, page_len=0,
 		filters=None, as_dict=True, ignore_permissions=False):
-	from frappe.desk.reportview import get_match_cond, get_filters_cond
-	from erpnext.controllers.queries import get_fields
-
 	fields = get_fields("Pretreatment Order")
 	select_fields = ", ".join(["`tabPretreatment Order`.{0}".format(f) for f in fields])
 	limit = "limit {0}, {1}".format(start, page_len) if page_len else ""
@@ -1148,6 +1181,61 @@ def _get_pretreatment_orders_to_be_delivered(doctype="Pretreatment Order", txt="
 			and `tabPretreatment Order`.`{key}` like {txt}
 			and `tabPretreatment Order`.`per_delivered` < `tabPretreatment Order`.`per_produced`
 			and (`tabPretreatment Order`.`packing_slip_required` = 0 or `tabPretreatment Order`.`per_delivered` < `tabPretreatment Order`.`per_packed`)
+			{fcond} {mcond}
+		order by `tabPretreatment Order`.transaction_date, `tabPretreatment Order`.creation
+		{limit}
+	""".format(
+		fields=select_fields,
+		key=searchfield,
+		fcond=get_filters_cond(doctype, filters, [], ignore_permissions=ignore_permissions),
+		mcond="" if ignore_permissions else get_match_cond(doctype),
+		limit=limit,
+		txt="%(txt)s",
+	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_pretreatment_orders_to_be_billed(doctype, txt, searchfield, start, page_len, filters, as_dict):
+	return _get_pretreatment_orders_to_be_billed(doctype, txt, searchfield, start, page_len, filters, as_dict)
+
+
+def _get_pretreatment_orders_to_be_billed(doctype="Pretreatment Order", txt="", searchfield="name", start=0, page_len=0,
+		filters=None, as_dict=True, ignore_permissions=False):
+	fields = get_fields("Pretreatment Order")
+	select_fields = ", ".join(["`tabPretreatment Order`.{0}".format(f) for f in fields])
+	limit = "limit {0}, {1}".format(start, page_len) if page_len else ""
+
+	if not filters:
+		filters = {}
+
+	return frappe.db.sql("""
+		select {fields}
+		from `tabPretreatment Order`
+		where `tabPretreatment Order`.docstatus = 1
+			and `tabPretreatment Order`.`{key}` like {txt}
+			and (
+				(`tabPretreatment Order`.delivery_required = 0 and exists(
+					select so.name
+					from `tabSales Order Item` soi
+					inner join `tabSales Order` so on so.name = soi.parent
+					where soi.pretreatment_order = `tabPretreatment Order`.name
+						and so.docstatus = 1
+						and so.status not in ('Closed', 'On Hold')
+						and so.billing_status = 'To Bill'
+						and soi.qty > soi.billed_qty + soi.returned_qty
+				))
+				or (`tabPretreatment Order`.delivery_required = 1 and exists(
+					select dn.name
+					from `tabDelivery Note Item` dni
+					inner join `tabDelivery Note` dn on dn.name = dni.parent
+					where dni.pretreatment_order = `tabPretreatment Order`.name
+						and dn.docstatus = 1
+						and dn.status not in ('Closed', 'On Hold')
+						and dn.billing_status = 'To Bill'
+						and dni.qty > dni.billed_qty + dni.returned_qty
+				))
+			)
 			{fcond} {mcond}
 		order by `tabPretreatment Order`.transaction_date, `tabPretreatment Order`.creation
 		{limit}

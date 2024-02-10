@@ -111,7 +111,7 @@ $.extend(textile, {
 					},
 				},
 			],
-			columns: ['customer_name', 'greige_fabric_item_name', 'transaction_date'],
+			columns: ['customer_name', 'greige_fabric_item_name', 'ready_fabric_item_name', 'transaction_date'],
 			get_query: () => {
 				return {
 					query: query,
