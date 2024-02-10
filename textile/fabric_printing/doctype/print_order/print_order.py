@@ -1202,6 +1202,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			target.cost_center = source.get("cost_center")
 
 		target.run_method("set_missing_values")
+		target.run_method("set_taxes_and_charges")
 		target.run_method("calculate_taxes_and_totals")
 		target.run_method("set_payment_schedule")
 
