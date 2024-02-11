@@ -98,15 +98,16 @@ class FabricSalesPurchaseReport(SalesPurchaseDetailsReport):
 	def get_columns(self):
 		columns = super().get_columns()
 
-		item_code_index = next(i for i, c in enumerate(columns) if c.get("fieldname") == "item_code")
-		columns.insert(item_code_index, {
-			"label": _("Fabric Name"),
-			"fieldname": "fabric_item_name",
-			"fieldtype": "Data",
-			"width": 150
-		})
+		if "fabric_item" in self.group_by or not self.filters.totals_only:
+			item_code_index = next((i for i, c in enumerate(columns) if c.get("fieldname") == "item_code"), 1)
+			columns.insert(item_code_index, {
+				"label": _("Fabric Name"),
+				"fieldname": "fabric_item_name",
+				"fieldtype": "Data",
+				"width": 150
+			})
 
-		qty_index = next(i for i, c in enumerate(columns) if c.get("fieldname") == "qty")
+		qty_index = next((i for i, c in enumerate(columns) if c.get("fieldname") == "qty"), 100)
 		columns[qty_index+1:qty_index+1] = [
 			{
 				"label": _("Return Qty"),
@@ -129,7 +130,7 @@ class FabricSalesPurchaseReport(SalesPurchaseDetailsReport):
 			},
 		]
 
-		packing_slip_index = next(i for i, c in enumerate(columns) if c.get("fieldname") == "packing_slip")
+		packing_slip_index = next((i for i, c in enumerate(columns) if c.get("fieldname") == "packing_slip"), 100)
 		columns[packing_slip_index + 1:packing_slip_index + 1] = [
 			{
 				"label": _("Print Order"),
