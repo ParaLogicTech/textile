@@ -108,10 +108,10 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
+			let has_permission = frappe.model.can_create("Sales Order") || frappe.model.can_create("Work Order");
 
 			let bom_created = doc.ready_fabric_bom;
-			let can_create_bom = frappe.model.can_create("Sales Order") || frappe.model.can_create("Work Order");
-			if (!bom_created && can_create_bom) {
+			if (!bom_created && has_permission) {
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
 					__("Create"));
 			}
@@ -128,23 +128,27 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				&& (!doc.packing_slip_required || flt(doc.delivered_qty, qty_precision) < flt(doc.packed_qty, qty_precision));
 
 			if (doc.status != "Closed") {
-				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100 && frappe.model.can_create("Sales Order")) {
+				if (!doc.is_internal_customer && flt(doc.per_ordered) < 100) {
 					can_create_sales_order = true;
-					this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
-						__("Create"));
+
+					if (frappe.model.can_create("Sales Order")) {
+						this.frm.add_custom_button(__('Sales Order'), () => this.make_sales_order(),
+							__("Create"));
+					}
 				}
 
 				if (
-					frappe.model.can_create("Work Order")
-					&& bom_created
+					bom_created
 					&& (
 						(!doc.is_internal_customer && doc.per_ordered && doc.per_work_ordered < doc.per_ordered)
 						|| (doc.is_internal_customer && flt(doc.per_work_ordered) < 100)
 					)
 				) {
 					can_create_work_order = true;
-					this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
-						__("Create"));
+					if (frappe.model.can_create("Work Order")) {
+						this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
+							__("Create"));
+					}
 				}
 
 				if (is_unpacked && frappe.model.can_create("Packing Slip")) {
@@ -166,7 +170,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				}
 			}
 
-			if (doc.status != "Closed" && can_create_bom) {
+			if (doc.status != "Closed" && has_permission) {
 				if (!bom_created || can_create_sales_order || can_create_work_order) {
 					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_pretreatment_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");
