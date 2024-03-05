@@ -40,7 +40,7 @@ class CoatingProductionRegister:
 			SELECT se.name as stock_entry, se.posting_date, se.posting_time,
 				timestamp(se.posting_date, se.posting_time) as posting_dt,
 				se.coating_order, se.fg_completed_qty as qty,
-				co.uom as uom,
+				co.stock_uom as uom,
 				co.customer, co.customer_name,
 				co.fabric_item as fabric_item, co.fabric_item_name as fabric_item_name,
 				item.net_weight_per_unit, item.weight_uom
@@ -66,7 +66,6 @@ class CoatingProductionRegister:
 				from `tabUOM Conversion Detail`
 				where parenttype = 'Item' and parent in %s and uom = 'Square Meter'
 			""", [fabrics]))
-			print(self.square_meter_conversion)
 
 	def get_conditions(self):
 		conditions = []
@@ -296,20 +295,12 @@ class CoatingProductionRegister:
 				if "customer" in self.group_by:
 					exclude_columns.remove('customer')
 					exclude_columns.remove('customer_name')
-
-				if "greige_fabric" in self.group_by:
-					exclude_columns.remove('greige_fabric')
-					exclude_columns.remove('greige_fabric_name')
-
+					
 				if "coating_order" in self.group_by:
 					exclude_columns.remove('coating_order')
 
 		if not self.show_customer_name:
 			exclude_columns.add('customer_name')
-
-		if not self.show_item_name:
-			exclude_columns.add('greige_fabric_name')
-			exclude_columns.add('ready_fabric_name')
 
 		columns = [c for c in columns if c['fieldname'] not in exclude_columns]
 
