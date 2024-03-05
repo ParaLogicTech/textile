@@ -207,8 +207,46 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fabric Printing Settings",
+   "link_count": 0,
+   "link_to": "Fabric Printing Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Process Rule",
+   "link_count": 0,
+   "link_to": "Print Process Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Pricing Rule",
+   "link_count": 0,
+   "link_to": "Print Pricing Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Reports",
-   "link_count": 5,
+   "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -254,6 +292,16 @@
   },
   {
    "hidden": 0,
+   "is_query_report": 1,
+   "label": "Coating Production Register",
+   "link_count": 0,
+   "link_to": "Coating Production Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
    "is_query_report": 0,
    "label": "Textile Email Digest",
    "link_count": 0,
@@ -261,47 +309,9 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 3,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fabric Printing Settings",
-   "link_count": 0,
-   "link_to": "Fabric Printing Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Print Process Rule",
-   "link_count": 0,
-   "link_to": "Print Process Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Print Pricing Rule",
-   "link_count": 0,
-   "link_to": "Print Pricing Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
   }
  ],
- "modified": "2024-01-25 15:20:04.254412",
+ "modified": "2024-03-05 13:43:43.708280",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
