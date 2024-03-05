@@ -210,7 +210,7 @@ class CoatingProductionRegister:
 				"label": _("Date/Time"),
 				"fieldname": "posting_dt",
 				"fieldtype": "Datetime",
-				"width": 120
+				"width": 90
 			},
 			{
 				"label": _("Length (Meter)"),
