@@ -295,6 +295,10 @@ class CoatingProductionRegister:
 				if "customer" in self.group_by:
 					exclude_columns.remove('customer')
 					exclude_columns.remove('customer_name')
+				
+				if "fabric_item" in self.group_by:
+					exclude_columns.remove('fabric_item')
+					exclude_columns.remove('fabric_item_name')
 					
 				if "coating_order" in self.group_by:
 					exclude_columns.remove('coating_order')
