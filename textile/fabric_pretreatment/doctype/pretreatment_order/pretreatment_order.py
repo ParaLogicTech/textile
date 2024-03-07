@@ -877,7 +877,6 @@ def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, ge
 	get_greige_fabric = cint(get_greige_fabric)
 
 	out = get_fabric_item_details(fabric_item)
-
 	if prefix:
 		out = frappe._dict({f"{prefix}{key}": value for key, value in out.items()})
 
