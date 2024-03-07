@@ -18,6 +18,7 @@
   "notes",
   "pretreatment_order",
   "packing_slip_required",
+  "include_pretreatment_price",
   "column_break_kji8i",
   "naming_series",
   "company",
@@ -769,12 +770,19 @@
    "fieldtype": "Check",
    "label": "Skip Fabric Transfer to WIP Warehouse",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "include_pretreatment_price",
+   "fieldtype": "Check",
+   "label": "Include Pretreatment Price"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-01-09 23:27:54.775320",
+ "modified": "2024-03-07 18:12:16.691085",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",
