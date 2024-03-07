@@ -57,7 +57,7 @@ def get_price_list_rate(item_code, price_list, args):
 		include_pretreatment_price = frappe.db.get_value("Print Order", args.get("print_order"),
 			"include_pretreatment_price", cache=1) if args.get("print_order") else False
 
-		if args.get("print_order") and include_pretreatment_price:
+		if include_pretreatment_price:
 			pretreatment_rate = get_pretreatment_rate(item_code, price_list, customer=customer)
 
 		return printing_rate + fabric_rate + pretreatment_rate
