@@ -105,11 +105,12 @@ textile.set_printed_fabric_rate = function (frm, printed_fabric_row) {
 	}
 }
 
-textile.set_pretreatment_order_in_item_args = function (row, item_args) {
+textile.update_item_args_for_pricing = function (row, item_args) {
 	item_args.pretreatment_order = row.pretreatment_order;
+	item_args.print_order = row.print_order;
 }
 
 erpnext.taxes_and_totals_hooks.push(textile.calculate_panel_qty);
 erpnext.taxes_and_totals_hooks.push(textile.set_printed_fabric_details);
 
-erpnext.update_item_args_for_pricing_hooks.push(textile.set_pretreatment_order_in_item_args);
+erpnext.update_item_args_for_pricing_hooks.push(textile.update_item_args_for_pricing);
