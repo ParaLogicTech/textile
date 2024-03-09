@@ -67,6 +67,11 @@ class DeliveryNoteDP(DeliveryNote):
 			doc = frappe.get_doc("Print Order", name)
 			doc.run_method("update_status", None)
 
+	def get_skip_sales_invoice(self, row):
+		is_return_fabric = is_row_return_fabric(self, row)
+		if is_return_fabric:
+			return True
+
 
 def override_delivery_note_dashboard(data):
 	from textile.utils import override_sales_transaction_dashboard
