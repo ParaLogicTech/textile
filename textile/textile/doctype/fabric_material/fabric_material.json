@@ -62,7 +62,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2024-02-06 21:19:55.582155",
+ "modified": "2024-03-13 13:07:33.838311",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Material",
@@ -138,6 +138,20 @@
    "read": 1,
    "report": 1,
    "role": "Manufacturing User"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Pretreatment Sales User",
+   "select": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Print Sales User",
+   "select": 1
   }
  ],
  "quick_entry": 1,

@@ -241,7 +241,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-02-09 12:40:49.655301",
+ "modified": "2024-03-13 12:56:17.591640",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment",
@@ -282,6 +282,12 @@
   },
   {
    "role": "Packing User"
+  },
+  {
+   "role": "Pretreatment Production User"
+  },
+  {
+   "role": "Pretreatment Sales User"
   }
  ],
  "sequence_id": 20.0,

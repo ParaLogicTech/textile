@@ -672,7 +672,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-13 10:33:11.379625",
+ "modified": "2024-03-13 12:54:22.169085",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",
@@ -680,13 +680,8 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "email": 1,
-   "export": 1,
-   "print": 1,
    "read": 1,
-   "report": 1,
    "role": "Pretreatment Production User",
-   "share": 1,
    "write": 1
   },
   {
@@ -699,7 +694,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User",
+   "role": "Pretreatment Sales User",
    "share": 1,
    "submit": 1,
    "write": 1
