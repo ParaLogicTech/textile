@@ -672,13 +672,23 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-01-03 12:43:32.738554",
+ "modified": "2024-03-13 10:33:11.379625",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Pretreatment Production User",
+   "share": 1,
+   "write": 1
+  },
   {
    "amend": 1,
    "cancel": 1,

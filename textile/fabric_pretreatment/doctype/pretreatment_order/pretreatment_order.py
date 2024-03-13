@@ -22,7 +22,7 @@ force_process_component_fields = (
 )
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_component_fields
-
+ignore_permissions = frappe.has_permission("Pretreatment Order", "write")
 
 class PretreatmentOrder(TextileOrder):
 	@property
@@ -237,7 +237,7 @@ class PretreatmentOrder(TextileOrder):
 		if linked_greige_fabric != self.greige_fabric_item:
 			ready_fabric_doc = frappe.get_doc("Item", self.ready_fabric_item)
 			ready_fabric_doc.fabric_item = self.greige_fabric_item
-			ready_fabric_doc.save(ignore_permissions=True)
+			ready_fabric_doc.save(ignore_permissions=ignore_permissions)
 
 	def start_pretreatment_order(self):
 		frappe.flags.skip_pretreatment_order_status_update = True
@@ -248,10 +248,10 @@ class PretreatmentOrder(TextileOrder):
 
 		# Sales Order
 		if flt(self.per_ordered) < 100 and not self.is_internal_customer:
-			sales_order = _make_sales_order(self.name, ignore_permissions=True)
+			sales_order = _make_sales_order(self.name, ignore_permissions=ignore_permissions)
 			sales_order.flags.ignore_version = True
 			sales_order.flags.ignore_feed = True
-			sales_order.flags.ignore_permissions = True
+			sales_order.flags.ignore_permissions = ignore_permissions
 			sales_order.save()
 			sales_order.submit()
 
@@ -281,7 +281,7 @@ class PretreatmentOrder(TextileOrder):
 		bom_doc = self.make_ready_fabric_bom()
 		bom_doc.flags.ignore_version = ignore_version
 		bom_doc.flags.ignore_feed = ignore_feed
-		bom_doc.flags.ignore_permissions = True
+		bom_doc.flags.ignore_permissions = ignore_permissions
 		bom_doc.save()
 		bom_doc.submit()
 
@@ -980,7 +980,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 		if target.meta.has_field("cost_center") and source.get("cost_center"):
 			target.cost_center = source.get("cost_center")
-
+		target.flags.ignore_permissions = ignore_permissions
 		target.run_method("set_missing_values")
 		target.run_method("set_taxes_and_charges")
 		target.run_method("calculate_taxes_and_totals")

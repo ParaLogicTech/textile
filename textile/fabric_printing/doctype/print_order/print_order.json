@@ -782,7 +782,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-07 18:12:16.691085",
+ "modified": "2024-03-13 10:33:33.678661",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",
@@ -843,6 +843,16 @@
   {
    "read": 1,
    "role": "Packing User"
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Print Production User",
+   "share": 1,
+   "write": 1
   }
  ],
  "search_fields": "customer, customer_name, transaction_date, fabric_item_name, process_item_name",

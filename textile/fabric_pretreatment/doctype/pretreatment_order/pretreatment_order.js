@@ -108,7 +108,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
-			let has_permission = frappe.model.can_create("Sales Order") || frappe.model.can_create("Work Order");
+			let has_permission = frappe.model.can_write("Pretreatment Order")
 
 			let bom_created = doc.ready_fabric_bom;
 			if (!bom_created && has_permission) {

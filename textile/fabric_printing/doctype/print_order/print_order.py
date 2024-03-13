@@ -33,7 +33,7 @@ force_process_component_fields = (
 )
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
-
+ignore_permissions = frappe.has_permission("Print Order", "write")
 
 class PrintOrder(TextileOrder):
 	@property
@@ -823,7 +823,7 @@ class PrintOrder(TextileOrder):
 			sales_order = _make_sales_order(self.name, ignore_permissions=True)
 			sales_order.flags.ignore_version = True
 			sales_order.flags.ignore_feed = True
-			sales_order.flags.ignore_permissions = True
+			sales_order.flags.ignore_permissions = ignore_permissions
 			sales_order.save()
 			sales_order.submit()
 
@@ -860,9 +860,9 @@ class PrintOrder(TextileOrder):
 				item_doc = self.make_design_item(d)
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
-				item_doc.flags.ignore_permissions = True
+				item_doc.flags.ignore_permissions = ignore_permissions
 				item_doc.flags.from_print_order = True
-				item_doc.save()
+				item_doc.save(ignore_permissions=ignore_permissions)
 
 				d.db_set({
 					"item_code": item_doc.name,
@@ -873,8 +873,8 @@ class PrintOrder(TextileOrder):
 				bom_doc = self.make_design_bom(d)
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
-				bom_doc.flags.ignore_permissions = True
-				bom_doc.save()
+				bom_doc.flags.ignore_permissions = ignore_permissions
+				bom_doc.save(ignore_permissions=ignore_permissions)
 				bom_doc.submit()
 
 				d.db_set("design_bom", bom_doc.name)
@@ -1201,6 +1201,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		if target.meta.has_field("cost_center") and source.get("cost_center"):
 			target.cost_center = source.get("cost_center")
 
+		target.flags.ignore_permissions = ignore_permissions
 		target.run_method("set_missing_values")
 		target.run_method("set_taxes_and_charges")
 		target.run_method("calculate_taxes_and_totals")
