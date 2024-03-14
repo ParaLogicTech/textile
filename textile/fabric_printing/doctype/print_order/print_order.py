@@ -863,7 +863,7 @@ class PrintOrder(TextileOrder):
 				item_doc.flags.ignore_feed = ignore_feed
 				item_doc.flags.ignore_permissions = True
 				item_doc.flags.from_print_order = True
-				item_doc.save(ignore_permissions=True)
+				item_doc.save()
 
 				d.db_set({
 					"item_code": item_doc.name,
@@ -875,7 +875,7 @@ class PrintOrder(TextileOrder):
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
 				bom_doc.flags.ignore_permissions = True
-				bom_doc.save(ignore_permissions = True)
+				bom_doc.save()
 				bom_doc.submit()
 
 				d.db_set("design_bom", bom_doc.name)
