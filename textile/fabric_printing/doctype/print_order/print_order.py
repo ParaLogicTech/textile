@@ -33,7 +33,6 @@ force_process_component_fields = (
 )
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
-ignore_permissions = frappe.has_permission("Print Order", "write")
 
 class PrintOrder(TextileOrder):
 	@property
@@ -786,6 +785,7 @@ class PrintOrder(TextileOrder):
 
 	@frappe.catch_realtime_msgprint()
 	def _start_print_order(self, fabric_transfer_qty, publish_progress=True):
+		frappe.has_permission('Print Order', 'write', throw=True)
 		frappe.flags.skip_print_order_status_update = True
 
 		# Design Items
@@ -800,6 +800,7 @@ class PrintOrder(TextileOrder):
 			stock_entry = make_fabric_transfer_entry(self, fabric_transfer_qty, for_submit=True)
 			stock_entry.flags.ignore_version = True
 			stock_entry.flags.ignore_feed = True
+			stock_entry.flags.ignore_permissions = True
 			stock_entry.save()
 			stock_entry.submit()
 
@@ -823,7 +824,7 @@ class PrintOrder(TextileOrder):
 			sales_order = _make_sales_order(self.name, ignore_permissions=True)
 			sales_order.flags.ignore_version = True
 			sales_order.flags.ignore_feed = True
-			sales_order.flags.ignore_permissions = ignore_permissions
+			sales_order.flags.ignore_permissions = True
 			sales_order.save()
 			sales_order.submit()
 
@@ -860,9 +861,9 @@ class PrintOrder(TextileOrder):
 				item_doc = self.make_design_item(d)
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
-				item_doc.flags.ignore_permissions = ignore_permissions
+				item_doc.flags.ignore_permissions = True
 				item_doc.flags.from_print_order = True
-				item_doc.save(ignore_permissions=ignore_permissions)
+				item_doc.save(ignore_permissions=True)
 
 				d.db_set({
 					"item_code": item_doc.name,
@@ -873,8 +874,8 @@ class PrintOrder(TextileOrder):
 				bom_doc = self.make_design_bom(d)
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
-				bom_doc.flags.ignore_permissions = ignore_permissions
-				bom_doc.save(ignore_permissions=ignore_permissions)
+				bom_doc.flags.ignore_permissions = True
+				bom_doc.save(ignore_permissions = True)
 				bom_doc.submit()
 
 				d.db_set("design_bom", bom_doc.name)

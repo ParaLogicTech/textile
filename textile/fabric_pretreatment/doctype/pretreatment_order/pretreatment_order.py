@@ -22,7 +22,6 @@ force_process_component_fields = (
 )
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_component_fields
-ignore_permissions = frappe.has_permission("Pretreatment Order", "write")
 
 class PretreatmentOrder(TextileOrder):
 	@property
@@ -237,21 +236,21 @@ class PretreatmentOrder(TextileOrder):
 		if linked_greige_fabric != self.greige_fabric_item:
 			ready_fabric_doc = frappe.get_doc("Item", self.ready_fabric_item)
 			ready_fabric_doc.fabric_item = self.greige_fabric_item
-			ready_fabric_doc.save(ignore_permissions=ignore_permissions)
+			ready_fabric_doc.save()
 
 	def start_pretreatment_order(self):
+		frappe.has_permission("Pretreatment Order", "write", throw=True)
 		frappe.flags.skip_pretreatment_order_status_update = True
 
 		# Ready Fabric BOM
 		if not self.ready_fabric_bom:
-			self.create_ready_fabric_bom(ignore_version=True, ignore_feed=True)
+			self.create_ready_fabric_bom(ignore_version=True, ignore_feed=True, ignore_permissions=frappe.has_permission('Pretreatment Order', 'write'))
 
 		# Sales Order
 		if flt(self.per_ordered) < 100 and not self.is_internal_customer:
-			sales_order = _make_sales_order(self.name, ignore_permissions=ignore_permissions)
+			sales_order = _make_sales_order(self.name, ignore_permissions=True)
 			sales_order.flags.ignore_version = True
 			sales_order.flags.ignore_feed = True
-			sales_order.flags.ignore_permissions = ignore_permissions
 			sales_order.save()
 			sales_order.submit()
 
@@ -277,7 +276,7 @@ class PretreatmentOrder(TextileOrder):
 
 		self.notify_update()
 
-	def create_ready_fabric_bom(self, ignore_version=True, ignore_feed=True):
+	def create_ready_fabric_bom(self, ignore_version=True, ignore_feed=True, ignore_permissions=False):
 		bom_doc = self.make_ready_fabric_bom()
 		bom_doc.flags.ignore_version = ignore_version
 		bom_doc.flags.ignore_feed = ignore_feed

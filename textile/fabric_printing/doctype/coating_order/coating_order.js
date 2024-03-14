@@ -35,7 +35,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	}
 
 	setup_buttons() {
-		if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Stopped" && flt(this.frm.doc.per_coated) < 100) {
+		if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Stopped" && flt(this.frm.doc.per_coated) < 100 && frappe.model.can_write("Coating Order")) {
 			let finish_button = this.frm.add_custom_button(__("Finish"), () => this.finish_coating_order());
 			finish_button.removeClass("btn-default").addClass("btn-primary");
 		}
