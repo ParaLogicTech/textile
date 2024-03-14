@@ -311,7 +311,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-03-13 12:56:07.266371",
+ "modified": "2024-03-14 14:03:47.595909",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
@@ -358,6 +358,9 @@
   },
   {
    "role": "Print Sales User"
+  },
+  {
+   "role": "Coating User"
   }
  ],
  "sequence_id": 10.0,
