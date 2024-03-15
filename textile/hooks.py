@@ -14,6 +14,10 @@ app_include_css = "textile.bundle.css"
 after_install = "textile.install.after_install"
 notification_config = "textile.notifications.get_notification_config"
 
+permission_query_conditions = {
+    "Work Order": "textile.overrides.work_order_hooks.work_order_list_query",
+}
+
 doc_events = {
 	"Customer": {
 		"validate": "textile.overrides.customer_hooks.customer_order_default_validate",
