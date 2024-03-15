@@ -74,7 +74,7 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 
 	set_default_cost_center() {
 		if (this.frm.is_new()) {
-			let default_cost_center = frappe.defaults.get_default("default_printing_cost_center");
+			let default_cost_center = frappe.defaults.get_default("default_coating_cost_center");
 			if (default_cost_center && !this.frm.doc.cost_center) {
 			this.frm.set_value("cost_center", default_cost_center);
 			}

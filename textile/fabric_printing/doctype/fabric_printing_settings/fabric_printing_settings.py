@@ -17,6 +17,7 @@ class FabricPrintingSettings(Document):
 			"default_printing_fg_warehouse",
 			"default_coating_fg_warehouse",
 			"default_printing_cost_center",
+			"default_coating_cost_center",
 		]
 
 		for fn in global_default_fields:

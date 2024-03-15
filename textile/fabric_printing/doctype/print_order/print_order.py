@@ -34,6 +34,7 @@ force_process_component_fields = (
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_fields + force_process_component_fields
 
+
 class PrintOrder(TextileOrder):
 	@property
 	def fabric_stock_qty(self):

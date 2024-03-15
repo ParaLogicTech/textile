@@ -23,6 +23,7 @@ force_process_component_fields = (
 
 force_fields = force_customer_fields + force_fabric_fields + force_process_component_fields
 
+
 class PretreatmentOrder(TextileOrder):
 	@property
 	def greige_fabric_stock_qty(self):
