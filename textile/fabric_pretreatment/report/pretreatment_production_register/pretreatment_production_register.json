@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-18 10:14:58.056666",
+ "modified": "2024-03-18 15:12:21.609936",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Production Register",
@@ -19,9 +19,6 @@
  "report_name": "Pretreatment Production Register",
  "report_type": "Script Report",
  "roles": [
-  {
-   "role": "Stock User"
-  },
   {
    "role": "Accounts User"
   },

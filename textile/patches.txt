@@ -37,3 +37,4 @@ textile.patches.set_print_order_internal_customer
 textile.patches.set_pretreatment_order_subcontractable_qty
 textile.patches.update_fabric_conversion_uoms
 textile.patches.set_return_fabric_skip_sales_invoice
+textile.patches.set_to_default_coating_cost_center

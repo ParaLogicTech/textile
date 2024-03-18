@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-18 10:15:50.422935",
+ "modified": "2024-03-18 15:12:36.300257",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Production Register",
@@ -19,9 +19,6 @@
  "report_name": "Print Production Register",
  "report_type": "Script Report",
  "roles": [
-  {
-   "role": "Stock User"
-  },
   {
    "role": "Accounts User"
   },
