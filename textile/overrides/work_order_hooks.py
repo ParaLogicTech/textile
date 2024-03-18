@@ -160,10 +160,7 @@ def work_order_list_query(user):
 
 
 def work_order_has_permission(doc, user=None, permission_type=None):
-		if permission_type == "read" and doc.event_type == "Public":
-			return True
-		
-		if permission_type == "write":
-			return True
-		
-		return False
+	if permission_type == "write":
+		return True
+	
+	return False
