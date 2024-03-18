@@ -150,9 +150,9 @@ def work_order_list_query(user):
 	# show only work orders to user those linked with only pretreatment orders/print orders based on the user roles
 	user_has_roles = frappe.get_roles(user)
 	conditions = []
-	if "Pretreatment Production User" not in user_has_roles:
+	if all([("Pretreatment Production User" not in user_has_roles), ("Pretreatment Sales User" not in user_has_roles)]):
 		conditions.append("(NOT(`tabWork Order`.pretreatment_order IS NOT NULL AND `tabWork Order`.pretreatment_order != ''))")
-	if "Print Production User" not in user_has_roles:
+	if all([("Print Production User" not in user_has_roles), ("Print Sales User" not in user_has_roles)]):
 		conditions.append("(NOT(`tabWork Order`.print_order IS NOT NULL AND `tabWork Order`.print_order != ''))")
 
 	conditions = f"({' AND '.join(conditions)})" if conditions else ""

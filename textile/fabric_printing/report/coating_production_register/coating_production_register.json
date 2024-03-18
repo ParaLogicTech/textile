@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-04 16:10:28.932748",
+ "modified": "2024-03-18 10:17:43.941922",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Production Register",
@@ -26,7 +26,10 @@
    "role": "Accounts User"
   },
   {
-   "role": "Manufacturing User"
+   "role": "Coating User"
+  },
+  {
+   "role": "Print Sales User"
   }
  ]
 }

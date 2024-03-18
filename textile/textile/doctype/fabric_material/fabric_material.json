@@ -62,7 +62,7 @@
    "link_fieldname": "fabric_material"
   }
  ],
- "modified": "2024-03-13 15:34:33.247964",
+ "modified": "2024-03-15 16:02:13.630724",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Material",
@@ -105,19 +105,21 @@
    "role": "Stock User"
   },
   {
+   "email": 1,
+   "export": 1,
+   "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User"
+   "role": "Pretreatment Sales User",
+   "share": 1
   },
   {
+   "email": 1,
+   "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User (Read Only)"
-  },
-  {
-   "read": 1,
-   "report": 1,
-   "role": "Sales Master (Read Only)"
+   "role": "Print Sales User",
+   "share": 1
   },
   {
    "read": 1,
@@ -133,25 +135,6 @@
    "read": 1,
    "report": 1,
    "role": "Auditor"
-  },
-  {
-   "read": 1,
-   "report": 1,
-   "role": "Manufacturing User"
-  },
-  {
-   "print": 1,
-   "read": 1,
-   "role": "Pretreatment Sales User",
-   "select": 1,
-   "share": 1
-  },
-  {
-   "print": 1,
-   "read": 1,
-   "role": "Print Sales User",
-   "select": 1,
-   "share": 1
   }
  ],
  "quick_entry": 1,
