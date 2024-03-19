@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-18 15:11:40.082017",
+ "modified": "2024-03-19 15:31:09.212380",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Packing List",
@@ -24,6 +24,12 @@
   },
   {
    "role": "Delivery User"
+  },
+  {
+   "role": "Pretreatment Sales User"
+  },
+  {
+   "role": "Print Sales User"
   }
  ]
 }

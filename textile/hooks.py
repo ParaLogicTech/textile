@@ -19,7 +19,7 @@ has_permission = {
 }
 
 permission_query_conditions = {
-    "Work Order": "textile.overrides.work_order_hooks.work_order_list_query",
+	"Work Order": "textile.overrides.work_order_hooks.work_order_list_query",
 }
 
 doc_events = {

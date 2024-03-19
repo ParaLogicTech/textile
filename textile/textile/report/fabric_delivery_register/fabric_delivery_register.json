@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-18 15:11:59.718950",
+ "modified": "2024-03-19 15:31:41.619802",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Delivery Register",
@@ -24,6 +24,12 @@
   },
   {
    "role": "Accounts User"
+  },
+  {
+   "role": "Pretreatment Sales User"
+  },
+  {
+   "role": "Print Sales User"
   }
  ]
 }
