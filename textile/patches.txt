@@ -15,6 +15,7 @@ textile.patches.unset_sales_uom_for_printed_design_items
 textile.patches.update_fabric_material_tariff_numbers
 textile.patches.update_stock_entry_types
 textile.patches.setup_textile_item_types
+execute:frappe.delete_doc_if_exists("Page", "work-order-packing")
 
 [post_model_sync]
 textile.patches.set_panel_based_qty

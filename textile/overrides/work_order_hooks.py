@@ -143,12 +143,10 @@ def update_job_card_on_create(job_card):
 	job_card.pretreatment_order = pretreatment_order
 
 
-def work_order_list_query(user):
-	if not user:
-		user = frappe.session.user
-
-	# show only work orders to user those linked with only pretreatment orders/print orders based on the user roles
+def get_work_order_permission_query_conditions(user=None):
+	# hide print/pretreatment work orders if user does not have print/pretreatment roles
 	user_has_roles = frappe.get_roles(user)
+
 	conditions = []
 	if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles):
 		conditions.append("(`tabWork Order`.pretreatment_order IS NULL OR `tabWork Order`.pretreatment_order = '')")
@@ -160,15 +158,13 @@ def work_order_list_query(user):
 
 
 def work_order_has_permission(doc, user=None, permission_type=None):
-	if not user:
-		user = frappe.session.user
+	# restrict print/pretreatment work orders if user does not have print/pretreatment roles
 	user_has_roles = frappe.get_roles(user)
-	
-	if doc.print_order:
+
+	if doc.get("print_order"):
 		if ("Print Production User" not in user_has_roles) and ("Print Sales User" not in user_has_roles):
 			return False
-	if doc.pretreatment_order:
+
+	if doc.get("pretreatment_order"):
 		if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles):
 			return False
-	
-	return True

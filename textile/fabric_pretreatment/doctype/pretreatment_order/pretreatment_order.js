@@ -108,10 +108,10 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 
 			let can_create_sales_order = false;
 			let can_create_work_order = false;
-			let has_permission = frappe.model.can_write("Pretreatment Order")
+			let has_start_permission = frappe.model.can_write("Pretreatment Order");
 
 			let bom_created = doc.ready_fabric_bom;
-			if (!bom_created && has_permission) {
+			if (!bom_created && has_start_permission) {
 				this.frm.add_custom_button(__('Ready Fabric BOM'), () => this.create_ready_fabric_bom(),
 					__("Create"));
 			}
@@ -145,7 +145,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 					)
 				) {
 					can_create_work_order = true;
-					if (frappe.model.can_create("Work Order")) {
+					if (frappe.model.can_create("Work Order") || has_start_permission) {
 						this.frm.add_custom_button(__('Work Order'), () => this.create_work_order(),
 							__("Create"));
 					}
@@ -170,7 +170,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				}
 			}
 
-			if (doc.status != "Closed" && has_permission) {
+			if (doc.status != "Closed" && has_start_permission) {
 				if (!bom_created || can_create_sales_order || can_create_work_order) {
 					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_pretreatment_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");

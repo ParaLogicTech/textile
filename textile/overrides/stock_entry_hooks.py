@@ -165,3 +165,39 @@ class StockEntryDP(StockEntry):
 def update_stock_entry_from_work_order(stock_entry, work_order):
 	stock_entry.pretreatment_order = work_order.pretreatment_order
 	stock_entry.print_order = work_order.print_order
+
+
+def get_stock_entry_permission_query_conditions(user=None):
+	# hide print/pretreatment stock entries if user does not have print/pretreatment roles
+	user_has_roles = frappe.get_roles(user)
+
+	conditions = []
+
+	if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles):
+		conditions.append("(`tabStock Entry`.pretreatment_order IS NULL OR `tabStock Entry`.pretreatment_order = '')")
+
+	if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles) and ("Coating User" not in user_has_roles):
+		conditions.append("(`tabStock Entry`.coating_order IS NULL OR `tabStock Entry`.coating_order = '')")
+
+	if ("Print Production User" not in user_has_roles) and ("Print Sales User" not in user_has_roles):
+		conditions.append("(`tabStock Entry`.print_order IS NULL OR `tabStock Entry`.print_order = '')")
+
+	conditions = f"({' AND '.join(conditions)})" if conditions else ""
+	return conditions
+
+
+def stock_entry_has_permission(doc, user=None, permission_type=None):
+	# restrict print/pretreatment stock entries if user does not have print/pretreatment roles
+	user_has_roles = frappe.get_roles(user)
+
+	if doc.get("print_order"):
+		if ("Print Production User" not in user_has_roles) and ("Print Sales User" not in user_has_roles):
+			return False
+
+	if doc.get("coating_order"):
+		if ("Print Production User" not in user_has_roles) and ("Print Sales User" not in user_has_roles) and ("Coating User" not in user_has_roles):
+			return False
+
+	if doc.get("pretreatment_order"):
+		if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles):
+			return False

@@ -8,7 +8,7 @@ from frappe.utils import cint, flt, round_up
 from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
-from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders, get_subcontractable_qty
+from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders, get_subcontractable_qty
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
@@ -240,12 +240,11 @@ class PretreatmentOrder(TextileOrder):
 			ready_fabric_doc.save(ignore_permissions=True)
 
 	def start_pretreatment_order(self):
-		frappe.has_permission("Pretreatment Order", "write", throw=True)
 		frappe.flags.skip_pretreatment_order_status_update = True
 
 		# Ready Fabric BOM
 		if not self.ready_fabric_bom:
-			self.create_ready_fabric_bom(ignore_version=True, ignore_feed=True, ignore_permissions=True)
+			self.create_ready_fabric_bom(ignore_permissions=True, ignore_version=True, ignore_feed=True)
 
 		# Sales Order
 		if flt(self.per_ordered) < 100 and not self.is_internal_customer:
@@ -262,7 +261,7 @@ class PretreatmentOrder(TextileOrder):
 
 		# Work Order
 		if flt(self.per_work_ordered) < 100:
-			self.create_work_order(ignore_version=True, ignore_feed=True)
+			self.create_work_order(ignore_permissions=True, ignore_version=True, ignore_feed=True)
 
 		# Status Update
 		frappe.flags.skip_pretreatment_order_status_update = False
@@ -277,7 +276,7 @@ class PretreatmentOrder(TextileOrder):
 
 		self.notify_update()
 
-	def create_ready_fabric_bom(self, ignore_version=True, ignore_feed=True, ignore_permissions=False):
+	def create_ready_fabric_bom(self, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		bom_doc = self.make_ready_fabric_bom()
 		bom_doc.flags.ignore_version = ignore_version
 		bom_doc.flags.ignore_feed = ignore_feed
@@ -384,7 +383,7 @@ class PretreatmentOrder(TextileOrder):
 
 		return existing_bom[0] if existing_bom else None
 
-	def create_work_order(self, ignore_version=True, ignore_feed=True):
+	def create_work_order(self, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		if self.docstatus != 1:
 			frappe.throw(_("Pretreatment Order is not submitted"))
 
@@ -392,9 +391,11 @@ class PretreatmentOrder(TextileOrder):
 			frappe.throw(_("Ready Fabric BOM not created"))
 
 		if self.is_internal_customer:
-			wo_list = self.create_work_order_against_pretreatment_order(ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_list = self.create_work_order_against_pretreatment_order(ignore_permissions=ignore_permissions,
+				ignore_version=ignore_version, ignore_feed=ignore_feed)
 		else:
-			wo_list = self.create_work_order_against_sales_order(ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_list = self.create_work_order_against_sales_order(ignore_permissions=ignore_permissions,
+				ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 		if wo_list:
 			wo_message = _("Work Order created: {0}").format(
@@ -404,7 +405,7 @@ class PretreatmentOrder(TextileOrder):
 
 		return wo_list
 
-	def create_work_order_against_pretreatment_order(self, ignore_version=True, ignore_feed=True):
+	def create_work_order_against_pretreatment_order(self, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		pending_qty = flt(self.stock_qty) - flt(self.work_order_qty)
 		pending_qty = round_up(pending_qty, frappe.get_precision("Work Order", "qty"))
 
@@ -424,10 +425,10 @@ class PretreatmentOrder(TextileOrder):
 			"cost_center": self.get("cost_center"),
 		}
 
-		return create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
-			ignore_feed=ignore_feed)
+		return _create_work_orders([work_order_item], self.company,
+			ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
-	def create_work_order_against_sales_order(self, ignore_version=True, ignore_feed=True):
+	def create_work_order_against_sales_order(self, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
 			'pretreatment_order': self.name,
 			'docstatus': 1
@@ -443,7 +444,8 @@ class PretreatmentOrder(TextileOrder):
 
 		wo_list = []
 		for i, d in enumerate(wo_items):
-			wo_list += create_work_orders([d], self.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_list += _create_work_orders([d], self.company,
+				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 		if not wo_list:
 			frappe.msgprint(_("Work Order already created"))
@@ -940,6 +942,8 @@ def update_status(pretreatment_order, status):
 
 @frappe.whitelist()
 def start_pretreatment_order(pretreatment_order):
+	frappe.has_permission("Pretreatment Order", "write", throw=True)
+
 	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
 
 	if doc.docstatus != 1:
@@ -962,7 +966,7 @@ def create_ready_fabric_bom(pretreatment_order):
 	if doc.ready_fabric_bom:
 		frappe.throw(_("Ready Fabric BOM already created"))
 
-	doc.create_ready_fabric_bom()
+	doc.create_ready_fabric_bom(ignore_permissions=frappe.has_permission("Pretreatment Order", "write"))
 	doc.notify_update()
 
 
@@ -980,6 +984,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 		if target.meta.has_field("cost_center") and source.get("cost_center"):
 			target.cost_center = source.get("cost_center")
+
 		target.flags.ignore_permissions = ignore_permissions
 		target.run_method("set_missing_values")
 		target.run_method("set_taxes_and_charges")
@@ -1018,7 +1023,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 @frappe.whitelist()
 def create_work_order(pretreatment_order):
 	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
-	doc.create_work_order()
+	doc.create_work_order(ignore_permissions=frappe.has_permission("Pretreatment Order", "write"))
 
 
 @frappe.whitelist()

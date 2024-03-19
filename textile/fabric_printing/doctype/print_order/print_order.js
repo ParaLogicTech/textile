@@ -305,10 +305,10 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				}
 			}
 
-			let has_permission = frappe.model.can_write("Print Order")
+			let has_start_permission = frappe.model.can_write("Print Order")
 
 			let has_missing_item = doc.items.filter(d => !d.item_code || !d.design_bom).length;
-			if (has_missing_item && has_permission) {
+			if (has_missing_item && has_start_permission) {
 				this.frm.add_custom_button(__('Items and BOMs'), () => this.create_design_items_and_boms(),
 					__("Create"));
 			}
@@ -344,7 +344,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 					|| (doc.is_internal_customer && flt(doc.per_work_ordered) < 100)
 				) {
 					can_create_work_order = true;
-					if (frappe.model.can_create("Work Order")) {
+					if (frappe.model.can_create("Work Order") || has_start_permission) {
 						this.frm.add_custom_button(__('Work Order'), () => this.create_work_orders(),
 							__("Create"));
 					}
@@ -379,7 +379,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				}
 			}
 
-			if (doc.status != "Closed" && has_permission) {
+			if (doc.status != "Closed" && has_start_permission) {
 				if (has_missing_item || can_create_sales_order || can_create_work_order) {
 					let start_btn = this.frm.add_custom_button(__("Quick Start"), () => this.start_print_order());
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");

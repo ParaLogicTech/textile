@@ -472,7 +472,7 @@ class PrintOrder(TextileOrder):
 
 		return existing_bom[0] if existing_bom else None
 
-	def create_work_orders(self, publish_progress=True, ignore_version=True, ignore_feed=True):
+	def create_work_orders(self, publish_progress=True, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		if self.docstatus != 1:
 			frappe.throw(_("Print Order is not submitted"))
 
@@ -481,10 +481,10 @@ class PrintOrder(TextileOrder):
 
 		if self.is_internal_customer:
 			wo_list = self.create_work_orders_against_print_order(publish_progress=publish_progress,
-				ignore_version=ignore_version, ignore_feed=ignore_feed)
+				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 		else:
 			wo_list = self.create_work_order_against_sales_order(publish_progress=publish_progress,
-				ignore_version=ignore_version, ignore_feed=ignore_feed)
+				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 		if wo_list:
 			wo_message = _("Work Orders created: {0}").format(
@@ -492,8 +492,13 @@ class PrintOrder(TextileOrder):
 			)
 			frappe.msgprint(wo_message, indicator='green')
 
-	def create_work_orders_against_print_order(self, publish_progress=True, ignore_version=True, ignore_feed=True):
-		from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+	def create_work_orders_against_print_order(self,
+		publish_progress=True,
+		ignore_permissions=False,
+		ignore_version=True,
+		ignore_feed=True,
+	):
+		from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
 
 		wo_list = []
 
@@ -517,8 +522,8 @@ class PrintOrder(TextileOrder):
 				"cost_center": self.get("cost_center"),
 			}
 
-			wo_list += create_work_orders([work_order_item], self.company, ignore_version=ignore_version,
-				ignore_feed=ignore_feed)
+			wo_list += _create_work_orders([work_order_item], self.company,
+				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(self.items))
@@ -528,8 +533,13 @@ class PrintOrder(TextileOrder):
 
 		return wo_list
 
-	def create_work_order_against_sales_order(self, publish_progress=True, ignore_version=True, ignore_feed=True):
-		from erpnext.manufacturing.doctype.work_order.work_order import create_work_orders
+	def create_work_order_against_sales_order(self,
+		publish_progress=True,
+		ignore_permissions=False,
+		ignore_version=True,
+		ignore_feed=True,
+	):
+		from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
 
 		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
 			'print_order': self.name,
@@ -546,7 +556,8 @@ class PrintOrder(TextileOrder):
 
 		wo_list = []
 		for i, d in enumerate(wo_items):
-			wo_list += create_work_orders([d], self.company, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_list += _create_work_orders([d], self.company,
+				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(wo_items))
 
@@ -786,12 +797,12 @@ class PrintOrder(TextileOrder):
 
 	@frappe.catch_realtime_msgprint()
 	def _start_print_order(self, fabric_transfer_qty, publish_progress=True):
-		frappe.has_permission('Print Order', 'write', throw=True)
 		frappe.flags.skip_print_order_status_update = True
 
 		# Design Items
 		if not all(d.item_code and d.design_bom for d in self.items):
-			self._create_design_items_and_boms(publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
+			self._create_design_items_and_boms(publish_progress=publish_progress,
+				ignore_permissions=True, ignore_version=True, ignore_feed=True)
 
 		# Fabric Transfer
 		if flt(fabric_transfer_qty) > 0 and not self.skip_transfer:
@@ -839,7 +850,8 @@ class PrintOrder(TextileOrder):
 
 		# Work Orders
 		if flt(self.per_work_ordered) < 100:
-			self.create_work_orders(publish_progress=publish_progress, ignore_version=True, ignore_feed=True)
+			self.create_work_orders(publish_progress=publish_progress,
+				ignore_permissions=True, ignore_version=True, ignore_feed=True)
 
 		# Status Update
 		frappe.flags.skip_print_order_status_update = False
@@ -856,13 +868,13 @@ class PrintOrder(TextileOrder):
 
 		self.notify_update()
 
-	def _create_design_items_and_boms(self, publish_progress=True, ignore_version=True, ignore_feed=True):
+	def _create_design_items_and_boms(self, publish_progress=True, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		for i, d in enumerate(self.items):
 			if not d.item_code:
 				item_doc = self.make_design_item(d)
 				item_doc.flags.ignore_version = ignore_version
 				item_doc.flags.ignore_feed = ignore_feed
-				item_doc.flags.ignore_permissions = True
+				item_doc.flags.ignore_permissions = ignore_permissions
 				item_doc.flags.from_print_order = True
 				item_doc.save()
 
@@ -875,7 +887,7 @@ class PrintOrder(TextileOrder):
 				bom_doc = self.make_design_bom(d)
 				bom_doc.flags.ignore_version = ignore_version
 				bom_doc.flags.ignore_feed = ignore_feed
-				bom_doc.flags.ignore_permissions = True
+				bom_doc.flags.ignore_permissions = ignore_permissions
 				bom_doc.save()
 				bom_doc.submit()
 
@@ -1150,6 +1162,8 @@ def close_or_unclose_print_orders(names, status):
 def start_print_order(print_order, fabric_transfer_qty=None):
 	from erpnext.stock.stock_ledger import get_allow_negative_stock
 
+	frappe.has_permission('Print Order', 'write', throw=True)
+
 	doc = frappe.get_doc('Print Order', print_order)
 
 	if doc.docstatus != 1:
@@ -1190,7 +1204,7 @@ def create_design_items_and_boms(print_order):
 		doc.queue_action("_create_design_items_and_boms", timeout=600)
 		frappe.msgprint(_("Creating Design Items and BOMs..."), alert=True)
 	else:
-		doc._create_design_items_and_boms()
+		doc._create_design_items_and_boms(ignore_permissions=frappe.has_permission("Print Order", "write"))
 
 
 @frappe.whitelist()
@@ -1254,9 +1268,10 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 
 @frappe.whitelist()
-def create_work_orders(print_order, publish_progress=True, ignore_version=True, ignore_feed=True):
+def create_work_orders(print_order, publish_progress=True):
 	doc = frappe.get_doc("Print Order", print_order)
-	doc.create_work_orders(publish_progress=publish_progress, ignore_version=ignore_version, ignore_feed=ignore_feed)
+	doc.create_work_orders(publish_progress=publish_progress,
+		ignore_permissions=frappe.has_permission("Print Order", "write"))
 
 
 @frappe.whitelist()

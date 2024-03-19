@@ -16,10 +16,12 @@ notification_config = "textile.notifications.get_notification_config"
 
 has_permission = {
 	"Work Order": "textile.overrides.work_order_hooks.work_order_has_permission",
+	"Stock Entry": "textile.overrides.stock_entry_hooks.stock_entry_has_permission",
 }
 
 permission_query_conditions = {
-	"Work Order": "textile.overrides.work_order_hooks.work_order_list_query",
+	"Work Order": "textile.overrides.work_order_hooks.get_work_order_permission_query_conditions",
+	"Stock Entry": "textile.overrides.stock_entry_hooks.get_stock_entry_permission_query_conditions",
 }
 
 doc_events = {

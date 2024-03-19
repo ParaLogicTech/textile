@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-03-19 15:31:41.619802",
+ "modified": "2024-03-19 18:14:50.285442",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Delivery Register",
@@ -19,9 +19,6 @@
  "report_name": "Fabric Delivery Register",
  "report_type": "Script Report",
  "roles": [
-  {
-   "role": "Delivery User"
-  },
   {
    "role": "Accounts User"
   },
