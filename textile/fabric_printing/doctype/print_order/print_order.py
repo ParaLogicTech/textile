@@ -786,6 +786,7 @@ class PrintOrder(TextileOrder):
 
 	@frappe.catch_realtime_msgprint()
 	def _start_print_order(self, fabric_transfer_qty, publish_progress=True):
+		frappe.has_permission('Print Order', 'write', throw=True)
 		frappe.flags.skip_print_order_status_update = True
 
 		# Design Items
@@ -800,6 +801,7 @@ class PrintOrder(TextileOrder):
 			stock_entry = make_fabric_transfer_entry(self, fabric_transfer_qty, for_submit=True)
 			stock_entry.flags.ignore_version = True
 			stock_entry.flags.ignore_feed = True
+			stock_entry.flags.ignore_permissions = True
 			stock_entry.save()
 			stock_entry.submit()
 
@@ -1201,6 +1203,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		if target.meta.has_field("cost_center") and source.get("cost_center"):
 			target.cost_center = source.get("cost_center")
 
+		target.flags.ignore_permissions = ignore_permissions
 		target.run_method("set_missing_values")
 		target.run_method("set_taxes_and_charges")
 		target.run_method("calculate_taxes_and_totals")

@@ -11,6 +11,7 @@
   "default_package_type_for_printed_fabrics",
   "column_break_qidqn",
   "default_printing_cost_center",
+  "default_coating_cost_center",
   "wastage_mandatory",
   "warehouse_section",
   "default_printing_fabric_warehouse",
@@ -129,12 +130,18 @@
    "fieldtype": "Link",
    "label": "Stock Entry Type for Fabric Coating",
    "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "default_coating_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Coating Cost Center",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-02-07 01:24:12.007364",
+ "modified": "2024-03-14 15:34:10.806362",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",

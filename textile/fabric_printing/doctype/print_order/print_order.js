@@ -305,7 +305,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				}
 			}
 
-			let has_permission = frappe.model.can_create("Sales Order") || frappe.model.can_create("Work Order");
+			let has_permission = frappe.model.can_write("Print Order")
 
 			let has_missing_item = doc.items.filter(d => !d.item_code || !d.design_bom).length;
 			if (has_missing_item && has_permission) {

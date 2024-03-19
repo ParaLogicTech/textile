@@ -153,7 +153,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-12-20 14:25:52.016069",
+ "modified": "2024-03-18 10:39:13.370500",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Process Rule",
@@ -178,25 +178,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User",
-   "share": 1
-  },
-  {
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Sales User (Read Only)",
-   "share": 1
-  },
-  {
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Manufacturing User",
+   "role": "Print Sales User",
    "share": 1
   }
  ],

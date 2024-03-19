@@ -42,7 +42,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-08-21 02:52:07.763050",
+ "modified": "2024-03-15 15:58:02.915693",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printer",
@@ -67,16 +67,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Manufacturing User",
-   "share": 1
-  },
-  {
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Stock User",
+   "role": "Print Production User",
    "share": 1
   }
  ],

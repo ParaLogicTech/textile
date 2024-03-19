@@ -311,7 +311,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-03-05 13:43:43.708280",
+ "modified": "2024-03-15 14:16:45.810642",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
@@ -339,19 +339,13 @@
  "quick_lists": [],
  "roles": [
   {
-   "role": "Sales User (Read Only)"
+   "role": "Print Production User"
   },
   {
-   "role": "Sales User"
+   "role": "Print Sales User"
   },
   {
-   "role": "Manufacturing User"
-  },
-  {
-   "role": "Delivery User"
-  },
-  {
-   "role": "Packing User"
+   "role": "Coating User"
   }
  ],
  "sequence_id": 10.0,

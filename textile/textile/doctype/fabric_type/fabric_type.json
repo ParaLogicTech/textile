@@ -36,7 +36,7 @@
    "link_fieldname": "fabric_type"
   }
  ],
- "modified": "2024-02-06 21:19:54.241839",
+ "modified": "2024-03-18 15:03:07.024732",
  "modified_by": "Administrator",
  "module": "Textile",
  "name": "Fabric Type",
@@ -81,17 +81,12 @@
   {
    "read": 1,
    "report": 1,
-   "role": "Sales User"
+   "role": "Pretreatment Sales User"
   },
   {
    "read": 1,
    "report": 1,
-   "role": "Sales User (Read Only)"
-  },
-  {
-   "read": 1,
-   "report": 1,
-   "role": "Sales Master (Read Only)"
+   "role": "Print Sales User"
   },
   {
    "read": 1,
@@ -109,9 +104,20 @@
    "role": "Auditor"
   },
   {
+   "email": 1,
+   "export": 1,
+   "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Manufacturing User"
+   "role": "Pretreatment Production User"
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Print Production User"
   }
  ],
  "quick_entry": 1,
