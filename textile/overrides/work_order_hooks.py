@@ -160,7 +160,15 @@ def work_order_list_query(user):
 
 
 def work_order_has_permission(doc, user=None, permission_type=None):
-	if permission_type == "write":
-		return True
+	if not user:
+		user = frappe.session.user
+	user_has_roles = frappe.get_roles()
 	
-	return False
+	if doc.print_order:
+		if ("Print Production User" not in user_has_roles) and ("Print Sales User" not in user_has_roles):
+			return False
+	if doc.pretreatment_order:
+		if ("Pretreatment Production User" not in user_has_roles) and ("Pretreatment Sales User" not in user_has_roles):
+			return False
+	
+	return True
