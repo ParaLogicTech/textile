@@ -38,20 +38,23 @@ class TextilePricingRule(Document):
 		applicable_rules = cls.get_applicable_rules_for_filters(filters)
 
 		base_rate_rule = cls.get_base_rate_rule(applicable_rules, customer)
+
 		base_rate = flt(base_rate_rule.value) if base_rate_rule else 0
 		rate = base_rate
 
 		additions = []
-		for rule in applicable_rules:
-			if rule.type == "Add/Subtract":
-				rate += flt(rule.value)
-				additions.append(rule)
-
 		multipliers = []
-		for rule in applicable_rules:
-			if rule.type == "Multiply":
-				rate *= flt(rule.value)
-				multipliers.append(rule)
+
+		if not cls.is_fixed_base_rate(customer):
+			for rule in applicable_rules:
+				if rule.type == "Add/Subtract":
+					rate += flt(rule.value)
+					additions.append(rule)
+
+			for rule in applicable_rules:
+				if rule.type == "Multiply":
+					rate *= flt(rule.value)
+					multipliers.append(rule)
 
 		return frappe._dict({
 			"rule_rate": rate,
@@ -225,6 +228,14 @@ class TextilePricingRule(Document):
 	@classmethod
 	def get_customer_base_rate(cls, customer):
 		return None
+
+	@classmethod
+	def is_fixed_base_rate(cls, customer):
+		if cls.doctype == "Pretreatment Pricing Rule":
+			return frappe.get_cached_value("Customer", customer, "is_fixed_pretreatment_rate")
+		if cls.doctype == "Print Pricing Rule":
+			return frappe.get_cached_value("Customer", customer, "is_fixed_printing_rate")
+		return False
 
 	@classmethod
 	def get_rule_docs(cls):
