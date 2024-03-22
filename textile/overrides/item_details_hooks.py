@@ -52,17 +52,38 @@ def get_price_list_rate(item_code, price_list, args):
 	if item.textile_item_type == "Printed Design":
 		printing_rate = get_printing_rate(item_code, price_list, customer=customer)
 		fabric_rate = get_fabric_rate(item.fabric_item, price_list, args)
-		pretreatment_rate = 0
-
-		include_pretreatment_price = frappe.db.get_value("Print Order", args.get("print_order"),
-			"include_pretreatment_price", cache=1) if args.get("print_order") else False
-
-		if include_pretreatment_price:
-			pretreatment_rate = get_pretreatment_rate(item_code, price_list, customer=customer)
-
-		return printing_rate + fabric_rate + pretreatment_rate
+		return printing_rate + fabric_rate + add_pretreatment_price(item.fabric_item, price_list, args, customer)
 
 	elif item.textile_item_type == "Ready Fabric" and args.get("pretreatment_order"):
 		pretreatment_rate = get_pretreatment_rate(item_code, price_list, customer=customer)
 		fabric_rate = get_fabric_rate(item_code, price_list, args)
 		return pretreatment_rate + fabric_rate
+
+
+
+def add_pretreatment_price(item_code, price_list, args, customer):
+	if args.get("doctype") != "Sales Invoice":
+		return 0
+	
+	from textile.fabric_pretreatment.doctype.pretreatment_pricing_rule.pretreatment_pricing_rule import \
+		get_pretreatment_rate
+	
+	item = frappe.get_cached_doc("Item", item_code)
+
+	if item.default_bom and not item.is_customer_provided_item:
+		greigh_fabric = frappe.db.sql("""
+			select bomi.item_code
+				from 
+					`tabBOM Item` bomi
+					inner join `tabItem` item on item.item_code = bomi.item_code
+					where bomi.parent='%s' and item.textile_item_type ='Greige Fabric' limit 1
+			"""%item.default_bom, as_dict=True)
+		
+		if greigh_fabric:
+			return get_pretreatment_rate(item_code, price_list, customer=customer)
+		return 0
+	
+	if item.is_customer_provided_item:
+		# write code here for customer provided fabric
+		return 0
+
