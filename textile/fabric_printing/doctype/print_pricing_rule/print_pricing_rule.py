@@ -4,6 +4,7 @@
 import frappe
 from frappe.utils import flt
 from textile.controllers.textile_pricing_rule import TextilePricingRule
+from erpnext.stock.doctype.item.item import convert_item_uom_for
 
 
 class PrintPricingRule(TextilePricingRule):
@@ -16,8 +17,21 @@ class PrintPricingRule(TextilePricingRule):
 
 
 @frappe.whitelist()
-def get_printing_rate(design_item, price_list, customer=None):
-	return PrintPricingRule.get_applied_rule(design_item, price_list, customer)["rule_rate"]
+def get_printing_rate(design_item, price_list, customer=None, uom=None, conversion_factor=None):
+	printing_rate = PrintPricingRule.get_applied_rule(design_item, price_list, customer)["rule_rate"]
+
+	item = frappe.get_cached_doc("Item", design_item)
+	if uom and uom != item.stock_uom:
+		printing_rate = convert_item_uom_for(
+			value=printing_rate,
+			item_code=item.name,
+			from_uom=item.stock_uom,
+			to_uom=uom,
+			conversion_factor=conversion_factor,
+			is_rate=True
+		)
+
+	return printing_rate
 
 
 @frappe.whitelist()

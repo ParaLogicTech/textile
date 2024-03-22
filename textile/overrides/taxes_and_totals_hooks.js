@@ -99,7 +99,7 @@ textile.set_printed_fabric_rate = function (frm, printed_fabric_row) {
 
 	for (let d of frm.doc.items || []) {
 		if (d.fabric_item == printed_fabric_row.fabric_item && d.is_printed_fabric) {
-			d.rate = flt(printed_fabric_row.fabric_rate);
+			d.rate = flt(printed_fabric_row.fabric_rate) * flt(d.conversion_factor || 1);
 			frm.cscript.set_item_rate(d);
 		}
 	}

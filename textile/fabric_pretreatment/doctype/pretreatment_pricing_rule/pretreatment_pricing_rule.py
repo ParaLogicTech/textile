@@ -4,6 +4,7 @@
 import frappe
 from frappe.utils import flt
 from textile.controllers.textile_pricing_rule import TextilePricingRule
+from erpnext.stock.doctype.item.item import convert_item_uom_for
 
 
 class PretreatmentPricingRule(TextilePricingRule):
@@ -12,8 +13,21 @@ class PretreatmentPricingRule(TextilePricingRule):
 
 
 @frappe.whitelist()
-def get_pretreatment_rate(design_item, price_list, customer=None):
-	return PretreatmentPricingRule.get_applied_rule(design_item, price_list, customer)["rule_rate"]
+def get_pretreatment_rate(design_item, price_list, customer=None, uom=None, conversion_factor=None):
+	pretreatment_rate = PretreatmentPricingRule.get_applied_rule(design_item, price_list, customer)["rule_rate"]
+
+	item = frappe.get_cached_doc("Item", design_item)
+	if uom and uom != item.stock_uom:
+		pretreatment_rate = convert_item_uom_for(
+			value=pretreatment_rate,
+			item_code=item.name,
+			from_uom=item.stock_uom,
+			to_uom=uom,
+			conversion_factor=conversion_factor,
+			is_rate=True
+		)
+
+	return pretreatment_rate
 
 
 @frappe.whitelist()
