@@ -11,6 +11,14 @@ class PretreatmentPricingRule(TextilePricingRule):
 	doctype = "Pretreatment Pricing Rule"
 	cache_field = "pretreatment_pricing_rule_names"
 
+	@classmethod
+	def get_customer_base_rate(cls, customer):
+		return flt(frappe.get_cached_value("Customer", customer, "base_pretreatment_rate"))
+	
+	@classmethod
+	def is_fixed_base_rate(cls, customer):
+		return frappe.get_cached_value("Customer", customer, "is_fixed_pretreatment_rate")
+
 
 @frappe.whitelist()
 def get_pretreatment_rate(design_item, price_list, customer=None, uom=None, conversion_factor=None):
