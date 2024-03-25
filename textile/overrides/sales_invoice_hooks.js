@@ -39,23 +39,17 @@ frappe.ui.form.on("Printed Fabric Detail", {
 	},
 
 	before_printed_fabrics_remove: function(frm, cdt, cdn) {
-		var printed_fabrics_rows_selected = frm.get_selected().printed_fabrics
-		var printed_fabrics_removed = [];
-		for (let i in printed_fabrics_rows_selected) {
-			printed_fabrics_removed.push.apply(printed_fabrics_removed, (frm.doc.printed_fabrics).filter(d => d.name === printed_fabrics_rows_selected[i]))
-		}
-		
+		let printed_fabric_row = frappe.get_doc(cdt, cdn);
 		var parent_field = frm.get_field('items');
-		for (let i in printed_fabrics_removed) {
-			if (parent_field) {
-				var rows = (frm.doc.items || []).filter(d => d.fabric_item === printed_fabrics_removed[i].fabric_item);
-				$.each(rows, function (i, row) {
-					let grid_row = parent_field.grid.grid_rows_by_docname[row.name];
-					if (grid_row) {
-						grid_row.remove();
-					}
-				});
-			}	
+
+		if (parent_field) {
+			var rows = (frm.doc.items || []).filter(d => d.fabric_item === printed_fabric_row.fabric_item);
+			$.each(rows, function (i, row) {
+				let grid_row = parent_field.grid.grid_rows_by_docname[row.name];
+				if (grid_row) {
+					grid_row.remove();
+				}
+			});
 		}
 	}
 });
