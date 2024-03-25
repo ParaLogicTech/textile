@@ -164,7 +164,6 @@ fixtures = [
 
 				'Customer-printing_tab',
 				'Customer-printing_cb_1',
-				'Customer-printing_cb_2',
 				'Customer-default_printing_uom',
 				'Customer-default_printing_gap',
 				'Customer-default_printing_qty_type',
