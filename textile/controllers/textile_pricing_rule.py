@@ -230,14 +230,6 @@ class TextilePricingRule(Document):
 		return None
 
 	@classmethod
-	def is_fixed_base_rate(cls, customer):
-		if cls.doctype == "Pretreatment Pricing Rule":
-			return frappe.get_cached_value("Customer", customer, "is_fixed_pretreatment_rate")
-		if cls.doctype == "Print Pricing Rule":
-			return frappe.get_cached_value("Customer", customer, "is_fixed_printing_rate")
-		return False
-
-	@classmethod
 	def get_rule_docs(cls):
 		names = cls.get_rule_names()
 		docs = [frappe.get_cached_doc(cls.doctype, name) for name in names]

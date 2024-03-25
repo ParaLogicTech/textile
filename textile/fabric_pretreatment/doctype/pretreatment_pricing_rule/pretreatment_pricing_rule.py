@@ -13,6 +13,10 @@ class PretreatmentPricingRule(TextilePricingRule):
 	@classmethod
 	def get_customer_base_rate(cls, customer):
 		return flt(frappe.get_cached_value("Customer", customer, "base_pretreatment_rate"))
+	
+	@classmethod
+	def is_fixed_base_rate(cls, customer):
+		return frappe.get_cached_value("Customer", customer, "is_fixed_pretreatment_rate")
 
 
 @frappe.whitelist()
