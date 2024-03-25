@@ -174,6 +174,7 @@ fixtures = [
 				'Customer-base_pretreatment_rate',
 				'Customer-is_fixed_pretreatment_rate',
 				'Customer-is_fixed_printing_rate',
+				'Customer-custom_column_break_yfvrm',
 
 				'Item-textile_item_type',
 				'Item-process_component',
