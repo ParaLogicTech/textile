@@ -1,9 +1,10 @@
 frappe.provide("textile");
 
 // Print Pricing Check Dialog
-textile.print_pricing_dialog = function() {
+textile.show_print_pricing_dialog = function(customer) {
 	let doc = {
 		price_list: frappe.defaults.get_global_default("selling_price_list"),
+		customer: customer || null,
 		applied_rules: [],
 	};
 
@@ -189,9 +190,10 @@ textile.print_pricing_dialog = function() {
 
 
 // Pretreatment Pricing Check Dialog
-textile.pretreatment_pricing_dialog = function() {
+textile.show_pretreatment_pricing_dialog = function(customer) {
 	let doc = {
 		price_list: frappe.defaults.get_global_default("selling_price_list"),
+		customer: customer || null,
 		applied_rules: [],
 	};
 
