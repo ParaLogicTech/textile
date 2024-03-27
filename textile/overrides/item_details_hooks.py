@@ -52,7 +52,7 @@ def get_price_list_rate(item_code, price_list, args):
 	if item.textile_item_type == "Printed Design":
 		printing_rate = get_printing_rate(item_code, price_list, customer=customer)
 		fabric_rate = get_fabric_rate(item.fabric_item, price_list, args)
-		pretreatment_rate = add_pretreatment_price(item.fabric_item, price_list, args, customer)
+		pretreatment_rate = add_pretreatment_price(item, price_list, customer)
 		return printing_rate + fabric_rate + pretreatment_rate
 
 	elif item.textile_item_type == "Ready Fabric" and args.get("pretreatment_order"):
@@ -61,17 +61,17 @@ def get_price_list_rate(item_code, price_list, args):
 		return pretreatment_rate + fabric_rate
 
 
-
-def add_pretreatment_price(item_code, price_list, args, customer):
-	if args.get("doctype") not in ("Sales Invoice", "Sales Invoice Item"):
-		return 0
+def add_pretreatment_price(item, price_list, customer):
+	ready_fabric_item = None
+	if item.textile_item_type == "Printed Design":
+		ready_fabric_item = item.fabric_item
+	elif item.textile_item_type == "Ready Fabric":
+		ready_fabric_item = item.name
 	
-	from textile.fabric_pretreatment.doctype.pretreatment_pricing_rule.pretreatment_pricing_rule import \
-		get_pretreatment_rate
-	
-	item = frappe.get_cached_doc("Item", item_code)
-
-	if item.is_customer_provided_item and frappe.get_cached_value('Item', item.fabric_item, 'textile_item_type') == 'Greige Fabric':
-		return get_pretreatment_rate(item_code, price_list, customer=customer)
+	if ready_fabric_item:
+		fabric_item_doc = frappe.get_cached_doc("Item", ready_fabric_item)
+		if fabric_item_doc.is_customer_provided_item and fabric_item_doc.fabric_item:
+			from textile.fabric_pretreatment.doctype.pretreatment_pricing_rule.pretreatment_pricing_rule import get_pretreatment_rate
+			return get_pretreatment_rate(ready_fabric_item, price_list, customer=customer)
 	return 0
 
