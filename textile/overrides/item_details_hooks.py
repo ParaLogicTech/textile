@@ -50,18 +50,21 @@ def get_price_list_rate(item_code, price_list, args):
 	customer = args.get("customer") or (args.get("quotation_to") == "Customer" and args.get("party_name"))
 
 	if item.textile_item_type == "Printed Design":
-		printing_rate = get_printing_rate(item_code, price_list, customer=customer)
+		printing_rate = get_printing_rate(item_code, price_list, customer=customer,
+			uom=args.get("uom"), conversion_factor=args.get("conversion_factor"))
 		fabric_rate = get_fabric_rate(item.fabric_item, price_list, args)
-		pretreatment_rate = add_pretreatment_price(item, price_list, customer)
+		pretreatment_rate = add_pretreatment_price(item, price_list, customer,
+			uom=args.get("uom"), conversion_factor=args.get("conversion_factor"))
 		return printing_rate + fabric_rate + pretreatment_rate
 
 	elif item.textile_item_type == "Ready Fabric" and args.get("pretreatment_order"):
-		pretreatment_rate = get_pretreatment_rate(item_code, price_list, customer=customer)
+		pretreatment_rate = get_pretreatment_rate(item_code, price_list, customer=customer,
+			uom=args.get("uom"), conversion_factor=args.get("conversion_factor"))
 		fabric_rate = get_fabric_rate(item_code, price_list, args)
 		return pretreatment_rate + fabric_rate
 
 
-def add_pretreatment_price(item, price_list, customer):
+def add_pretreatment_price(item, price_list, customer, uom, conversion_factor):
 	ready_fabric_item = None
 	if item.textile_item_type == "Printed Design":
 		ready_fabric_item = item.fabric_item
@@ -72,6 +75,6 @@ def add_pretreatment_price(item, price_list, customer):
 		fabric_item_doc = frappe.get_cached_doc("Item", ready_fabric_item)
 		if fabric_item_doc.is_customer_provided_item and fabric_item_doc.fabric_item:
 			from textile.fabric_pretreatment.doctype.pretreatment_pricing_rule.pretreatment_pricing_rule import get_pretreatment_rate
-			return get_pretreatment_rate(ready_fabric_item, price_list, customer=customer)
+			return get_pretreatment_rate(ready_fabric_item, price_list, customer=customer, uom=uom, conversion_factor=conversion_factor)
 	return 0
 
