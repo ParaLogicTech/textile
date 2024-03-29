@@ -9,6 +9,8 @@ from frappe.desk.notifications import clear_doctype_notifications
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
 from textile.utils import validate_textile_item, get_textile_conversion_factors, printing_components
 from textile.controllers.textile_order import TextileOrder
+from frappe.desk.reportview import get_match_cond, get_filters_cond
+from erpnext.controllers.queries import get_fields
 from PIL import Image
 import json
 
@@ -1399,6 +1401,27 @@ def make_delivery_note(source_name, target_doc=None):
 
 
 @frappe.whitelist()
+def make_sales_invoice(source_name, target_doc=None):
+	from erpnext.controllers.queries import _get_delivery_notes_to_be_billed
+	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice as invoice_from_delivery_note
+
+	doc = frappe.get_doc("Print Order", source_name)
+
+	dn_items = frappe.get_all("Delivery Note Item", filters={"print_order": doc.name}, fields=["name", "parent"])
+	dn_names = list(set([d.parent for d in dn_items]))
+	if not dn_names:
+		frappe.throw(_("There are no Delivery Notes to be delivered"))
+
+	frappe.flags.selected_children = {"items": [d.name for d in dn_items]}
+
+	delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
+	for d in delivery_notes:
+		target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
+
+	return target_doc
+
+
+@frappe.whitelist()
 def make_customer_fabric_stock_entry(source_name, target_doc=None):
 	po_doc = frappe.get_doc('Print Order', source_name)
 
@@ -1563,8 +1586,6 @@ def get_print_orders_to_be_delivered(doctype, txt, searchfield, start, page_len,
 
 def _get_print_orders_to_be_delivered(doctype="Print Order", txt="", searchfield="name", start=0, page_len=0,
 		filters=None, as_dict=True, ignore_permissions=False):
-	from frappe.desk.reportview import get_match_cond, get_filters_cond
-	from erpnext.controllers.queries import get_fields
 
 	fields = get_fields("Print Order")
 	select_fields = ", ".join(["`tabPrint Order`.{0}".format(f) for f in fields])
@@ -1583,6 +1604,50 @@ def _get_print_orders_to_be_delivered(doctype="Print Order", txt="", searchfield
 			and `tabPrint Order`.`{key}` like {txt}
 			and `tabPrint Order`.`per_delivered` < `tabPrint Order`.`per_produced`
 			and (`tabPrint Order`.`packing_slip_required` = 0 or `tabPrint Order`.`per_delivered` < `tabPrint Order`.`per_packed`)
+			{fcond} {mcond}
+		order by `tabPrint Order`.transaction_date, `tabPrint Order`.creation
+		{limit}
+	""".format(
+		fields=select_fields,
+		key=searchfield,
+		fcond=get_filters_cond(doctype, filters, [], ignore_permissions=ignore_permissions),
+		mcond="" if ignore_permissions else get_match_cond(doctype),
+		limit=limit,
+		txt="%(txt)s",
+	), {"txt": ("%%%s%%" % txt)}, as_dict=as_dict)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_print_orders_to_be_billed(doctype, txt, searchfield, start, page_len, filters, as_dict):
+	return _get_print_orders_to_be_billed(doctype, txt, searchfield, start, page_len, filters, as_dict)
+
+
+def _get_print_orders_to_be_billed(doctype="Print Order", txt="", searchfield="name", start=0, page_len=0,
+		filters=None, as_dict=True, ignore_permissions=False):
+	fields = get_fields("Print Order")
+	select_fields = ", ".join(["`tabPrint Order`.{0}".format(f) for f in fields])
+	limit = "limit {0}, {1}".format(start, page_len) if page_len else ""
+
+	if not filters:
+		filters = {}
+
+	return frappe.db.sql("""
+		select {fields}
+		from `tabPrint Order`
+		where `tabPrint Order`.docstatus = 1
+			and `tabPrint Order`.`{key}` like {txt}
+			and ((`tabPrint Order`.delivery_status = 'Delivered' and exists(
+					select dn.name
+					from `tabDelivery Note Item` dni
+					inner join `tabDelivery Note` dn on dn.name = dni.parent
+					where dni.print_order = `tabPrint Order`.name
+						and dn.docstatus = 1
+						and dn.status not in ('Closed', 'On Hold')
+						and dn.billing_status = 'To Bill'
+						and dni.qty > dni.billed_qty + dni.returned_qty
+				))
+			)
 			{fcond} {mcond}
 		order by `tabPrint Order`.transaction_date, `tabPrint Order`.creation
 		{limit}
