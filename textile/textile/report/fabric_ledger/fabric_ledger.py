@@ -70,6 +70,7 @@ class FabricLedger:
 	def get_data(self):
 		self.data = []
 		self.opening_qty = None
+		self.opening_packed_qty = None
 
 		if not self.filters.fabric_item_codes:
 			return
@@ -77,18 +78,34 @@ class FabricLedger:
 		conditions = self.get_conditions()
 
 		if self.filters.from_date:
+			rejected_warehouse_condition = "and sle.warehouse not in %(rejected_warehouses)s"\
+				if self.filters.rejected_warehouses else ""
+
 			self.opening_qty = frappe.db.sql(f"""
 				select sum(sle.actual_qty)
 				from `tabStock Ledger Entry` sle
-				where sle.item_code in %(fabric_item_codes)s and sle.posting_date < %(from_date)s
+				where sle.item_code in %(fabric_item_codes)s
+					and sle.posting_date < %(from_date)s
+					{rejected_warehouse_condition}
 			""", self.filters)
+
+			self.opening_packed_qty = frappe.db.sql(f"""
+				select sum(sle.actual_qty)
+				from `tabStock Ledger Entry` sle
+				where sle.item_code in %(fabric_item_codes)s
+					and (sle.packing_slip is not null and sle.packing_slip != '')
+					and sle.posting_date < %(from_date)s
+					{rejected_warehouse_condition}
+			""", self.filters)
+
 			self.opening_qty = flt(self.opening_qty[0][0]) if self.opening_qty else 0
+			self.opening_packed_qty = flt(self.opening_packed_qty[0][0]) if self.opening_packed_qty else 0
 
 		self.data = frappe.db.sql(f"""
 			select sle.posting_date,
 				sle.voucher_type, sle.voucher_no,
 				sle.item_code, item.item_name,
-				sle.warehouse, sle.batch_no,
+				sle.warehouse, sle.batch_no, sle.packing_slip,
 				sle.party_type, sle.party,
 				item.textile_item_type,
 				fabric_item.name as fabric_item, fabric_item.item_name as fabric_item_name,
@@ -161,7 +178,9 @@ class FabricLedger:
 		voucher_map = {}
 		for sle in self.data:
 			voucher_key = (sle.posting_date, sle.document_type, sle.document_no)
-			voucher_dict = voucher_map.setdefault(voucher_key, frappe._dict({"actual_qty": 0, "fabric_items": {}}))
+			voucher_dict = voucher_map.setdefault(voucher_key, frappe._dict({
+				"actual_qty": 0, "packed_qty": 0, "fabric_items": {}
+			}))
 
 			row = voucher_dict.fabric_items.get(sle.fabric_item)
 			if not row:
@@ -170,10 +189,14 @@ class FabricLedger:
 				row.in_qty = 0
 				row.out_qty = 0
 				row.rejected_qty = 0
+				row.packed_qty = 0
 
 			voucher_dict.actual_qty += sle.actual_qty
 			row.actual_qty += sle.actual_qty
-			row.qty_after_transaction = row.actual_qty
+
+			packed_qty = sle.actual_qty if sle.packing_slip else 0
+			voucher_dict.packed_qty += packed_qty
+			row.packed_qty += packed_qty
 
 			if sle.is_rejection:
 				row.rejected_qty += sle.actual_qty
@@ -184,30 +207,59 @@ class FabricLedger:
 				row.out_qty += -sle.actual_qty
 
 		# Opening Row
+		opening_row = frappe._dict()
 		if self.opening_qty is not None:
-			self.rows.append(self.get_opening_row())
+			opening_row = self.get_opening_row()
+			self.rows.append(opening_row)
 
 		# Movement Rows
 		movement_rows = []
+		accumulated_balance_qty = opening_row.qty_after_transaction or 0
+		accumulated_packed_qty = opening_row.packed_qty_after_transaction or 0
+
 		for voucher_dict in voucher_map.values():
 			for row in voucher_dict.fabric_items.values():
 				row.is_internal_entry = not flt(voucher_dict.actual_qty, 6) or not flt(row.actual_qty, 6)
+				row.is_packing_entry = flt(voucher_dict.packed_qty, 6) or flt(row.packed_qty, 6)
 
-				if row.rejected_qty:
+				accumulated_balance_qty += row.actual_qty
+				accumulated_packed_qty += row.packed_qty
+				row.qty_after_transaction = accumulated_balance_qty
+				row.packed_qty_after_transaction = accumulated_packed_qty
+
+				if row.rejected_qty > 0:
 					row.in_qty -= row.rejected_qty
 					row.out_qty -= row.rejected_qty
+				elif row.rejected_qty < 0:
+					row.in_qty += row.rejected_qty
+					row.out_qty += row.rejected_qty
 
-				if not row.is_internal_entry or not self.filters.hide_internal_entries:
+				skip_row = False
+				if row.is_internal_entry and self.filters.hide_internal_entries:
+					skip_row = True
+				if row.rejected_qty and not flt(row.in_qty, 6) and not flt(row.out_qty, 6):
+					skip_row = True
+
+				if not skip_row:
 					movement_rows.append(row)
 
 				if row.rejected_qty:
 					rejected_row = row.copy()
-					rejected_row.in_qty = 0
-					rejected_row.out_qty = rejected_row.rejected_qty
+
+					if rejected_row.rejected_qty > 0:
+						rejected_row.in_qty = 0
+						rejected_row.out_qty = rejected_row.rejected_qty
+					else:
+						rejected_row.in_qty = -rejected_row.rejected_qty
+						rejected_row.out_qty = 0
+
 					rejected_row.actual_qty = -rejected_row.rejected_qty
-					rejected_row.qty_after_transaction = rejected_row.actual_qty
 					rejected_row.is_internal_entry = False
 					rejected_row.is_wastage = True
+
+					accumulated_balance_qty += rejected_row.actual_qty
+					rejected_row.qty_after_transaction = accumulated_balance_qty
+
 					movement_rows.append(rejected_row)
 
 		# Entry Type
@@ -248,14 +300,10 @@ class FabricLedger:
 
 		self.rows += movement_rows
 
-		# Running balance qty and totals
-		accumulated_balance_qty = 0
+		# Totals
 		total_in_qty = 0
 		total_out_qty = 0
 		for row in self.rows:
-			accumulated_balance_qty += row.qty_after_transaction
-			row.qty_after_transaction = accumulated_balance_qty
-
 			if not row.is_internal_entry:
 				total_in_qty += flt(row.in_qty)
 				total_out_qty += flt(row.out_qty)
@@ -265,7 +313,7 @@ class FabricLedger:
 
 		# Closing Row
 		if self.opening_qty is not None:
-			self.rows.append(self.get_closing_row(accumulated_balance_qty, total_in_qty, total_out_qty))
+			self.rows.append(self.get_closing_row(accumulated_balance_qty, accumulated_packed_qty, total_in_qty, total_out_qty))
 
 	def get_opening_row(self):
 		return frappe._dict({
@@ -275,10 +323,12 @@ class FabricLedger:
 			"fabric_item_name": frappe.db.get_value("Item", self.filters.item_code, "item_name", cache=1),
 			"uom": frappe.db.get_value("Item", self.filters.item_code, "stock_uom", cache=1),
 			"qty_after_transaction": self.opening_qty or 0,
+			"packed_qty_after_transaction": self.opening_packed_qty or 0,
+			"is_opening": True,
 			"_bold": True,
 		})
 
-	def get_closing_row(self, closing_qty, in_qty, out_qty):
+	def get_closing_row(self, closing_qty, packed_qty, in_qty, out_qty):
 		return frappe._dict({
 			"posting_date": self.filters.to_date,
 			"entry_type": "Closing Stock",
@@ -288,6 +338,8 @@ class FabricLedger:
 			"in_qty": in_qty,
 			"out_qty": out_qty,
 			"qty_after_transaction": closing_qty,
+			"packed_qty_after_transaction": packed_qty,
+			"is_closing": True,
 			"_bold": True,
 		})
 
@@ -300,6 +352,7 @@ class FabricLedger:
 			{"label": _("UOM"), "fieldname": "uom", "fieldtype": "Link", "options": "UOM", "width": 60},
 			{"label": _("In Qty"), "fieldname": "in_qty", "fieldtype": "Float", "width": 80},
 			{"label": _("Out Qty"), "fieldname": "out_qty", "fieldtype": "Float", "width": 80},
+			{"label": _("Packed Qty"), "fieldname": "packed_qty_after_transaction", "fieldtype": "Float", "width": 100},
 			{"label": _("Balance Qty"), "fieldname": "qty_after_transaction", "fieldtype": "Float", "width": 100},
 			{"label": _("Party"), "fieldname": "party", "fieldtype": "Dynamic Link", "options": "party_type", "width": 150},
 			{"label": _("Voucher Type"), "fieldname": "document_type", "width": 120},

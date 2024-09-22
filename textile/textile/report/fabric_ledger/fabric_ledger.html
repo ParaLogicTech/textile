@@ -108,7 +108,12 @@
 					<div>{%= d.document_no %}</div>
 				</td>
 
-				<td class="field-value">{%= d.fabric_item_name %}</td>
+				<td class="field-value">
+					<div>{%= d.fabric_item_name %}</div>
+					{% if d.is_closing && flt(d.packed_qty_after_transaction, 2) %}
+						<div>Packed Qty: {%= format_number(d.packed_qty_after_transaction, null, 2) %}</div>
+					{% endif %}
+				</td>
 
 				{% if !filters.customer %}
 					<td class="field-value">{%= d.party_name %}</td>
