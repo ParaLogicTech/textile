@@ -29,6 +29,8 @@
   "greige_fabric_item_name",
   "greige_fabric_width",
   "greige_fabric_gsm",
+  "greige_fabric_batch_no",
+  "greige_fabric_has_batch_no",
   "column_break_xibnp",
   "ready_fabric_item",
   "ready_fabric_item_name",
@@ -747,12 +749,31 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "greige_fabric_has_batch_no",
+   "fieldname": "greige_fabric_batch_no",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Greige Fabric Batch No",
+   "no_copy": 1,
+   "options": "Batch"
+  },
+  {
+   "default": "0",
+   "fetch_from": "greige_fabric_item.has_batch_no",
+   "fieldname": "greige_fabric_has_batch_no",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Greige Fabric Has Batch No",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-09 23:33:14.668052",
+ "modified": "2024-10-25 15:08:50.013591",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Pretreatment Order",

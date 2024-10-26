@@ -50,6 +50,29 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			return erpnext.queries.item(filters);
 		});
 
+		this.frm.set_query("greige_fabric_batch_no", () => {
+			if (!this.frm.doc.greige_fabric_item) {
+				frappe.throw(__("Please enter Greige Fabric Item to get Batch Number"));
+			} else {
+				if (this.frm.doc.fabric_warehouse) {
+					return {
+						query: "erpnext.controllers.queries.get_batch_no",
+						filters: {
+							item_code: this.frm.doc.greige_fabric_item,
+							warehouse: this.frm.doc.fabric_warehouse,
+							posting_date: frappe.datetime.nowdate(),
+						}
+					};
+				} else {
+					return {
+						filters: {
+							item: this.frm.doc.greige_fabric_item,
+						}
+					}
+				}
+			}
+		});
+
 		for (let [component_item_field, component_type] of Object.entries(textile.pretreatment_components)) {
 			this.frm.set_query(component_item_field, () => {
 				let filters = {

@@ -10,6 +10,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
 from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders, get_subcontractable_qty
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
+from erpnext.stock.doctype.batch.batch import validate_batch_no
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
 
@@ -47,6 +48,7 @@ class PretreatmentOrder(TextileOrder):
 		self.validate_dates()
 		self.validate_customer()
 		self.validate_fabric_items()
+		self.validate_batch_no()
 		self.validate_process_items()
 		self.validate_qty()
 		self.clean_remarks()
@@ -62,13 +64,15 @@ class PretreatmentOrder(TextileOrder):
 
 	def before_update_after_submit(self):
 		self.validate_dates()
+		self.validate_batch_no()
 		self.get_disallow_on_submit_fields()
 
-		self._before_change = frappe.db.get_value(self.doctype, self.name, ["delivery_required", "packing_slip_required"],
-			as_dict=1)
+		self._before_change = frappe.db.get_value(self.doctype, self.name, [
+			"delivery_required", "packing_slip_required", "greige_fabric_batch_no",
+		], as_dict=1)
 
 	def on_update_after_submit(self):
-		self.handle_delivery_required_changed()
+		self.handle_change_after_submit()
 		self.set_production_packing_status(update=True)
 		self.set_delivery_status(update=True)
 		self.set_status(update=True)
@@ -139,6 +143,15 @@ class PretreatmentOrder(TextileOrder):
 				frappe.throw(_("Greige Fabric Type {0} does not match with Ready Fabric Type {1}").format(
 					frappe.bold(greige_fabric_details.fabric_type), frappe.bold(ready_fabric_details.fabric_type)
 				))
+
+	def validate_batch_no(self):
+		self.greige_fabric_has_batch_no = frappe.get_cached_value("Item", self.greige_fabric_item, "has_batch_no")
+		if not self.greige_fabric_has_batch_no:
+			self.greige_fabric_batch_no = None
+
+		if self.greige_fabric_batch_no:
+			validate_batch_no(self.greige_fabric_batch_no, self.greige_fabric_item,
+				transaction_date=self.transaction_date)
 
 	def validate_process_items(self):
 		for component_item_field, component_type in pretreatment_components.items():
@@ -722,43 +735,70 @@ class PretreatmentOrder(TextileOrder):
 		if is_sales_order_closed:
 			return True
 
-	def handle_delivery_required_changed(self):
+	def handle_change_after_submit(self):
 		# Update Work Orders packing_slip_required
-		if self.delivery_required != self._before_change.delivery_required or self.packing_slip_required != self._before_change.packing_slip_required:
-			work_orders = frappe.get_all("Work Order",
-				filters={"pretreatment_order": self.name},
-				pluck="name"
-			)
-			for name in work_orders:
-				work_order = frappe.get_doc("Work Order", name)
-				work_order.db_set({
-					"packing_slip_required": cint(self.delivery_required and self.packing_slip_required),
-				})
-				if work_order.docstatus == 1:
-					work_order.set_packing_status(update=True)
+		if (
+			self.delivery_required != self._before_change.delivery_required
+			or self.packing_slip_required != self._before_change.packing_slip_required
+		):
+			self.update_work_order_packing_slip_required()
 
-				work_order.notify_update()
+		# Update Work Order Batch Nos
+		if self.greige_fabric_batch_no != self._before_change.greige_fabric_batch_no:
+			self.update_work_order_greige_fabric_batch_no()
 
 		# Update Sales Order skip_delivery_note
 		if self.delivery_required != self._before_change.delivery_required:
-			sales_orders = frappe.get_all("Sales Order Item",
-				filters={"pretreatment_order": self.name, "docstatus": ["<", 2]},
-				fields="distinct parent as sales_order",
-				pluck="sales_order"
-			)
-			for name in sales_orders:
-				sales_order = frappe.get_doc("Sales Order", name)
-				for d in sales_order.items:
-					if d.pretreatment_order == self.name:
-						sales_order.set_skip_delivery_note_for_row(d, update=True)
+			self.update_sales_order_skip_delivery_note()
 
-				if sales_order.docstatus == 1:
-					sales_order.set_skip_delivery_note_for_order(update=True)
-					sales_order.set_delivery_status(update=True)
-					sales_order.set_production_packing_status(update=True)
-					sales_order.set_status(update=True)
-					sales_order.update_reserved_qty()
-					sales_order.notify_update()
+	def update_work_order_packing_slip_required(self):
+		work_orders = frappe.get_all("Work Order",
+			filters={"pretreatment_order": self.name},
+			pluck="name"
+		)
+		for name in work_orders:
+			work_order = frappe.get_doc("Work Order", name)
+			work_order.db_set({
+				"packing_slip_required": cint(self.delivery_required and self.packing_slip_required),
+			})
+			if work_order.docstatus == 1:
+				work_order.set_packing_status(update=True)
+
+			work_order.notify_update()
+
+	def update_work_order_greige_fabric_batch_no(self):
+		frappe.db.sql("""
+			update `tabWork Order Item` i
+			inner join `tabWork Order` wo on wo.name = i.parent
+			set i.batch_no = %(greige_fabric_batch_no)s
+			where wo.docstatus = 1
+				and wo.pretreatment_order = %(pretreatment_order)s
+				and i.item_code = %(greige_fabric_item)s
+		""", {
+			"greige_fabric_item": self.greige_fabric_item,
+			"greige_fabric_batch_no": self.greige_fabric_batch_no,
+			"pretreatment_order": self.name,
+		})
+
+	def update_sales_order_skip_delivery_note(self):
+		sales_orders = frappe.get_all("Sales Order Item",
+			filters={"pretreatment_order": self.name, "docstatus": ["<", 2]},
+			fields="distinct parent as sales_order",
+			pluck="sales_order"
+		)
+		for name in sales_orders:
+			sales_order = frappe.get_doc("Sales Order", name)
+			for d in sales_order.items:
+				if d.pretreatment_order == self.name:
+					sales_order.set_skip_delivery_note_for_row(d, update=True)
+
+			if sales_order.docstatus == 1:
+				sales_order.set_skip_delivery_note_for_order(update=True)
+				sales_order.set_delivery_status(update=True)
+				sales_order.set_production_packing_status(update=True)
+				sales_order.set_status(update=True)
+				sales_order.update_reserved_qty()
+				sales_order.notify_update()
 
 
 def validate_transaction_against_pretreatment_order(doc):

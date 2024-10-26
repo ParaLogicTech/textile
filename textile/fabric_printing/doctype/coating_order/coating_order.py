@@ -258,10 +258,8 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 	if coating_order_doc.get("cost_center"):
 		stock_entry.cost_center = coating_order_doc.get("cost_center")
 
-	auto_select_batches = frappe.get_cached_value("Manufacturing Settings", None, "auto_select_batches_in_stock_entry")
-
 	stock_entry.set_stock_entry_type()
-	stock_entry.get_items(auto_select_batches=auto_select_batches)
+	stock_entry.get_items(auto_select_batches=True)
 
 	if frappe.db.get_single_value("Manufacturing Settings", "auto_submit_manufacture_entry"):
 		try:

@@ -51,19 +51,22 @@ class WorkOrderDP(WorkOrder):
 	def set_required_items(self, reset_only_qty=False):
 		super().set_required_items(reset_only_qty)
 
-		if not reset_only_qty and self.get("print_order"):
-			order = get_print_order_details(self.print_order)
-			for d in self.get("required_items"):
-				if d.item_code == order.fabric_item:
-					d.source_warehouse = order.fabric_warehouse if order.skip_transfer else order.wip_warehouse
+		if self.get("print_order"):
+			if not reset_only_qty:
+				order = get_print_order_details(self.print_order)
+				for d in self.get("required_items"):
+					if d.item_code == order.fabric_item:
+						d.source_warehouse = order.fabric_warehouse if order.skip_transfer else order.wip_warehouse
 
-		if not reset_only_qty and self.get("pretreatment_order"):
+		elif self.get("pretreatment_order"):
 			order = frappe.db.get_value("Pretreatment Order", self.pretreatment_order,
-				["greige_fabric_item", "fabric_warehouse"], as_dict=1)
+				["greige_fabric_item", "fabric_warehouse", "greige_fabric_batch_no"], as_dict=1)
 
 			for d in self.get("required_items"):
 				if d.item_code == order.greige_fabric_item:
-					d.source_warehouse = order.fabric_warehouse
+					d.batch_no = order.greige_fabric_batch_no
+					if not reset_only_qty:
+						d.source_warehouse = order.fabric_warehouse
 
 
 def update_work_order_on_create(work_order, args=None):
@@ -89,12 +92,13 @@ def update_work_order_on_create(work_order, args=None):
 
 		work_order.skip_transfer = 0
 		work_order.from_wip_warehouse = 0
-		work_order.produce_fg_in_wip_warehouse = 0
 		work_order.allow_material_consumption = 1
 		work_order.allow_process_loss = 1
+		work_order.auto_select_batches_in_stock_entry = 0
 		work_order.packing_slip_required = cint(
 			pretreatment_order_details.delivery_required and pretreatment_order_details.packing_slip_required
 		)
+		work_order.produce_fg_in_wip_warehouse = 0
 
 		for warehouse_field in warehouse_fields:
 			warehouse = pretreatment_order_details.get(warehouse_field)
@@ -110,6 +114,9 @@ def update_work_order_on_create(work_order, args=None):
 
 		work_order.skip_transfer = 1
 		work_order.from_wip_warehouse = 0
+		work_order.allow_material_consumption = 0
+		work_order.allow_process_loss = 0
+		work_order.auto_select_batches_in_stock_entry = 1
 		work_order.packing_slip_required = cint(
 			not print_order_details.is_internal_customer and print_order_details.packing_slip_required
 		)
