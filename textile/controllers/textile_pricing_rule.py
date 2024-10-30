@@ -30,7 +30,7 @@ class TextilePricingRule(Document):
 
 	@classmethod
 	def clear_pricing_rule_cache(cls):
-		frappe.cache().delete_value(cls.cache_field)
+		frappe.cache.delete_value(cls.cache_field)
 
 	@classmethod
 	def get_applied_rule(cls, item_code, price_list, customer=None):
@@ -245,7 +245,7 @@ class TextilePricingRule(Document):
 			names = [d.name for d in frappe.get_all(cls.doctype)]
 			return names
 
-		return frappe.cache().get_value(cls.cache_field, generator)
+		return frappe.cache.get_value(cls.cache_field, generator)
 
 
 def get_fabric_rate(fabric_item_code, price_list, args=None):

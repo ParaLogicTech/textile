@@ -183,11 +183,11 @@ def get_print_process_rule_names():
 		names = [d.name for d in frappe.get_all('Print Process Rule')]
 		return names
 
-	return frappe.cache().get_value("print_process_rule_names", generator)
+	return frappe.cache.get_value("print_process_rule_names", generator)
 
 
 def clear_print_process_rule_cache():
-	frappe.cache().delete_value('print_process_rule_names')
+	frappe.cache.delete_value('print_process_rule_names')
 
 
 @frappe.whitelist()
