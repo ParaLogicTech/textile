@@ -102,7 +102,7 @@ class TextilePricingRule(Document):
 			if range_filters:
 				for field, conditions in range_filters.items():
 					for operator, val2 in conditions:
-						if not frappe.compare(flt(filters.get(field)), operator, val2):
+						if not frappe.utils.compare(flt(filters.get(field)), operator, val2):
 							required_filters_matched = False
 							break
 
