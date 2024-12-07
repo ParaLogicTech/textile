@@ -1096,9 +1096,7 @@ def make_fabric_reconciliation_entry(pretreatment_order, purpose, for_submit=Fal
 		stock_entry.cost_center = doc.get("cost_center")
 
 	if not for_submit:
-		stock_entry.run_method("set_missing_values")
-		stock_entry.run_method("set_actual_qty")
-		stock_entry.run_method("calculate_rate_and_amount", raise_error_if_no_rate=False)
+		stock_entry.run_method("postprocess_after_mapping")
 
 	return stock_entry
 

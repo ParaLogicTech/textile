@@ -1247,10 +1247,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			target.cost_center = source.get("cost_center")
 
 		target.flags.ignore_permissions = ignore_permissions
-		target.run_method("set_missing_values")
-		target.run_method("set_taxes_and_charges")
-		target.run_method("calculate_taxes_and_totals")
-		target.run_method("set_payment_schedule")
+		target.run_method("postprocess_after_mapping")
 
 	def item_condition(source, source_parent, target_parent):
 		if not source.item_code:
@@ -1402,9 +1399,7 @@ def _postprocess_stock_entry(stock_entry, print_order, for_submit=False):
 		stock_entry.cost_center = print_order.get("cost_center")
 
 	if not for_submit:
-		stock_entry.run_method("set_missing_values")
-		stock_entry.run_method("set_actual_qty")
-		stock_entry.run_method("calculate_rate_and_amount", raise_error_if_no_rate=False)
+		stock_entry.run_method("postprocess_after_mapping")
 
 
 @frappe.whitelist()
@@ -1518,9 +1513,7 @@ def make_customer_fabric_stock_entry(source_name, target_doc=None):
 		"uom": "Meter",
 	})
 
-	target_doc.run_method("set_missing_values")
-	target_doc.run_method("calculate_rate_and_amount")
-
+	target_doc.run_method("postprocess_after_mapping")
 	return target_doc
 
 

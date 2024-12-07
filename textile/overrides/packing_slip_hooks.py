@@ -56,8 +56,7 @@ class PackingSlipDP(PackingSlip):
 	@frappe.whitelist()
 	def add_return_fabric(self):
 		self._add_return_fabric()
-		self.run_method("set_missing_values")
-		self.run_method("calculate_totals")
+		self.run_method("postprocess_after_mapping")
 
 	def _add_return_fabric(self):
 		print_orders = set([d.get("print_order") for d in self.get("items") if d.get("print_order")])
