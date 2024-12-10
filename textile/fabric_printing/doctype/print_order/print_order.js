@@ -251,7 +251,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 					(["packed_qty", "delivered_qty"].includes(field.fieldname) && this.frm.doc.is_internal_customer)
 					|| (field.fieldname == "packed_qty" && !this.frm.doc.packing_slip_required)
 				) {
-					return "<span class='indicator light-gray text-faded'>N/A</span>";
+					return "<span class='indicator light-gray text-light'>N/A</span>";
 				}
 
 				let min_qty = flt(doc.stock_print_length, precision("stock_print_length", doc));
