@@ -7,7 +7,7 @@ from frappe.utils import flt, cint
 from frappe.model.document import Document
 from textile.utils import validate_textile_item, printing_components
 
-filter_fields = ['fabric_material', 'fabric_type', 'default_material_request_type']
+filter_fields = ['default_material_request_type', 'fabric_material', 'fabric_type']
 
 
 class PrintProcessRule(Document):
