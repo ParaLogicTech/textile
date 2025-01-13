@@ -116,7 +116,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	# sort: more matches first, precendent filters first
 	if not filter_sort:
-		filter_sort = ['fabric_material', 'fabric_type']
+		filter_sort = filter_fields.copy()
 
 	applicable_rules = sorted(applicable_rules, key=lambda d: sorting_function(d))
 

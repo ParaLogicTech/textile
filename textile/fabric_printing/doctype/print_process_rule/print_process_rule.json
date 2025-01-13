@@ -13,6 +13,8 @@
   "fabric_material",
   "column_break_fze2w",
   "fabric_type",
+  "column_break_fw7yn",
+  "default_material_request_type",
   "process_details_section",
   "process_item",
   "process_item_name",
@@ -149,11 +151,23 @@
    "hidden": 1,
    "label": "Coating Using Coating Order",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fw7yn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_material_request_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Material Request Type",
+   "options": "\nPurchase\nManufacture\nCustomer Provided"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-18 10:39:13.370500",
+ "modified": "2025-01-13 17:03:33.486081",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Process Rule",
