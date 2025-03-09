@@ -36,10 +36,15 @@ class PretreatmentProductionRegister:
 	def get_data(self):
 		conditions = self.get_conditions()
 
-		self.data = frappe.db.sql("""
+		if self.filters.based_on == "Operation Entry":
+			qty_field = "se.fg_completed_qty + se.process_loss_qty as qty"
+		else:
+			qty_field = "se.fg_completed_qty as qty"
+
+		self.data = frappe.db.sql(f"""
 			SELECT se.name as stock_entry, se.posting_date, se.posting_time,
 				timestamp(se.posting_date, se.posting_time) as posting_dt,
-				se.work_order, se.fg_completed_qty as qty,
+				se.work_order, {qty_field},
 				wo.pretreatment_order, wo.stock_uom as uom,
 				wo.customer, wo.customer_name,
 				wo.production_item as ready_fabric, wo.item_name as ready_fabric_name,
@@ -55,7 +60,7 @@ class PretreatmentProductionRegister:
 				AND se.posting_date between %(from_date)s AND %(to_date)s
 				{conditions}
 			ORDER BY se.posting_date, se.posting_time
-		""".format(conditions=conditions), self.filters, as_dict=1)
+		""", self.filters, as_dict=1)
 
 		greige_fabrics = list(set([d.greige_fabric for d in self.data]))
 		self.square_meter_conversion = {}
