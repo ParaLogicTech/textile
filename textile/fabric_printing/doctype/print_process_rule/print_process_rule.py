@@ -7,7 +7,7 @@ from frappe.utils import flt, cint
 from frappe.model.document import Document
 from textile.utils import validate_textile_item, printing_components
 
-filter_fields = ['fabric_material', 'fabric_type']
+filter_fields = ['default_material_request_type', 'fabric_material', 'fabric_type']
 
 
 class PrintProcessRule(Document):
@@ -113,7 +113,7 @@ def get_default_values_dict(applicable_rules, filter_sort=None):
 
 	# sort: more matches first, precendent filters first
 	if not filter_sort:
-		filter_sort = ['fabric_material', 'fabric_type']
+		filter_sort = filter_fields.copy()
 
 	applicable_rules = sorted(applicable_rules, key=lambda d: sorting_function(d))
 

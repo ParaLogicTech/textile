@@ -251,7 +251,9 @@ class TextileOrder(TransactionBase):
 		operations_data = frappe.db.sql(f"""
 			select
 				woo.operation,
-				sum(woo.completed_qty) as completed_qty
+				sum(woo.completed_qty) as completed_qty,
+				sum(woo.process_loss_qty) as process_loss_qty,
+				sum(woo.previous_loss_qty) as previous_loss_qty
 			from `tabWork Order Operation` woo
 			inner join `tabWork Order` wo on wo.name = woo.parent
 			where wo.`{reference_fieldname}` = %s and wo.docstatus = 1

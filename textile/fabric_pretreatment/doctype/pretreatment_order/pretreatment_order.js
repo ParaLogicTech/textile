@@ -264,7 +264,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			});
 
 			for (let row of this.frm.doc.__onload.progress_data.operations || []) {
-				erpnext.manufacturing.show_progress_for_operation(this.frm.doc.__onload.progress_data, row, this.frm);
+				erpnext.manufacturing.show_progress_for_operation(this.frm.doc.__onload.progress_data, row, this.frm, {
+					process_loss_label: __("Shrinked"),
+				});
 			}
 		}
 	}
