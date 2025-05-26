@@ -1005,10 +1005,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			target.cost_center = source.get("cost_center")
 
 		target.flags.ignore_permissions = ignore_permissions
-		target.run_method("set_missing_values")
-		target.run_method("set_taxes_and_charges")
-		target.run_method("calculate_taxes_and_totals")
-		target.run_method("set_payment_schedule")
+		target.run_method("postprocess_after_mapping")
 
 	def item_condition(source_parent, target_parent):
 		if source_parent.name in [d.pretreatment_order for d in target_parent.get('items') if d.pretreatment_order]:
