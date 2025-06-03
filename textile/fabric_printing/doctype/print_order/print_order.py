@@ -356,9 +356,11 @@ class PrintOrder(TextileOrder):
 			validate_uom_and_qty_type(d)
 			self.round_floats_in(d)
 
-			d.panel_based_qty = cint(bool(d.design_gap))
+			d.panel_based_qty = cint(bool(d.design_gap) or d.manual_panel_length)
 
-			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap)
+			if not d.manual_panel_length:
+				d.panel_length_inch = flt(d.design_height) + flt(d.design_gap)
+
 			d.panel_length_meter = d.panel_length_inch * conversion_factors['inch_to_meter']
 			d.panel_length_yard = d.panel_length_meter / conversion_factors['yard_to_meter']
 
