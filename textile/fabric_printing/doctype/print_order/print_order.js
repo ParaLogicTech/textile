@@ -580,6 +580,14 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.calculate_totals();
 	}
 
+	manual_panel_length() {
+		this.calculate_totals();
+	}
+
+	panel_length_inch() {
+		this.calculate_totals();
+	}
+
 	uom(doc, cdt, cdn) {
 		let row = frappe.get_doc(cdt, cdn);
 
@@ -629,7 +637,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		let defaults = {
 			'design_gap': this.frm.doc.default_gap,
 			'qty': this.frm.doc.default_qty,
-			'uom': this.frm.doc.default_uom,	
+			'uom': this.frm.doc.default_uom,
 			'qty_type': this.frm.doc.default_qty_type,
 			'per_wastage': this.frm.doc.default_wastage,
 			'length_uom': this.frm.doc.default_length_uom,
@@ -658,9 +666,12 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		this.frm.doc.items.forEach(d => {
 			frappe.model.round_floats_in(d);
 
-			d.panel_based_qty = cint(Boolean(d.design_gap));
+			d.panel_based_qty = cint(Boolean(d.design_gap) || d.manual_panel_length);
 
-			d.panel_length_inch = flt(d.design_height) + flt(d.design_gap);
+			if (!d.manual_panel_length) {
+				d.panel_length_inch = flt(d.design_height) + flt(d.design_gap);
+			}
+
 			d.panel_length_meter = d.panel_length_inch * conversion_factors.inch_to_meter;
 			d.panel_length_yard = d.panel_length_meter / conversion_factors.yard_to_meter;
 

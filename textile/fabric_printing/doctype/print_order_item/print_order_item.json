@@ -29,6 +29,7 @@
   "design_bom",
   "section_break_dgei8",
   "panel_length_inch",
+  "manual_panel_length",
   "column_break_fakwf",
   "panel_length_meter",
   "column_break_kgepc",
@@ -273,7 +274,8 @@
    "fieldtype": "Float",
    "label": "Panel Length (Inch)",
    "non_negative": 1,
-   "read_only": 1
+   "read_only": 1,
+   "read_only_depends_on": "eval:!doc.manual_panel_length;"
   },
   {
    "fieldname": "panel_length_meter",
@@ -398,12 +400,18 @@
    "label": "Rejected Qty",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "manual_panel_length",
+   "fieldtype": "Check",
+   "label": "Set Panel Length Manually"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-23 10:38:48.249248",
+ "modified": "2025-06-02 10:29:13.570829",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order Item",
