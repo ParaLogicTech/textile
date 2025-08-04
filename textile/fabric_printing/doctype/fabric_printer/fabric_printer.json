@@ -40,9 +40,10 @@
    "read_only": 1
   }
  ],
+ "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-19 18:24:04.482682",
+ "modified": "2025-08-04 11:57:31.989004",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printer",
@@ -80,9 +81,10 @@
    "share": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "process_item_name",
- "sort_field": "idx",
- "sort_order": "DESC",
+ "sort_field": "name",
+ "sort_order": "ASC",
  "states": [],
  "track_changes": 1
 }
