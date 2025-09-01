@@ -4,7 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _, STANDARD_USERS
-from frappe.utils import cint, cstr, getdate, get_datetime, add_days, validate_email_address
+from frappe.utils import cint, cstr, getdate, now_datetime, add_days, validate_email_address
 from textile.fabric_printing.report.fabric_printing_summary.fabric_printing_summary import FabricPrintingSummary
 from textile.utils import get_rotated_image
 from urllib.parse import quote
@@ -132,9 +132,8 @@ class TextileEmailDigest(Document):
 		return valid_users
 
 
-@frappe.whitelist()
 def send_textile_email_digest():
-	now_dt = get_datetime()
+	now_dt = now_datetime()
 	digest_doc = frappe.get_single("Textile Email Digest")
 
 	if not cint(digest_doc.enabled):
