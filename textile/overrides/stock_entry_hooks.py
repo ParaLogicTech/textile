@@ -135,10 +135,12 @@ class StockEntryDP(StockEntry):
 		if not self.get("fabric_printer") or not self.get("work_order"):
 			return
 
-		printer_process = frappe.get_cached_value("Fabric Printer", self.fabric_printer, "process_item")
+		printer_doc = frappe.get_cached_doc("Fabric Printer", self.fabric_printer)
+		printer_processes = [d.process_item for d in printer_doc.get("process_items")]
+
 		work_order_process = frappe.db.get_value("Work Order", self.work_order, "process_item", cache=1)
 
-		if printer_process and printer_process != work_order_process:
+		if printer_processes and work_order_process not in printer_processes:
 			frappe.throw(_("Fabric Printer {0} is not allowed to manufacture using Process {1} in {2}").format(
 				self.fabric_printer, work_order_process, frappe.get_desk_link("Work Order", self.work_order)
 			))
