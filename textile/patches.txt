@@ -47,3 +47,4 @@ textile.patches.fix_return_fabric_skip_sales_invoice
 textile.patches.set_coating_order_actual_end_date
 textile.patches.set_print_order_rejected_qty
 textile.patches.set_pretreatment_greige_fabric_batch_no
+textile.patches.move_fabric_printer_process_to_table

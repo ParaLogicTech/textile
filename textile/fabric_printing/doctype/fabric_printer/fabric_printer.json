@@ -9,8 +9,8 @@
  "engine": "InnoDB",
  "field_order": [
   "printer_name",
-  "process_item",
-  "process_item_name"
+  "section_break_orfh",
+  "process_items"
  ],
  "fields": [
   {
@@ -23,27 +23,20 @@
    "unique": 1
   },
   {
-   "allow_in_quick_entry": 1,
-   "fieldname": "process_item",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Process Item",
-   "options": "Item",
-   "reqd": 1
+   "fieldname": "section_break_orfh",
+   "fieldtype": "Section Break"
   },
   {
-   "allow_in_quick_entry": 1,
-   "fetch_from": "process_item.item_name",
-   "fieldname": "process_item_name",
-   "fieldtype": "Data",
-   "label": "Process Item Name",
-   "read_only": 1
+   "fieldname": "process_items",
+   "fieldtype": "Table",
+   "label": "Allowed Processes",
+   "options": "Fabric Printer Process"
   }
  ],
  "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-04 11:57:31.989004",
+ "modified": "2025-11-13 12:26:03.800722",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printer",
@@ -82,7 +75,6 @@
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "process_item_name",
  "sort_field": "name",
  "sort_order": "ASC",
  "states": [],
