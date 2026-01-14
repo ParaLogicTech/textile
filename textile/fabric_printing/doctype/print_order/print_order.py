@@ -9,6 +9,7 @@ from frappe.desk.notifications import clear_doctype_notifications
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
 from textile.utils import validate_textile_item, get_textile_conversion_factors, printing_components
 from textile.controllers.textile_order import TextileOrder
+from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
 from PIL import Image
@@ -505,9 +506,7 @@ class PrintOrder(TextileOrder):
 		ignore_version=True,
 		ignore_feed=True,
 	):
-		from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
-
-		wo_list = []
+		wo_docs = []
 
 		for i, d in enumerate(self.items):
 			pending_qty = flt(d.stock_print_length) - flt(d.work_order_qty)
@@ -517,29 +516,40 @@ class PrintOrder(TextileOrder):
 				continue
 
 			work_order_item = {
-				"print_order": self.name,
-				"print_order_item": d.name,
 				"item_code": d.item_code,
 				"item_name": d.item_name,
 				"bom_no": d.design_bom,
 				"warehouse": self.fg_warehouse,
+				"wip_warehouse": self.wip_warehouse,
 				"production_qty": pending_qty,
+
+				"company": self.get("company"),
+				"cost_center": self.get("cost_center"),
 				"customer": self.customer,
 				"customer_name": self.customer_name,
 				"delivery_date": self.delivery_date,
-				"cost_center": self.get("cost_center"),
+
+				"print_order": self.name,
+				"print_order_item": d.name,
+				"order_line_no": d.idx,
 			}
 
-			wo_list += _create_work_orders([work_order_item], self.company,
-				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_docs += _create_work_orders(
+				[work_order_item],
+				company=self.company,
+				use_multi_level_bom=1,
+				ignore_permissions=ignore_permissions,
+				ignore_version=ignore_version,
+				ignore_feed=ignore_feed,
+			)
 
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(self.items))
 
-		if not wo_list:
+		if not wo_docs:
 			frappe.msgprint(_("Work Orders already created"))
 
-		return wo_list
+		return [doc.name for doc in wo_docs]
 
 	def create_work_order_against_sales_order(self,
 		publish_progress=True,
@@ -547,8 +557,6 @@ class PrintOrder(TextileOrder):
 		ignore_version=True,
 		ignore_feed=True,
 	):
-		from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
-
 		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
 			'print_order': self.name,
 			'docstatus': 1
@@ -562,17 +570,23 @@ class PrintOrder(TextileOrder):
 			so_doc = frappe.get_doc('Sales Order', so)
 			wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.print_order == self.name)
 
-		wo_list = []
+		wo_docs = []
 		for i, d in enumerate(wo_items):
-			wo_list += _create_work_orders([d], self.company,
-				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_docs += _create_work_orders(
+				[d],
+				company=self.company,
+				use_multi_level_bom=1,
+				ignore_permissions=ignore_permissions,
+				ignore_version=ignore_version,
+				ignore_feed=ignore_feed,
+			)
 			if publish_progress:
 				publish_print_order_progress(self.name, "Creating Work Orders", i + 1, len(wo_items))
 
-		if not wo_list:
+		if not wo_docs:
 			frappe.msgprint(_("Work Order already created"))
 
-		return wo_list
+		return [doc.name for doc in wo_docs]
 
 	def set_item_creation_status(self, update=False, update_modified=True):
 		self.items_created = cint(all(d.item_code and d.design_bom for d in self.items))
@@ -1436,7 +1450,8 @@ def make_packing_slip(source_name, target_doc=None, selected_rows=None):
 	else:
 		work_order_filters["print_order"] = doc.name
 
-	work_orders = frappe.get_all("Work Order", filters=work_order_filters, pluck="name")
+	work_orders = frappe.get_all("Work Order", filters=work_order_filters, pluck="name",
+		order_by="transaction_date, order_line_no")
 	if not work_orders:
 		frappe.throw(_("There are no Work Orders to be packed"))
 
@@ -1461,6 +1476,8 @@ def make_delivery_note(source_name, target_doc=None):
 			AND s.per_delivered < 100 AND i.skip_delivery_note = 0
 			AND s.company = %(company)s AND i.print_order = %(print_order)s
 	""", {"print_order": doc.name, "company": doc.company},  as_dict=1)
+
+	frappe.flags.selected_children = None
 
 	if not sales_orders:
 		frappe.throw(_("There are no Sales Orders to be delivered"))
@@ -1492,6 +1509,8 @@ def make_sales_invoice(source_name, target_doc=None):
 		delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
 		for d in delivery_notes:
 			target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
+
+		frappe.flags.selected_children = None
 
 	return target_doc
 

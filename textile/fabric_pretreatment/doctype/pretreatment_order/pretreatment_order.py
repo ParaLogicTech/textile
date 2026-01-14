@@ -404,8 +404,16 @@ class PretreatmentOrder(TextileOrder):
 			"cost_center": self.get("cost_center"),
 		}
 
-		return _create_work_orders([work_order_item], self.company,
-			ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
+		wo_docs = _create_work_orders(
+			[work_order_item],
+			company=self.company,
+			use_multi_level_bom=1,
+			ignore_permissions=ignore_permissions,
+			ignore_version=ignore_version,
+			ignore_feed=ignore_feed,
+		)
+
+		return [doc.name for doc in wo_docs]
 
 	def create_work_order_against_sales_order(self, ignore_permissions=False, ignore_version=True, ignore_feed=True):
 		sales_orders = frappe.get_all("Sales Order Item", 'distinct parent as sales_order', {
@@ -421,15 +429,21 @@ class PretreatmentOrder(TextileOrder):
 			so_doc = frappe.get_doc('Sales Order', so)
 			wo_items += so_doc.get_work_order_items(item_condition=lambda d: d.pretreatment_order == self.name)
 
-		wo_list = []
+		wo_docs = []
 		for i, d in enumerate(wo_items):
-			wo_list += _create_work_orders([d], self.company,
-				ignore_permissions=ignore_permissions, ignore_version=ignore_version, ignore_feed=ignore_feed)
+			wo_docs += _create_work_orders(
+				[d],
+				company=self.company,
+				use_multi_level_bom=1,
+				ignore_permissions=ignore_permissions,
+				ignore_version=ignore_version,
+				ignore_feed=ignore_feed,
+			)
 
-		if not wo_list:
+		if not wo_docs:
 			frappe.msgprint(_("Work Order already created"))
 
-		return wo_list
+		return [doc.name for doc in wo_docs]
 
 	def set_sales_order_status(self, update=False, update_modified=True):
 		sales_order_data = frappe.db.sql("""
@@ -1112,7 +1126,8 @@ def make_packing_slip(source_name, target_doc=None):
 		"company": doc.company,
 	}
 
-	work_orders = frappe.get_all("Work Order", filters=work_order_filters, pluck="name")
+	work_orders = frappe.get_all("Work Order", filters=work_order_filters, pluck="name",
+		order_by="transaction_date")
 	if not work_orders:
 		frappe.throw(_("There are no Work Orders to be packed"))
 
@@ -1146,6 +1161,8 @@ def make_delivery_note(source_name, target_doc=None):
 	for d in sales_orders:
 		target_doc = make_delivery_note_from_packing_slips(d.name, target_doc=target_doc, packing_filter=packing_filter)
 
+	frappe.flags.selected_children = None
+
 	return target_doc
 
 
@@ -1165,6 +1182,8 @@ def make_sales_invoice(source_name, target_doc=None):
 		delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
 		for d in delivery_notes:
 			target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
+
+		frappe.flags.selected_children = None
 
 	return target_doc
 

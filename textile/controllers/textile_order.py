@@ -213,23 +213,29 @@ class TextileOrder(TransactionBase):
 				frappe.get_desk_link("Item", item_code)
 			))
 
-	def get_production_progress_data(self, reference_fieldname, total_qty, uom):
+	def get_production_progress_data(self, reference_fieldname, total_qty, uom, item_codes=None):
+		item_conditions = ""
+		if item_codes:
+			item_conditions += " and wo.production_item in %(item_codes)s"
+
+		args = {"name": self.name, "item_codes": item_codes}
+
 		totals = frappe.db.sql(f"""
 			select
-				sum(qty) as qty,
-				sum(producible_qty) as producible_qty,
-				sum(material_transferred_for_manufacturing) as material_transferred_for_manufacturing,
-				sum(completed_qty) as completed_qty,
-				sum(produced_qty) as produced_qty,
-				sum(process_loss_qty) as process_loss_qty,
-				sum(subcontract_order_qty) as subcontract_order_qty,
-				sum(subcontract_received_qty) as subcontract_received_qty,
-				sum(packed_qty) as packed_qty,
-				sum(rejected_qty) as rejected_qty,
-				sum(reconciled_qty) as reconciled_qty
-			from `tabWork Order`
-			where `{reference_fieldname}` = %s and docstatus = 1
-		""", self.name, as_dict=1)
+				sum(wo.qty) as qty,
+				sum(wo.producible_qty) as producible_qty,
+				sum(wo.material_transferred_for_manufacturing) as material_transferred_for_manufacturing,
+				sum(wo.completed_qty) as completed_qty,
+				sum(wo.produced_qty) as produced_qty,
+				sum(wo.process_loss_qty) as process_loss_qty,
+				sum(wo.subcontract_order_qty) as subcontract_order_qty,
+				sum(wo.subcontract_received_qty) as subcontract_received_qty,
+				sum(wo.packed_qty) as packed_qty,
+				sum(wo.rejected_qty) as rejected_qty,
+				sum(wo.reconciled_qty) as reconciled_qty
+			from `tabWork Order` wo
+			where wo.`{reference_fieldname}` = %(name)s and wo.docstatus = 1 {item_conditions}
+		""", args, as_dict=1)
 
 		totals = totals[0] if totals else frappe._dict()
 		progress_data = frappe._dict({
@@ -256,10 +262,10 @@ class TextileOrder(TransactionBase):
 				sum(woo.previous_loss_qty) as previous_loss_qty
 			from `tabWork Order Operation` woo
 			inner join `tabWork Order` wo on wo.name = woo.parent
-			where wo.`{reference_fieldname}` = %s and wo.docstatus = 1
+			where wo.`{reference_fieldname}` = %(name)s and wo.docstatus = 1 {item_conditions}
 			group by woo.operation
 			order by woo.idx
-		""", self.name, as_dict=1)
+		""", args, as_dict=1)
 
 		for row in operations_data:
 			progress_data["operations"].append(row)

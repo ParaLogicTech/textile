@@ -89,6 +89,9 @@ def update_sales_order_mapper(mapper, target_doctype):
 
 
 def sales_order_autoname(doc, method):
+	if doc.name:
+		return
+
 	print_orders = set()
 	pretreatment_orders = set()
 
