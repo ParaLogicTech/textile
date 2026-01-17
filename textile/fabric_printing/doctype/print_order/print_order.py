@@ -1451,7 +1451,7 @@ def make_packing_slip(source_name, target_doc=None, selected_rows=None):
 		work_order_filters["print_order"] = doc.name
 
 	work_orders = frappe.get_all("Work Order", filters=work_order_filters, pluck="name",
-		order_by="transaction_date, order_line_no")
+		order_by="order_line_no, transaction_date")
 	if not work_orders:
 		frappe.throw(_("There are no Work Orders to be packed"))
 
