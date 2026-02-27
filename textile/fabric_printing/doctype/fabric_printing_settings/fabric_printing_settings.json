@@ -9,24 +9,12 @@
  "field_order": [
   "default_item_group_for_printed_design_item",
   "default_package_type_for_printed_fabrics",
-  "column_break_qidqn",
-  "default_printing_cost_center",
-  "default_coating_cost_center",
   "column_break_gfkuh",
   "wastage_mandatory",
   "coating_item_mandatory",
   "softener_item_mandatory",
   "sublimation_paper_item_mandatory",
   "protection_paper_item_mandatory",
-  "warehouse_section",
-  "default_printing_fabric_warehouse",
-  "default_printing_source_warehouse",
-  "column_break_ao9pt",
-  "default_printing_wip_warehouse",
-  "default_coating_fg_warehouse",
-  "column_break_s3mwh",
-  "default_printing_fg_warehouse",
-  "default_printing_rejected_warehouse",
   "stock_entry_type_section",
   "stock_entry_type_for_print_production",
   "stock_entry_type_for_fabric_transfer",
@@ -44,28 +32,6 @@
    "options": "Item Group"
   },
   {
-   "fieldname": "column_break_ao9pt",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "default_printing_source_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Raw Material Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "default_printing_wip_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Work In Progress Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "default_printing_fg_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Finished Goods Warehouse",
-   "options": "Warehouse"
-  },
-  {
    "fieldname": "default_package_type_for_printed_fabrics",
    "fieldtype": "Link",
    "label": "Default Package Type for Printed Fabrics",
@@ -76,37 +42,6 @@
    "fieldname": "wastage_mandatory",
    "fieldtype": "Check",
    "label": "Wastage Mandatory in Print Order"
-  },
-  {
-   "fieldname": "default_printing_fabric_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Ready Fabric Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "default_coating_fg_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Coated Fabric Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "warehouse_section",
-   "fieldtype": "Section Break",
-   "label": "Warehouse"
-  },
-  {
-   "fieldname": "column_break_s3mwh",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_qidqn",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "default_printing_cost_center",
-   "fieldtype": "Link",
-   "label": "Default Printing Cost Center",
-   "options": "Cost Center"
   },
   {
    "fieldname": "stock_entry_type_section",
@@ -138,18 +73,6 @@
    "fieldtype": "Link",
    "label": "Stock Entry Type for Fabric Coating",
    "options": "Stock Entry Type"
-  },
-  {
-   "fieldname": "default_coating_cost_center",
-   "fieldtype": "Link",
-   "label": "Default Coating Cost Center",
-   "options": "Cost Center"
-  },
-  {
-   "fieldname": "default_printing_rejected_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Rejected Warehouse",
-   "options": "Warehouse"
   },
   {
    "fieldname": "stock_entry_type_for_fabric_shrinkage",
@@ -192,10 +115,11 @@
    "label": "Protection Paper Mandatory in Print Order"
   }
  ],
+ "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-08-15 13:32:39.914389",
+ "modified": "2026-02-27 14:57:11.095055",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",
@@ -212,6 +136,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

@@ -42,17 +42,6 @@ class PackingSlipDP(PackingSlip):
 		if self.package_type:
 			self.set_package_type_details(force=True)
 
-	def set_default_rejected_warehouse(self):
-		print_orders = set([d.get("print_order") for d in self.get("items") if d.get("print_order")])
-		pretreatment_orders = set([d.get("pretreatment_order") for d in self.get("items") if d.get("pretreatment_order")])
-
-		if print_orders and not self.rejected_warehouse:
-			self.rejected_warehouse = frappe.get_cached_value("Fabric Printing Settings", None,
-				"default_printing_rejected_warehouse")
-		if pretreatment_orders and not self.rejected_warehouse:
-			self.rejected_warehouse = frappe.get_cached_value("Fabric Pretreatment Settings", None,
-				"default_pretreatment_rejected_warehouse")
-
 	@frappe.whitelist()
 	def add_return_fabric(self):
 		self._add_return_fabric()
@@ -161,7 +150,6 @@ def postprocess_work_orders_to_packing_slip(work_orders, packing_slip):
 
 def postprocess_mapped_packing_slip(packing_slip):
 	packing_slip.set_default_package_type()
-	packing_slip.set_default_rejected_warehouse()
 	packing_slip._add_return_fabric()
 
 

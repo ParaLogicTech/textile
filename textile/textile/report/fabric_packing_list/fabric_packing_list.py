@@ -86,12 +86,13 @@ class FabricPackingList:
 				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
 
 		# Rejected Warehouse
+		self.filters.rejected_warehouses = frappe.get_all("Warehouse", filters={
+			"is_group": 0, "stock_type": "Rejected"
+		}, pluck="name")
 		self.filters.rejected_warehouses = [
-			frappe.db.get_single_value("Fabric Printing Settings", "default_printing_rejected_warehouse"),
-			frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_rejected_warehouse"),
+			v for v in self.filters.rejected_warehouses
+			if not self.filters.warehouse or v != self.filters.warehouse
 		]
-		self.filters.rejected_warehouses = [v for v in self.filters.rejected_warehouses
-			if v and (not self.filters.warehouse or v != self.filters.warehouse)]
 		if self.filters.rejected_warehouses:
 			conditions.append("ps.warehouse not in %(rejected_warehouses)s")
 

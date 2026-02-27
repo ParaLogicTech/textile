@@ -187,19 +187,12 @@ class FabricPrintingSummary:
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
-		fabric_warehouses = []
-
-		printing_fabric_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_printing_fabric_warehouse")
-		if printing_fabric_warehouse:
-			fabric_warehouses.append(printing_fabric_warehouse)
-
-		pretreatment_fabric_warehouse = frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_fabric_warehouse")
-		if pretreatment_fabric_warehouse:
-			fabric_warehouses.append(pretreatment_fabric_warehouse)
-
 		warehouse_condition = ""
-		if fabric_warehouses:
-			warehouse_condition = " and sle.warehouse in %(fabric_warehouses)s"
+		available_warehouses = frappe.get_all("Warehouse", filters={
+			"is_group": 0, "stock_type": "Available"
+		}, pluck="name")
+		if available_warehouses:
+			warehouse_condition = " and sle.warehouse in %(available_warehouses)s"
 
 		self.total_fabric_qty_data = frappe.db.sql(f"""
 			SELECT i.fabric_material,
@@ -211,7 +204,7 @@ class FabricPrintingSummary:
 			WHERE i.textile_item_type IN ('Ready Fabric', 'Greige Fabric') AND sle.posting_date <= %(to_date)s
 				{warehouse_condition}
 			GROUP BY i.fabric_material
-		""", {"to_date": self.filters.to_date, "fabric_warehouses": fabric_warehouses}, as_dict=1)
+		""", {"to_date": self.filters.to_date, "available_warehouses": available_warehouses}, as_dict=1)
 
 	def get_grouped_data(self):
 		data_bank = [

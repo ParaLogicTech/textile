@@ -10,7 +10,7 @@ from textile.fabric_printing.doctype.print_process_rule.print_process_rule impor
 from textile.utils import validate_textile_item, get_textile_conversion_factors, printing_components
 from textile.controllers.textile_order import TextileOrder
 from erpnext.setup.doctype.item_default_rule.item_default_rule import get_item_default_values
-from erpnext.stock.get_item_details import get_default_cost_center
+from erpnext.stock.get_item_details import get_default_cost_center, get_default_rejected_warehouse
 from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders, get_default_warehouses
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
@@ -1378,8 +1378,9 @@ def make_fabric_reconciliation_entry(print_order, purpose, for_submit=False):
 	stock_entry.from_warehouse = doc.wip_warehouse
 
 	if purpose == "Material Transfer":
-		stock_entry.to_warehouse = frappe.get_cached_value("Fabric Printing Settings", None,
-			"default_printing_rejected_warehouse")
+		stock_entry.to_warehouse = get_default_rejected_warehouse(None, {
+			"textile_item_type": "Printed Design", "company": doc.company
+		})
 
 	for d in doc.items:
 		work_orders = frappe.get_all("Work Order", filters={
@@ -1399,8 +1400,12 @@ def make_fabric_reconciliation_entry(print_order, purpose, for_submit=False):
 			row = stock_entry.append("items", frappe.new_doc("Stock Entry Detail"))
 			row.work_order = wo.name
 			row.item_code = wo.production_item
+
 			row.s_warehouse = wo.wip_warehouse if wo.produce_fg_in_wip_warehouse else wo.fg_warehouse
-			row.t_warehouse = stock_entry.to_warehouse if purpose == "Material Transfer" else None
+			row.t_warehouse = get_default_rejected_warehouse(wo.production_item, {
+				"textile_item_type": "Printed Design", "company": doc.company
+			}) or stock_entry.to_warehouse if purpose == "Material Transfer" else None
+
 			row.qty = unpacked_qty
 			row.uom = "Meter"
 

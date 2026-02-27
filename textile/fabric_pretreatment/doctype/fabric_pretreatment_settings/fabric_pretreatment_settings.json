@@ -9,17 +9,8 @@
  "field_order": [
   "default_package_type_for_ready_fabrics",
   "column_break_5r6mx",
-  "default_pretreatment_cost_center",
   "singeing_mandatory",
   "desizing_mandatory",
-  "section_break_h7i6g",
-  "default_pretreatment_fabric_warehouse",
-  "default_pretreatment_source_warehouse",
-  "column_break_yc3wg",
-  "default_pretreatment_wip_warehouse",
-  "default_pretreatment_rejected_warehouse",
-  "column_break_iscpi",
-  "default_pretreatment_fg_warehouse",
   "stock_entry_type_section",
   "stock_entry_type_for_fabric_transfer",
   "stock_entry_type_for_pretreatment_production",
@@ -30,32 +21,10 @@
  ],
  "fields": [
   {
-   "fieldname": "default_pretreatment_source_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Raw Material Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "default_pretreatment_wip_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Work In Progress Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "default_pretreatment_fg_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Finished Goods Warehouse",
-   "options": "Warehouse"
-  },
-  {
    "fieldname": "default_package_type_for_ready_fabrics",
    "fieldtype": "Link",
    "label": "Default Package Type for Ready Fabrics",
    "options": "Package Type"
-  },
-  {
-   "fieldname": "column_break_yc3wg",
-   "fieldtype": "Column Break"
   },
   {
    "default": "0",
@@ -70,24 +39,8 @@
    "label": "Desizing Mandatory in Pretreatment Order"
   },
   {
-   "fieldname": "default_pretreatment_fabric_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Greige Fabric Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "section_break_h7i6g",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "column_break_5r6mx",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "default_pretreatment_cost_center",
-   "fieldtype": "Link",
-   "label": "Default Pretreatment Cost Center",
-   "options": "Cost Center"
   },
   {
    "fieldname": "stock_entry_type_section",
@@ -115,16 +68,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "default_pretreatment_rejected_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Rejected Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "column_break_iscpi",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "stock_entry_type_for_fabric_rejection",
    "fieldtype": "Link",
    "label": "Stock Entry Type for Fabric Rejection",
@@ -137,10 +80,11 @@
    "options": "Stock Entry Type"
   }
  ],
+ "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-04 17:22:22.808595",
+ "modified": "2026-02-27 14:46:40.109139",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment Settings",
@@ -157,6 +101,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

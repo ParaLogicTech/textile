@@ -13,7 +13,7 @@ from erpnext.manufacturing.doctype.work_order.work_order import (
 	get_subcontractable_qty,
 	get_default_warehouses,
 )
-from erpnext.stock.get_item_details import get_default_cost_center
+from erpnext.stock.get_item_details import get_default_cost_center, get_default_rejected_warehouse
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
 from erpnext.stock.doctype.batch.batch import validate_batch_no
 from frappe.desk.reportview import get_match_cond, get_filters_cond
@@ -1125,8 +1125,9 @@ def make_fabric_reconciliation_entry(pretreatment_order, purpose, for_submit=Fal
 	stock_entry.from_warehouse = doc.fg_warehouse
 
 	if purpose == "Material Transfer":
-		stock_entry.to_warehouse = frappe.get_cached_value("Fabric Pretreatment Settings", None,
-			"default_pretreatment_rejected_warehouse")
+		stock_entry.to_warehouse = get_default_rejected_warehouse(doc.ready_fabric_item, {
+			"textile_item_type": "Ready Fabric", "company": doc.company
+		})
 
 	work_orders = frappe.get_all("Work Order", filters={
 		"pretreatment_order": doc.name, "docstatus": 1
@@ -1148,8 +1149,12 @@ def make_fabric_reconciliation_entry(pretreatment_order, purpose, for_submit=Fal
 		row = stock_entry.append("items", frappe.new_doc("Stock Entry Detail"))
 		row.work_order = wo.name
 		row.item_code = wo.production_item
+
 		row.s_warehouse = wo.wip_warehouse if wo.produce_fg_in_wip_warehouse else wo.fg_warehouse
-		row.t_warehouse = stock_entry.to_warehouse if purpose == "Material Transfer" else None
+		row.t_warehouse = get_default_rejected_warehouse(wo.production_item, {
+			"textile_item_type": "Ready Fabric", "company": doc.company
+		}) or stock_entry.to_warehouse if purpose == "Material Transfer" else None
+
 		row.qty = pending_qty
 		row.uom = "Meter"
 

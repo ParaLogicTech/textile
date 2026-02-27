@@ -7,14 +7,6 @@ frappe.ui.form.on('Fabric Printing Settings', {
 			return erpnext.queries.warehouse(frm.doc);
 		});
 
-		frm.set_query("default_printing_cost_center", function(doc) {
-			return {
-				filters: {
-					"is_group": 0
-				}
-			};
-		});
-
 		frm.set_query("stock_entry_type_for_fabric_transfer", function(doc) {
 			return {
 				filters: {

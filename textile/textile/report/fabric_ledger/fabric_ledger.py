@@ -33,11 +33,9 @@ class FabricLedger:
 			if textile_item_type not in ("Greige Fabric", "Ready Fabric"):
 				frappe.throw("Item must be Greige Fabric or Ready Fabric")
 
-		self.filters.rejected_warehouses = [
-			frappe.db.get_single_value("Fabric Printing Settings", "default_printing_rejected_warehouse"),
-			frappe.db.get_single_value("Fabric Pretreatment Settings", "default_pretreatment_rejected_warehouse"),
-		]
-		self.filters.rejected_warehouses = [v for v in self.filters.rejected_warehouses if v]
+		self.filters.rejected_warehouses = frappe.get_all("Warehouse", filters={
+			"is_group": 0, "stock_type": "Rejected"
+		}, pluck="name")
 
 		self.filters.shrinkage_stock_entry_type = frappe.db.get_single_value("Fabric Printing Settings", "stock_entry_type_for_fabric_shrinkage")
 
