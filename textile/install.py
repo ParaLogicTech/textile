@@ -65,6 +65,14 @@ customs_tariff_numbers = [
 		"description": "Woven Fabrics Of Synthetic Filaments , 85% Or More By Weight Of Textured Polyester Filaments, Printed",
 	},
 	{
+		"tariff_number": "5407.1000",
+		"description": "Fabrics, woven; from high tenacity yarn, of nylon, other polyamides or of polyesters",
+	},
+	{
+		"tariff_number": "5407.4400",
+		"description": "Fabrics, woven; containing 85% or more by weight of filaments of nylon or other polyamides, printed",
+	},
+	{
 		"tariff_number": "5007.9000",
 		"description": "Woven Fabrics Of Silk Or Silk Waste",
 	},
@@ -97,11 +105,11 @@ cotton_printed_tariff = [
 ]
 
 polyester_greige_ready_tariff = [
-	{'customs_tariff_number': '5407.5100'},
+	{'customs_tariff_number': '5407.1000'},
 ]
 
 polyester_printed_tariff = [
-	{'customs_tariff_number': '5407.5400'},
+	{'customs_tariff_number': '5407.4400'},
 ]
 
 silk_tariff = [
