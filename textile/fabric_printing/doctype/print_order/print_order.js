@@ -35,8 +35,6 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		super.refresh();
 		this.setup_buttons();
 		this.setup_route_options();
-		this.set_default_warehouse();
-		this.set_default_cost_center();
 		this.setup_progressbars();
 	}
 
@@ -400,56 +398,13 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		}
 	}
 
-	set_default_warehouse() {
-		if (this.frm.is_new()) {
-			const po_to_dps_warehouse_fn_map = {
-				'fabric_warehouse': 'default_printing_fabric_warehouse',
-				'source_warehouse': 'default_printing_source_warehouse',
-				'wip_warehouse': 'default_printing_wip_warehouse',
-				'fg_warehouse': 'default_printing_fg_warehouse',
-			}
-
-			for (let [po_warehouse_fn, dps_warehouse_fn] of Object.entries(po_to_dps_warehouse_fn_map)) {
-				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
-				if (!this.frm.doc[po_warehouse_fn] && warehouse) {
-					this.frm.set_value(po_warehouse_fn, warehouse);
-				}
-			}
-			this.set_default_fabric_warehouse();
-		}
-	}
-
-	set_default_fabric_warehouse() {
-		let printing_fabric_warehouse = frappe.defaults.get_global_default("default_printing_fabric_warehouse");
-		let coated_fabric_warehouse = frappe.defaults.get_global_default("default_coating_fg_warehouse");
-
-		let warehouse = printing_fabric_warehouse;
-		if (this.frm.doc.coating_item_separate_process) {
-			warehouse = coated_fabric_warehouse || warehouse;
-		}
-
-		if (warehouse) {
-			this.frm.set_value("fabric_warehouse", warehouse);
-		}
-
-		this.frm.set_value("skip_transfer", this.frm.doc.coating_item_separate_process);
-	}
-
-	set_default_cost_center() {
-		if (this.frm.is_new()) {
-			let default_cost_center = frappe.defaults.get_default("default_printing_cost_center");
-			if (default_cost_center && !this.frm.doc.cost_center) {
-				this.frm.set_value("cost_center", default_cost_center);
-			}
-		}
-	}
-
 	customer() {
 		this.get_order_defaults_from_customer();
 		this.get_is_internal_customer();
 	}
 
 	company() {
+		this.get_fabric_item_defaults();
 		this.get_is_internal_customer();
 	}
 
@@ -469,12 +424,48 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 	process_item() {
 		return frappe.run_serially([
 			() => this.get_process_item_details(),
-			() => this.set_default_fabric_warehouse(),
+			() => this.get_default_fabric_warehouse(),
 		]);
 	}
 
 	fabric_warehouse() {
 		this.get_fabric_stock_qty();
+	}
+
+	get_fabric_item_defaults() {
+		if (this.frm.doc.company) {
+			return frappe.call({
+				method: "textile.fabric_printing.doctype.print_order.print_order.get_fabric_item_defaults",
+				args: {
+					company: this.frm.doc.company,
+					fabric_item: this.frm.doc.fabric_item,
+					coating_item_separate_process: cint(this.frm.doc.coating_item_separate_process),
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value(r.message);
+					}
+				}
+			});
+		}
+	}
+
+	get_default_fabric_warehouse() {
+		if (this.frm.doc.company) {
+			return frappe.call({
+				method: "textile.fabric_printing.doctype.print_order.print_order.get_default_fabric_warehouse",
+				args: {
+					company: this.frm.doc.company,
+					fabric_item: this.frm.doc.fabric_item,
+					coating_item_separate_process: cint(this.frm.doc.coating_item_separate_process),
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value("fabric_warehouse", r.message);
+					}
+				}
+			});
+		}
 	}
 
 	get_fabric_item_details() {
@@ -483,7 +474,8 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				method: "textile.fabric_printing.doctype.print_order.print_order.get_fabric_item_details",
 				args: {
 					fabric_item: this.frm.doc.fabric_item,
-					get_default_process: 1
+					get_default_process: 1,
+					company: this.frm.doc.company,
 				},
 				callback: (r) => {
 					if (r.message) {

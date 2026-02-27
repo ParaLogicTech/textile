@@ -83,12 +83,20 @@ doctype_list_js = {
 	"Work Order": "overrides/work_order_list_hooks.js"
 }
 
+update_item_default_rule_item_filter_fields = [
+	"textile.overrides.item_hooks.update_item_default_rule_item_filter_fields"
+]
+
 update_item_override_fields = [
 	"textile.overrides.item_hooks.update_item_override_fields",
 ]
 
 calculate_taxes_and_totals = [
 	"textile.overrides.taxes_and_totals_hooks.calculate_taxes_and_totals"
+]
+
+update_work_order_default_settings = [
+	"textile.overrides.work_order_hooks.update_work_order_default_settings",
 ]
 
 update_work_order_on_create = [
@@ -241,6 +249,9 @@ fixtures = [
 				'Item Group-textile_item_type',
 				'Item Source-textile_item_type',
 				'Brand-textile_item_type',
+				'Item Default Rule-textile_item_type',
+
+				'Item Default Rule-default_coating_fg_warehouse',
 
 				'Quotation Item-textile_item_type',
 

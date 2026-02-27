@@ -240,6 +240,10 @@ def update_item_override_fields(item_fields, args, validate=False):
 	item_fields['textile_item_type'] = 'Data'
 
 
+def update_item_default_rule_item_filter_fields(fields):
+	fields.insert(1, "textile_item_type")
+
+
 def override_item_dashboard(data):
 	data.setdefault("non_standard_fieldnames", {})
 	data["non_standard_fieldnames"]["Print Order"] = "item_code"

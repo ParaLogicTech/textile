@@ -4,10 +4,12 @@
 import frappe
 from frappe import _
 from frappe.utils import flt, cint
-from erpnext.stock.get_item_details import is_item_uom_convertible
 from frappe.utils.status_updater import OverAllowanceError
 from textile.controllers.textile_order import TextileOrder
 from textile.utils import get_textile_conversion_factors, validate_textile_item
+from erpnext.stock.get_item_details import is_item_uom_convertible, get_default_cost_center
+from erpnext.manufacturing.doctype.work_order.work_order import get_default_warehouses
+from erpnext.setup.doctype.item_default_rule.item_default_rule import get_item_default_values
 import copy
 
 
@@ -48,13 +50,7 @@ class CoatingOrder(TextileOrder):
 		self.validate_dates()
 
 	def set_missing_values(self):
-		self.set_default_cost_center()
 		self.set_fabric_item_details()
-
-	def set_default_cost_center(self):
-		if not self.get("cost_center"):
-			self.cost_center = frappe.db.get_single_value("Fabric Printing Settings",
-			"default_printing_cost_center")
 
 	def validate_coating_item(self):
 		validate_textile_item(self.coating_item, "Process Component", "Coating")
@@ -98,7 +94,7 @@ class CoatingOrder(TextileOrder):
 		self.coating_bom = get_default_coating_bom(self.coating_item, throw=self.docstatus == 1)
 
 	def set_fabric_item_details(self):
-		details = get_fabric_item_details(self.fabric_item, get_coating_item=False)
+		details = get_fabric_item_details(self.fabric_item, get_coating_item=False, company=self.company)
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -184,7 +180,7 @@ class CoatingOrder(TextileOrder):
 
 
 @frappe.whitelist()
-def get_fabric_item_details(fabric_item, get_coating_item=True):
+def get_fabric_item_details(fabric_item, get_coating_item=True, company=None):
 	from textile.utils import get_fabric_item_details
 	from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values
 
@@ -196,6 +192,34 @@ def get_fabric_item_details(fabric_item, get_coating_item=True):
 		print_process_defaults = get_print_process_values(fabric_item)
 		out.coating_item = print_process_defaults.coating_item
 		out.coating_item_name = print_process_defaults.coating_item_name
+
+	out.update(get_fabric_item_defaults(company, fabric_item))
+
+	return out
+
+
+@frappe.whitelist()
+def get_fabric_item_defaults(company, fabric_item=None):
+	out = frappe._dict()
+
+	warehouses = get_default_warehouses({
+		"item_code": fabric_item,
+		"company": company,
+		"textile_item_type": "Ready Fabric",
+	})
+	out.fabric_warehouse = warehouses.get("fg_warehouse")
+	out.source_warehouse = warehouses.get("source_warehouse")
+
+	default_values = get_item_default_values(fabric_item, {
+		"company": company,
+		"textile_item_type": "Ready Fabric",
+	})
+	out.fg_warehouse = default_values.get("default_coating_fg_warehouse")
+
+	out.cost_center = get_default_cost_center(fabric_item, {
+		"company": company,
+		"textile_item_type": "Ready Fabric",
+	}, selling_or_buying="buying")
 
 	return out
 

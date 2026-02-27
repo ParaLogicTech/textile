@@ -7,8 +7,6 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	refresh() {
 		super.refresh();
 		this.setup_buttons();
-		this.set_default_warehouse();
-		this.set_default_cost_center();
 		this.show_progress_for_coating();
 	}
 
@@ -54,38 +52,12 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		}
 	}
 
-	set_default_warehouse() {
-		if (this.frm.is_new()) {
-			const co_to_dps_warehouse_fn_map = {
-				'fabric_warehouse': 'default_printing_fabric_warehouse',
-				'source_warehouse': 'default_printing_source_warehouse',
-				'fg_warehouse': 'default_coating_fg_warehouse',
-			}
-
-			for (let [co_warehouse_fn, dps_warehouse_fn] of Object.entries(co_to_dps_warehouse_fn_map)) {
-				let warehouse = frappe.defaults.get_default(dps_warehouse_fn);
-				if (!this.frm.doc[co_warehouse_fn] && warehouse) {
-					this.frm.set_value(co_warehouse_fn, warehouse);
-				}
-
-			}
-		}
-	}
-
-	set_default_cost_center() {
-		if (this.frm.is_new()) {
-			let default_cost_center = frappe.defaults.get_default("default_coating_cost_center");
-			if (default_cost_center && !this.frm.doc.cost_center) {
-			this.frm.set_value("cost_center", default_cost_center);
-			}
-		}
-	}
-
 	customer() {
 		this.get_is_internal_customer();
 	}
 
 	company() {
+		this.get_fabric_item_defaults();
 		this.get_is_internal_customer();
 	}
 
@@ -123,13 +95,31 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 		this.frm.refresh_fields();
 	}
 
+	get_fabric_item_defaults() {
+		if (this.frm.doc.company) {
+			return frappe.call({
+				method: "textile.fabric_printing.doctype.coating_order.coating_order.get_fabric_item_defaults",
+				args: {
+					company: this.frm.doc.company,
+					fabric_item: this.frm.doc.fabric_item,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value(r.message);
+					}
+				}
+			});
+		}
+	}
+
 	get_fabric_item_details() {
 		if (this.frm.doc.fabric_item) {
 			return this.frm.call({
 				method: "textile.fabric_printing.doctype.coating_order.coating_order.get_fabric_item_details",
 				args: {
 					fabric_item: this.frm.doc.fabric_item,
-					get_coating_item: 1
+					get_coating_item: 1,
+					company: this.frm.doc.company,
 				},
 				callback: (r) => {
 					if (r.message) {
@@ -141,17 +131,21 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 	}
 
 	get_default_coating_bom() {
-		return this.frm.call({
-			method: "textile.fabric_printing.doctype.coating_order.coating_order.get_default_coating_bom",
-			args: {
-				coating_item: this.frm.doc.coating_item,
-			},
-			callback: (r) => {
-				if (r.message) {
-					this.frm.set_value("coating_bom", r.message);
+		if (this.frm.doc.coating_item) {
+			return this.frm.call({
+				method: "textile.fabric_printing.doctype.coating_order.coating_order.get_default_coating_bom",
+				args: {
+					coating_item: this.frm.doc.coating_item,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value("coating_bom", r.message);
+					}
 				}
-			}
-		});
+			});
+		} else {
+			this.frm.set_value("coating_bom", null);
+		}
 	}
 
 	finish_coating_order() {

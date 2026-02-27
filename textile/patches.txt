@@ -20,6 +20,7 @@ execute:frappe.delete_doc_if_exists("Custom Field", "Customer-printing_cb_2")
 textile.patches.set_line_textile_item_type
 textile.patches.rename_stock_entry_type_for_pretreatment_production
 textile.patches.enable_allow_process_loss
+textile.patches.make_item_default_rule_from_settings
 
 [post_model_sync]
 textile.patches.set_panel_based_qty

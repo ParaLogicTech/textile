@@ -8,7 +8,12 @@ from frappe.utils import cint, flt, round_up
 from textile.utils import pretreatment_components, get_textile_conversion_factors, validate_textile_item
 from frappe.model.mapper import get_mapped_doc
 from frappe.desk.notifications import clear_doctype_notifications
-from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders, get_subcontractable_qty
+from erpnext.manufacturing.doctype.work_order.work_order import (
+	_create_work_orders,
+	get_subcontractable_qty,
+	get_default_warehouses,
+)
+from erpnext.stock.get_item_details import get_default_cost_center
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
 from erpnext.stock.doctype.batch.batch import validate_batch_no
 from frappe.desk.reportview import get_match_cond, get_filters_cond
@@ -106,21 +111,25 @@ class PretreatmentOrder(TextileOrder):
 		return self.flags.disallow_on_submit or []
 
 	def set_missing_values(self):
-		self.set_default_cost_center()
 		self.set_fabric_item_details()
 
-	def set_default_cost_center(self):
-		if not self.get("cost_center"):
-			self.cost_center = frappe.db.get_single_value("Fabric Pretreatment Settings",
-			"default_pretreatment_cost_center")
-
 	def set_fabric_item_details(self):
-		ready_details = get_fabric_item_details(self.greige_fabric_item, prefix="greige_", get_default_process=False)
-		for k, v in ready_details.items():
+		greige_details = get_fabric_item_details(
+			self.greige_fabric_item,
+			prefix="greige_",
+			get_default_process=False,
+			company=self.company,
+		)
+		for k, v in greige_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
 
-		ready_details = get_fabric_item_details(self.ready_fabric_item, prefix="ready_", get_default_process=False)
+		ready_details = get_fabric_item_details(
+			self.ready_fabric_item,
+			prefix="ready_",
+			get_default_process=False,
+			company=self.company,
+		)
 		for k, v in ready_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -904,37 +913,80 @@ def validate_transaction_against_pretreatment_order(doc):
 
 
 @frappe.whitelist()
-def get_fabric_item_details(fabric_item, prefix=None, get_ready_fabric=False, get_greige_fabric=False,
-		get_default_process=True):
+def get_fabric_item_details(
+	fabric_item,
+	prefix=None,
+	get_ready_fabric=False,
+	get_greige_fabric=False,
+	get_default_process=True,
+	company=None,
+):
 	from textile.utils import get_fabric_item_details
 
 	get_ready_fabric = cint(get_ready_fabric)
 	get_greige_fabric = cint(get_greige_fabric)
 
+	fabric_doc = frappe.get_cached_doc("Item", fabric_item) if fabric_item else frappe._dict()
+	greige_fabric_item = fabric_doc.name if fabric_doc.textile_item_type == "Greige Fabric" else None
+	ready_fabric_item = fabric_doc.name if fabric_doc.textile_item_type == "Ready Fabric" else None
+
 	out = get_fabric_item_details(fabric_item)
 	if prefix:
 		out = frappe._dict({f"{prefix}{key}": value for key, value in out.items()})
 
-	if fabric_item and get_ready_fabric:
+	if greige_fabric_item and get_ready_fabric:
 		ready_fabric_items = frappe.get_all("Item", filters={
 			"textile_item_type": "Ready Fabric",
-			"fabric_item": fabric_item,
+			"fabric_item": greige_fabric_item,
 			"disabled": 0,
 		}, pluck="name")
 
 		if len(ready_fabric_items) == 1:
 			out.ready_fabric_item = ready_fabric_items[0]
 
-	if fabric_item and get_greige_fabric:
-		textile_item_type, greige_fabric_item = frappe.get_cached_value("Item", fabric_item,
-			["textile_item_type", "fabric_item"])
+	if ready_fabric_item and get_greige_fabric:
+		if fabric_doc.fabric_item:
+			out.greige_fabric_item = fabric_doc.fabric_item
 
-		if textile_item_type == "Ready Fabric" and greige_fabric_item:
-			out.greige_fabric_item = greige_fabric_item
-
-	if fabric_item and cint(get_default_process):
-		process_details = get_default_pretreatment_process(fabric_item)
+	if greige_fabric_item and cint(get_default_process):
+		process_details = get_default_pretreatment_process(greige_fabric_item)
 		out.update(process_details)
+
+	out.update(get_fabric_item_defaults(
+		company=company,
+		greige_fabric_item=greige_fabric_item,
+		ready_fabric_item=ready_fabric_item,
+	))
+
+	return out
+
+
+@frappe.whitelist()
+def get_fabric_item_defaults(company, greige_fabric_item=None, ready_fabric_item=None):
+	out = frappe._dict()
+
+	if ready_fabric_item:
+		ready_warehouses = get_default_warehouses({
+			"item_code": ready_fabric_item,
+			"company": company,
+			"textile_item_type": "Ready Fabric",
+		})
+		out.fg_warehouse = ready_warehouses.get("fg_warehouse")
+		out.wip_warehouse = ready_warehouses.get("wip_warehouse")
+		out.source_warehouse = ready_warehouses.get("source_warehouse")
+
+		out.cost_center = get_default_cost_center(ready_fabric_item, {
+			"company": company,
+			"textile_item_type": "Ready Fabric",
+		}, selling_or_buying="buying")
+
+	if greige_fabric_item:
+		greige_warehouses = get_default_warehouses({
+			"item_code": greige_fabric_item,
+			"company": company,
+			"textile_item_type": "Greige Fabric",
+		})
+		out.fabric_warehouse = greige_warehouses.get("fg_warehouse")
 
 	return out
 

@@ -69,6 +69,16 @@ class WorkOrderDP(WorkOrder):
 						d.source_warehouse = order.fabric_warehouse
 
 
+def update_work_order_default_settings(args, out):
+	item_doc = frappe.get_cached_doc("Item", args.item_code) if args.item_code else frappe._dict()
+
+	if args.get("pretreatment_order") or item_doc.get("textile_item_type") == "Ready Fabric":
+		out.update(get_pretreatment_work_order_settings(args.get("pretreatment_order")))
+
+	if args.get("print_order") or item_doc.get("textile_item_type") == "Printed Design":
+		out.update(get_print_work_order_settings(args.get("print_order")))
+
+
 def update_work_order_on_create(work_order, args=None):
 	if args and args.get("pretreatment_order"):
 		work_order.pretreatment_order = args.get("pretreatment_order")
@@ -88,17 +98,9 @@ def update_work_order_on_create(work_order, args=None):
 
 	# Set Preatreatment Order related values
 	if work_order.get('pretreatment_order'):
-		pretreatment_order_details = get_pretreatment_order_details(work_order.pretreatment_order)
+		work_order.update(get_pretreatment_work_order_settings(work_order.pretreatment_order))
 
-		work_order.skip_transfer = 0
-		work_order.from_wip_warehouse = 0
-		work_order.allow_material_consumption = 1
-		work_order.allow_process_loss = 1
-		work_order.auto_select_batches_in_stock_entry = 0
-		work_order.packing_slip_required = cint(
-			pretreatment_order_details.delivery_required and pretreatment_order_details.packing_slip_required
-		)
-		work_order.produce_fg_in_wip_warehouse = 0
+		pretreatment_order_details = get_pretreatment_order_details(work_order.pretreatment_order)
 
 		for warehouse_field in warehouse_fields:
 			warehouse = pretreatment_order_details.get(warehouse_field)
@@ -110,17 +112,9 @@ def update_work_order_on_create(work_order, args=None):
 
 	# Set Print Order related values
 	if work_order.get('print_order'):
-		print_order_details = get_print_order_details(work_order.print_order)
+		work_order.update(get_print_work_order_settings(work_order.print_order))
 
-		work_order.skip_transfer = 1
-		work_order.from_wip_warehouse = 0
-		work_order.allow_material_consumption = 0
-		work_order.allow_process_loss = 0
-		work_order.auto_select_batches_in_stock_entry = 1
-		work_order.packing_slip_required = cint(
-			not print_order_details.is_internal_customer and print_order_details.packing_slip_required
-		)
-		work_order.produce_fg_in_wip_warehouse = work_order.packing_slip_required
+		print_order_details = get_print_order_details(work_order.print_order)
 
 		for warehouse_field in warehouse_fields:
 			warehouse = print_order_details.get(warehouse_field)
@@ -136,9 +130,50 @@ def update_work_order_on_create(work_order, args=None):
 			"stock_fabric_length", cache=1))
 
 
+def get_pretreatment_work_order_settings(pretreatment_order=None):
+	out = frappe._dict()
+
+	out.use_multi_level_bom = 1
+	out.skip_transfer = 0
+	out.from_wip_warehouse = 0
+	out.allow_material_consumption = 1
+	out.allow_process_loss = 1
+	out.auto_select_batches_in_stock_entry = 0
+
+	if pretreatment_order:
+		pretreatment_order_details = get_pretreatment_order_details(pretreatment_order)
+		out.packing_slip_required = cint(
+			pretreatment_order_details.delivery_required and pretreatment_order_details.packing_slip_required
+		)
+
+	return out
+
+
+def get_print_work_order_settings(print_order=None):
+	out = frappe._dict()
+
+	out.use_multi_level_bom = 1
+	out.skip_transfer = 1
+	out.from_wip_warehouse = 0
+	out.allow_material_consumption = 0
+	out.allow_process_loss = 0
+	out.auto_select_batches_in_stock_entry = 1
+
+	if print_order:
+		print_order_details = get_print_order_details(print_order)
+		out.packing_slip_required = cint(
+			not print_order_details.is_internal_customer and print_order_details.packing_slip_required
+		)
+
+	return out
+
+
 def get_pretreatment_order_details(pretreatment_order):
-	fields = ["packing_slip_required", "delivery_required"] + greige_fabric_fields + warehouse_fields
-	return frappe.db.get_value("Pretreatment Order", pretreatment_order, fields, as_dict=1)
+	def generator():
+		fields = ["packing_slip_required", "delivery_required"] + greige_fabric_fields + warehouse_fields
+		return frappe.db.get_value("Pretreatment Order", pretreatment_order, fields, as_dict=1)
+
+	return frappe.local_cache("pretreatment_order_details_wo_from_so", pretreatment_order, generator)
 
 
 def get_print_order_details(print_order):

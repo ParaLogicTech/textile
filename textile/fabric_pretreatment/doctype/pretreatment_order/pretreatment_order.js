@@ -21,8 +21,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		super.refresh();
 		this.setup_buttons();
 		this.setup_route_options();
-		this.set_default_warehouse();
-		this.set_default_cost_center();
 		this.frm.trigger('set_disallow_on_submit_fields_read_only');
 		this.setup_progressbars();
 	}
@@ -219,33 +217,6 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		}
 	}
 
-	set_default_warehouse() {
-		if (this.frm.is_new()) {
-			const order_to_settings_field_map = {
-				'fabric_warehouse': 'default_pretreatment_fabric_warehouse',
-				'source_warehouse': 'default_pretreatment_source_warehouse',
-				'wip_warehouse': 'default_pretreatment_wip_warehouse',
-				'fg_warehouse': 'default_pretreatment_fg_warehouse',
-			}
-
-			for (let [order_field, settings_field] of Object.entries(order_to_settings_field_map)) {
-				let warehouse = frappe.defaults.get_default(settings_field);
-				if (!this.frm.doc[order_field] && warehouse) {
-					this.frm.set_value(order_field, warehouse);
-				}
-			}
-		}
-	}
-
-	set_default_cost_center() {
-		if (this.frm.is_new()) {
-			let default_cost_center = frappe.defaults.get_default("default_pretreatment_cost_center");
-			if (default_cost_center && !this.frm.doc.cost_center) {
-				this.frm.set_value("cost_center", default_cost_center);
-			}
-		}
-	}
-
 	setup_progressbars() {
 		if (this.frm.doc.docstatus == 1 && this.frm.doc.per_work_ordered) {
 			this.show_progress_for_production();
@@ -330,6 +301,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 	}
 
 	company() {
+		this.get_fabric_item_defaults();
 		this.get_is_internal_customer();
 	}
 
@@ -355,6 +327,24 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		this.get_fabric_stock_qty("greige_");
 	}
 
+	get_fabric_item_defaults() {
+		if (this.frm.doc.company) {
+			return frappe.call({
+				method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.get_fabric_item_defaults",
+				args: {
+					company: this.frm.doc.company,
+					greige_fabric_item: this.frm.doc.greige_fabric_item,
+					ready_fabric_item: this.frm.doc.ready_fabric_item,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.frm.set_value(r.message);
+					}
+				}
+			});
+		}
+	}
+
 	get_fabric_item_details(prefix, get_ready_fabric, get_greige_fabric, get_default_process) {
 		let fabric_field = cstr(prefix) + "fabric_item";
 
@@ -367,6 +357,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 					get_ready_fabric: cint(get_ready_fabric),
 					get_greige_fabric: cint(get_greige_fabric),
 					get_default_process: cint(get_default_process),
+					company: this.frm.doc.company,
 				},
 				callback: (r) => {
 					if (r.message) {

@@ -9,7 +9,9 @@ from frappe.desk.notifications import clear_doctype_notifications
 from textile.fabric_printing.doctype.print_process_rule.print_process_rule import get_print_process_values, get_applicable_papers
 from textile.utils import validate_textile_item, get_textile_conversion_factors, printing_components
 from textile.controllers.textile_order import TextileOrder
-from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders
+from erpnext.setup.doctype.item_default_rule.item_default_rule import get_item_default_values
+from erpnext.stock.get_item_details import get_default_cost_center
+from erpnext.manufacturing.doctype.work_order.work_order import _create_work_orders, get_default_warehouses
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
 from PIL import Image
@@ -96,17 +98,11 @@ class PrintOrder(TextileOrder):
 		self.update_status_on_cancel()
 
 	def set_missing_values(self, get_default_process=False):
-		self.set_default_cost_center()
 		self.attach_unlinked_item_images()
 		self.set_design_details_from_image()
 		self.set_fabric_item_details(get_default_process=get_default_process)
 		self.set_process_item_details()
 		self.set_process_component_details()
-
-	def set_default_cost_center(self):
-		if not self.get("cost_center"):
-			self.cost_center = frappe.db.get_single_value("Fabric Printing Settings",
-			"default_printing_cost_center")
 
 	def attach_unlinked_item_images(self):
 		filters = {
@@ -142,7 +138,7 @@ class PrintOrder(TextileOrder):
 			d.update(design_details)
 
 	def set_fabric_item_details(self, get_default_process=False):
-		details = get_fabric_item_details(self.fabric_item, get_default_process=get_default_process)
+		details = get_fabric_item_details(self.fabric_item, get_default_process=get_default_process, company=self.company)
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -180,10 +176,15 @@ class PrintOrder(TextileOrder):
 
 	def set_values_for_coated_fabric(self):
 		self.skip_transfer = cint(self.coating_item_separate_process)
-
-		coated_fabric_warehouse = frappe.db.get_single_value("Fabric Printing Settings", "default_coating_fg_warehouse")
-		if self.coating_item_separate_process and coated_fabric_warehouse:
-			self.fabric_warehouse = coated_fabric_warehouse
+		if self.coating_item_separate_process:
+			coated_fabric_warehouse = get_default_fabric_warehouse(
+				self.company,
+				self.fabric_item,
+				coating_item_separate_process=1,
+				fallback_coating_warehouse=False,
+			)
+			if coated_fabric_warehouse:
+				self.fabric_warehouse = coated_fabric_warehouse
 
 	def update_status_on_cancel(self):
 		self.db_set({
@@ -1564,7 +1565,7 @@ def get_image_details(image_url, throw_not_found=True):
 
 
 @frappe.whitelist()
-def get_fabric_item_details(fabric_item, get_default_process=True):
+def get_fabric_item_details(fabric_item, get_default_process=True, company=None):
 	from textile.utils import get_fabric_item_details
 
 	out = get_fabric_item_details(fabric_item)
@@ -1573,7 +1574,59 @@ def get_fabric_item_details(fabric_item, get_default_process=True):
 		process_details = get_default_print_process(fabric_item)
 		out.update(process_details)
 
+	out.update(get_fabric_item_defaults(company, fabric_item, out.coating_item_separate_process))
+
 	return out
+
+
+@frappe.whitelist()
+def get_fabric_item_defaults(company, fabric_item=None, coating_item_separate_process=0):
+	out = frappe._dict()
+
+	printed_warehouses = get_default_warehouses({"textile_item_type": "Printed Design", "company": company})
+	out.fg_warehouse = printed_warehouses.get("fg_warehouse")
+	out.wip_warehouse = printed_warehouses.get("wip_warehouse")
+	out.source_warehouse = printed_warehouses.get("source_warehouse")
+
+	out.fabric_warehouse = get_default_fabric_warehouse(company, fabric_item, coating_item_separate_process)
+
+	out.cost_center = get_default_cost_center(fabric_item, {
+		"company": company,
+		"textile_item_type": "Ready Fabric",
+	}, selling_or_buying="buying")
+
+	return out
+
+
+@frappe.whitelist()
+def get_default_fabric_warehouse(
+	company,
+	fabric_item=None,
+	coating_item_separate_process=0,
+	fallback_coating_warehouse=True,
+):
+	coating_item_separate_process = cint(coating_item_separate_process)
+	fallback_coating_warehouse = cint(fallback_coating_warehouse)
+
+	ready_warehouses = get_default_warehouses({
+		"item_code": fabric_item,
+		"company": company,
+		"textile_item_type": "Ready Fabric",
+	})
+	default_warehouse = ready_warehouses.get("fg_warehouse")
+
+	if coating_item_separate_process:
+		default_values = get_item_default_values(fabric_item, {
+			"company": company,
+			"textile_item_type": "Ready Fabric",
+		})
+
+		if fallback_coating_warehouse:
+			default_warehouse = default_values.get("default_coating_fg_warehouse") or default_warehouse
+		else:
+			default_warehouse = default_values.get("default_coating_fg_warehouse")
+
+	return default_warehouse
 
 
 @frappe.whitelist()
