@@ -4,6 +4,16 @@
 frappe.provide("textile");
 
 textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
+	setup() {
+		super.setup();
+		erpnext.utils.setup_projected_qty_formatter(
+			"Coating Order",
+			"fabric_stock_qty",
+			"fabric_item",
+			"stock_qty",
+		);
+	}
+
 	refresh() {
 		super.refresh();
 		this.setup_buttons();

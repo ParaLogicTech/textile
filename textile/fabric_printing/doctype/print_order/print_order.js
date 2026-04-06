@@ -29,6 +29,13 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 		}
 
 		this.setup_custom_items_table();
+
+		erpnext.utils.setup_projected_qty_formatter(
+			"Print Order",
+			"fabric_stock_qty",
+			"fabric_item",
+			"total_fabric_length",
+		);
 	}
 
 	refresh() {

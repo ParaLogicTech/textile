@@ -15,6 +15,13 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			'Sales Invoice': 'Sales Invoice',
 			'Print Order': 'Print Order',
 		}
+
+		erpnext.utils.setup_projected_qty_formatter(
+			"Pretreatment Order",
+			"greige_fabric_stock_qty",
+			"greige_fabric_item",
+			"stock_qty",
+		);
 	}
 
 	refresh() {
