@@ -816,6 +816,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 					"print_order": this.frm.doc.name,
 					"fabric_transfer_qty": flt(data.fabric_transfer_qty),
 				},
+				freeze: 1,
 				callback: function (r) {
 					if (!r.exc) {
 						let doclist = frappe.model.sync(r.message);
@@ -833,6 +834,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				"print_order": this.frm.doc.name,
 				"purpose": "Material Transfer",
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -849,6 +851,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				"print_order": this.frm.doc.name,
 				"purpose": "Material Issue",
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -904,6 +907,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 				source_name: this.frm.doc.name,
 				selected_rows: selected_rows,
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -919,6 +923,7 @@ textile.PrintOrder = class PrintOrder extends textile.TextileOrder {
 			args: {
 				source_name: this.frm.doc.name,
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);

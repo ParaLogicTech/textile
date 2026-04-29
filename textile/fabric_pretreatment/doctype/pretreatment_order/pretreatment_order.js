@@ -483,6 +483,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 				"pretreatment_order": this.frm.doc.name,
 				"purpose": "Material Transfer",
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -498,6 +499,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			args: {
 				source_name: this.frm.doc.name,
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -513,6 +515,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			args: {
 				source_name: this.frm.doc.name,
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
@@ -528,6 +531,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			args: {
 				source_name: this.frm.doc.name,
 			},
+			freeze: 1,
 			callback: function (r) {
 				if (!r.exc) {
 					let doclist = frappe.model.sync(r.message);
