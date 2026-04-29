@@ -282,8 +282,9 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 			total_qty: this.frm.doc.stock_qty,
 			progress_bars: [
 				{
-					title: __('<b>Delivered:</b> {0} {1} ({2}%)', [
+					title: __('<b>Delivered:</b> {0} / {1} {2} ({3}%)', [
 						frappe.format(delivered_qty, {'fieldtype': 'Float'}, { inline: 1 }),
+						frappe.format(this.frm.doc.stock_qty, {'fieldtype': 'Float'}, { inline: 1 }),
 						"Meter",
 						format_number(delivered_qty / this.frm.doc.stock_qty * 100, null, 1),
 					]),
@@ -292,7 +293,7 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 					add_min_width: 0.5,
 				},
 				{
-					title: __("<b>Ready to Deliver:</b> {0} {1}", [
+					title: __("<b>Ready for Delivery:</b> {0} {1}", [
 						frappe.format(to_deliver, {'fieldtype': 'Float'}, { inline: 1 }),
 						"Meter"
 					]),
