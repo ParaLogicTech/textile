@@ -34,7 +34,7 @@ textile.TextileOrder = class TextileOrder extends frappe.ui.form.Controller {
 			return this.frm.set_value("is_internal_customer", 0);
 		} else {
 			return frappe.call({
-				method: "textile.utils.is_internal_customer",
+				method: "erpnext.selling.doctype.customer.customer.is_internal_company_customer",
 				args: {
 					customer: this.frm.doc.customer,
 					company: this.frm.doc.company,

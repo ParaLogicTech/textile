@@ -3,7 +3,8 @@ from frappe import _
 from frappe.utils import getdate, cstr, flt, cint, clean_whitespace
 from erpnext.utilities.transaction_base import TransactionBase
 from erpnext.accounts.party import validate_party_frozen_disabled
-from textile.utils import validate_textile_item, gsm_to_grams, is_internal_customer
+from textile.utils import validate_textile_item, gsm_to_grams
+from erpnext.selling.doctype.customer.customer import is_internal_company_customer
 from erpnext.stock.get_item_details import get_bin_details, is_item_uom_convertible
 
 
@@ -77,7 +78,7 @@ class TextileOrder(TransactionBase):
 
 	def validate_is_internal_customer(self):
 		if self.meta.has_field("is_internal_customer"):
-			self.is_internal_customer = is_internal_customer(self.customer, self.company)
+			self.is_internal_customer = is_internal_company_customer(self.customer, self.company)
 
 			if self.is_internal_customer:
 				if self.meta.has_field("delivery_required"):

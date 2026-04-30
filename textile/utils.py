@@ -73,18 +73,6 @@ def get_fabric_item_details(fabric_item):
 	return out
 
 
-@frappe.whitelist()
-def is_internal_customer(customer, company):
-	if not customer or not company:
-		return 0
-
-	customer_doc = frappe.get_cached_doc("Customer", customer)
-	if not customer_doc.is_internal_customer or not customer_doc.represents_company:
-		return 0
-
-	return cint(customer_doc.represents_company == company)
-
-
 def get_combined_fabric_items(fabric_item, combine_greige_ready=True, combine_ready_printed=True):
 	out = frappe._dict({
 		"textile_item_type": frappe.db.get_value("Item", fabric_item, "textile_item_type", cache=1),
