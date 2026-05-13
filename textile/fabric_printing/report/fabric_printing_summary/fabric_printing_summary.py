@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, cstr
+from frappe.utils import getdate, cstr, flt
 
 
 def execute(filters=None):
@@ -42,6 +42,10 @@ class FabricPrintingSummary:
 
 		if self.filters.from_date > self.filters.to_date:
 			frappe.throw(_("Date Range is incorrect"))
+
+		self.filters.rejected_warehouses = frappe.get_all("Warehouse", filters={
+			"is_group": 0, "stock_type": "Rejected"
+		}, pluck="name")
 
 	def run(self):
 		self.get_data()
@@ -160,11 +164,7 @@ class FabricPrintingSummary:
 
 		self.delivery_backlog_data = frappe.db.sql("""
 			SELECT item.fabric_material,
-				SUM(IF(
-					pro.packing_slip_required = 1,
-					poi.packed_qty - poi.delivered_qty,
-					poi.produced_qty - poi.delivered_qty
-				)) as delivery_backlog_qty
+				SUM(poi.produced_qty - poi.delivered_qty) as delivery_backlog_qty
 			FROM `tabPrint Order Item` poi
 			INNER JOIN `tabPrint Order` pro ON pro.name = poi.parent
 			INNER JOIN `tabItem` item ON item.name = pro.fabric_item
@@ -172,10 +172,29 @@ class FabricPrintingSummary:
 				and pro.delivery_status = 'To Deliver'
 				and pro.status != 'Closed'
 				and pro.transaction_date <= %(to_date)s
-				and (
-					(pro.packing_slip_required = 1 and poi.delivered_qty < poi.packed_qty)
-					or (pro.packing_slip_required = 0 and poi.delivered_qty < poi.produced_qty)
-				)
+				and pro.packing_slip_required = 0
+				and poi.delivered_qty < poi.produced_qty
+			GROUP BY item.fabric_material
+		""", self.filters, as_dict=1)
+
+		rejected_warehouse_condition = ""
+		if self.filters.rejected_warehouses:
+			rejected_warehouse_condition = " and ps.warehouse not in %(rejected_warehouses)s"
+
+		self.delivery_backlog_data_from_packing_slips = frappe.db.sql(f"""
+			SELECT item.fabric_material,
+				SUM(psi.stock_qty) as delivery_backlog_qty
+			FROM `tabPacking Slip Item` psi
+			INNER JOIN `tabPacking Slip` ps ON ps.name = psi.parent
+			INNER JOIN `tabItem` item ON item.name = psi.item_code
+			WHERE ps.docstatus = 1
+				AND ps.status = 'In Stock'
+				AND ifnull(psi.source_packing_slip, '') = ''
+				AND psi.qty != 0
+				AND psi.is_return_fabric = 0
+				AND ps.posting_date <= %(to_date)s
+				AND item.textile_item_type IN ('Greige Fabric', 'Ready Fabric', 'Printed Design')
+			{rejected_warehouse_condition}
 			GROUP BY item.fabric_material
 		""", self.filters, as_dict=1)
 
@@ -216,6 +235,7 @@ class FabricPrintingSummary:
 			self.packing_backlog_data,
 			self.delivery_data,
 			self.delivery_backlog_data,
+			self.delivery_backlog_data_from_packing_slips,
 			self.fabrics_created,
 			self.total_fabric_qty_data,
 		]
@@ -223,7 +243,10 @@ class FabricPrintingSummary:
 		self.grouped_data = {}
 		for data_list in data_bank:
 			for d in data_list:
-				self.grouped_data.setdefault(cstr(d.fabric_material), self.zero_fields.copy()).update(d)
+				group = self.grouped_data.setdefault(cstr(d.fabric_material), self.zero_fields.copy())
+				group["fabric_material"] = d.fabric_material
+				for f in self.sum_fields:
+					group[f] += flt(d.get(f))
 
 		self.fabric_materials = list(self.grouped_data.keys())
 
