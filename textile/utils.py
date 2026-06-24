@@ -31,7 +31,7 @@ def validate_textile_item(item_code, textile_item_type, process_component=None):
 				frappe.throw(_("{0} is not a {1} Component Item").format(frappe.bold(item_code), process_component))
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
-	validate_end_of_life(item.name, item.end_of_life, item.disabled)
+	validate_end_of_life(item.name)
 
 
 def gsm_to_grams(gsm, width_inch, length_meter=1):
