@@ -31,7 +31,7 @@ class FabricLedger:
 		if self.filters.item_code:
 			textile_item_type = frappe.db.get_value("Item", self.filters.item_code, "textile_item_type")
 			if textile_item_type not in ("Greige Fabric", "Ready Fabric"):
-				frappe.throw("Item must be Greige Fabric or Ready Fabric")
+				frappe.throw(_("Item must be Greige Fabric or Ready Fabric"))
 
 		self.filters.rejected_warehouses = frappe.get_all("Warehouse", filters={
 			"is_group": 0, "stock_type": "Rejected"
@@ -243,6 +243,8 @@ class FabricLedger:
 
 				if row.rejected_qty:
 					rejected_row = row.copy()
+					rejected_row.is_internal_entry = False
+					rejected_row.is_wastage = True
 
 					if rejected_row.rejected_qty > 0:
 						rejected_row.in_qty = 0
@@ -252,11 +254,13 @@ class FabricLedger:
 						rejected_row.out_qty = 0
 
 					rejected_row.actual_qty = -rejected_row.rejected_qty
-					rejected_row.is_internal_entry = False
-					rejected_row.is_wastage = True
-
 					accumulated_balance_qty += rejected_row.actual_qty
 					rejected_row.qty_after_transaction = accumulated_balance_qty
+
+					if rejected_row.packing_slip:
+						rejected_row.packed_qty = -rejected_row.rejected_qty
+						accumulated_packed_qty += rejected_row.packed_qty
+						rejected_row.packed_qty_after_transaction = accumulated_packed_qty
 
 					movement_rows.append(rejected_row)
 
