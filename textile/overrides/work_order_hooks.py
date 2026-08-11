@@ -203,7 +203,7 @@ def get_work_order_permission_query_conditions(user=None):
 	return conditions
 
 
-def work_order_has_permission(doc, user=None, permission_type=None):
+def work_order_has_permission(doc, user=None, ptype=None):
 	# restrict print/pretreatment work orders if user does not have print/pretreatment roles
 	user_has_roles = frappe.get_roles(user)
 

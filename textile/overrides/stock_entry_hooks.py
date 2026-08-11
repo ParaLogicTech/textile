@@ -221,7 +221,7 @@ def get_stock_entry_permission_query_conditions(user=None):
 	return conditions
 
 
-def stock_entry_has_permission(doc, user=None, permission_type=None):
+def stock_entry_has_permission(doc, user=None, ptype=None):
 	# restrict print/pretreatment stock entries if user does not have print/pretreatment roles
 	user_has_roles = frappe.get_roles(user)
 
