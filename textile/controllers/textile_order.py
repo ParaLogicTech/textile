@@ -6,6 +6,7 @@ from erpnext.accounts.party import validate_party_frozen_disabled
 from textile.utils import validate_textile_item, gsm_to_grams
 from erpnext.selling.doctype.customer.customer import is_internal_company_customer
 from erpnext.stock.get_item_details import get_bin_details, is_item_uom_convertible
+from erpnext.stock.doctype.batch.batch import validate_batch_no
 
 
 class TextileOrder(TransactionBase):
@@ -103,17 +104,8 @@ class TextileOrder(TransactionBase):
 			frappe.throw(_("{0} is not submitted").format(
 				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order)
 			))
-		if pretreatment_order.status == "Closed":
-			frappe.throw(_("{0} is {1}").format(
-				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
-				pretreatment_order.status)
-			)
-		if pretreatment_order.is_internal_customer:
-			frappe.throw(_("{0} is for an internal customer").format(
-				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order))
-			)
 
-		if self.customer != pretreatment_order.customer:
+		if not pretreatment_order.is_internal_customer and self.customer != pretreatment_order.customer:
 			frappe.throw(_("Customer does not match with {0}. Customer should be {1}").format(
 				frappe.get_desk_link("Pretreatment Order", self.pretreatment_order),
 				frappe.bold(pretreatment_order.customer)
@@ -213,6 +205,24 @@ class TextileOrder(TransactionBase):
 			frappe.throw(_("Could not create BOM because {0} does not have a Default BOM").format(
 				frappe.get_desk_link("Item", item_code)
 			))
+
+	def validate_fabric_batch_no(self, item_code, prefix=None):
+		prefix = prefix or ""
+		has_batch_no_field = f"{prefix}has_batch_no"
+		batch_no_field = f"{prefix}batch_no"
+
+		has_batch_no = cint(frappe.get_cached_value("Item", item_code, "has_batch_no"))
+		self.set(has_batch_no_field, has_batch_no)
+		if not has_batch_no:
+			self.set(batch_no_field, None)
+
+		batch_no = self.get(batch_no_field)
+		if batch_no:
+			validate_batch_no(
+				batch_no,
+				item_code,
+				transaction_date=self.get("transaction_date"),
+			)
 
 	def get_production_progress_data(self, reference_fieldname, total_qty, uom, item_codes=None):
 		item_conditions = ""

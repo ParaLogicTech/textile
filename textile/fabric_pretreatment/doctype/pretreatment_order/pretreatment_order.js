@@ -217,8 +217,8 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 					$(start_btn).removeClass("btn-default").addClass("btn-primary");
 				}
 
-				if (!this.frm.doc.is_internal_customer && frappe.model.can_create("Print Order")) {
-					this.frm.add_custom_button(__("Print Order"), () => this.make_print_order(), __("Create"));
+				if (frappe.model.can_create("Coating Order")) {
+					this.frm.add_custom_button(__("Coating Order"), () => this.create_coating_orders(), __("Create"));
 				}
 			}
 		}
@@ -526,18 +526,15 @@ textile.PretreatmentOrder = class PretreatmentOrder extends textile.TextileOrder
 		});
 	}
 
-	make_print_order() {
+	create_coating_orders() {
 		return frappe.call({
-			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_print_order",
+			method: "textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.create_coating_orders",
 			args: {
 				source_name: this.frm.doc.name,
 			},
 			freeze: 1,
-			callback: function (r) {
-				if (!r.exc) {
-					let doclist = frappe.model.sync(r.message);
-					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
-				}
+			callback: () => {
+				this.frm.reload_doc();
 			}
 		});
 	}

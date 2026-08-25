@@ -40,6 +40,29 @@ textile.CoatingOrder = class CoatingOrder extends textile.TextileOrder {
 			}
 			return erpnext.queries.item(filters);
 		});
+
+		this.frm.set_query("batch_no", () => {
+			if (!this.frm.doc.fabric_item) {
+				frappe.throw(__("Please enter Fabric Item to get Batch Number"));
+			} else {
+				if (this.frm.doc.fabric_warehouse) {
+					return {
+						query: "erpnext.controllers.queries.get_batch_no",
+						filters: {
+							item_code: this.frm.doc.fabric_item,
+							warehouse: this.frm.doc.fabric_warehouse,
+							posting_date: frappe.datetime.nowdate(),
+						}
+					};
+				} else {
+					return {
+						filters: {
+							item: this.frm.doc.fabric_item,
+						}
+					}
+				}
+			}
+		});
 	}
 
 	setup_buttons() {

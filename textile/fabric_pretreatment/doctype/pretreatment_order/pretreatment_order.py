@@ -15,7 +15,6 @@ from erpnext.manufacturing.doctype.work_order.work_order import (
 )
 from erpnext.stock.get_item_details import get_default_cost_center, get_default_rejected_warehouse
 from textile.fabric_pretreatment.doctype.pretreatment_process_rule.pretreatment_process_rule import get_pretreatment_process_values
-from erpnext.stock.doctype.batch.batch import validate_batch_no
 from frappe.desk.reportview import get_match_cond, get_filters_cond
 from erpnext.controllers.queries import get_fields
 
@@ -154,13 +153,7 @@ class PretreatmentOrder(TextileOrder):
 				))
 
 	def validate_batch_no(self):
-		self.greige_fabric_has_batch_no = frappe.get_cached_value("Item", self.greige_fabric_item, "has_batch_no")
-		if not self.greige_fabric_has_batch_no:
-			self.greige_fabric_batch_no = None
-
-		if self.greige_fabric_batch_no:
-			validate_batch_no(self.greige_fabric_batch_no, self.greige_fabric_item,
-				transaction_date=self.transaction_date)
+		self.validate_fabric_batch_no(self.greige_fabric_item, prefix="greige_fabric_")
 
 	def validate_process_items(self):
 		for component_item_field, component_type in pretreatment_components.items():
@@ -1246,26 +1239,82 @@ def make_sales_invoice(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def make_print_order(source_name):
+def create_coating_orders(source_name):
 	pretreatment_order = frappe.get_doc('Pretreatment Order', source_name)
 
 	if pretreatment_order.docstatus != 1:
 		frappe.throw(_("Pretreatment Order {0} is not submitted").format(pretreatment_order.name))
-	if pretreatment_order.is_internal_customer:
-		frappe.throw(_("Cannot make Print Order against Pretreatment Order for internal customer"))
-	if pretreatment_order.status == "Closed":
-		frappe.throw(_("Pretreatment Order {0} is Closed").format(pretreatment_order.name))
 
-	print_order = frappe.new_doc("Print Order")
-	print_order.pretreatment_order = pretreatment_order.name
-	print_order.customer = pretreatment_order.customer
-	print_order.is_fabric_provided_by_customer = pretreatment_order.is_fabric_provided_by_customer
-	print_order.fabric_item = pretreatment_order.ready_fabric_item
-	print_order.fabric_warehouse = pretreatment_order.fg_warehouse
+	coating_orders = []
 
-	print_order.run_method("set_missing_values", get_default_process=True)
+	ready_fabric_has_batch_no = frappe.get_cached_value("Item", pretreatment_order.ready_fabric_item, "has_batch_no")
+	if ready_fabric_has_batch_no:
+		work_orders = frappe.get_all("Work Order", {
+			"docstatus": 1, "pretreatment_order": source_name
+		}, pluck="name")
 
-	return print_order
+		batch_produced_qty = {}
+		if work_orders:
+			batch_produced_qty = dict(frappe.db.sql("""
+				select i.batch_no, sum(i.stock_qty) as produced_qty
+				from `tabStock Entry Detail` i
+				inner join `tabStock Entry` ste on ste.name = i.parent
+				where ste.docstatus = 1
+					and ste.work_order in %(work_orders)s
+					and ste.purpose = 'Manufacture'
+					and i.item_code = %(ready_fabric_item)s
+					and ifnull(i.s_warehouse, '') = ''
+				group by i.batch_no
+			""", {
+				"work_orders": work_orders,
+				"ready_fabric_item": pretreatment_order.ready_fabric_item,
+			}))
+
+		existing_coating_orders = []
+		if batch_produced_qty:
+			existing_coating_orders = frappe.db.sql_list("""
+				select distinct batch_no
+				from `tabCoating Order`
+				where batch_no in %s and docstatus < 2
+			""", [list(batch_produced_qty.keys())])
+
+		for batch_no, produced_qty in batch_produced_qty.items():
+			if batch_no in existing_coating_orders:
+				continue
+
+			coating_order = make_coating_order(pretreatment_order, produced_qty, batch_no=batch_no)
+			coating_order.save()
+			coating_orders.append(coating_order.name)
+	else:
+		coating_order_exists = frappe.db.exists("Coating Order", {"pretreatment_order": source_name, "docstatus": ["<", 2]})
+		if not coating_order_exists:
+			coating_order = make_coating_order(pretreatment_order, pretreatment_order.qty, uom=pretreatment_order.uom)
+			coating_order.save()
+			coating_orders.append(coating_order.name)
+
+	if coating_orders:
+		formatted_coating_orders = [frappe.utils.get_link_to_form("Coating Order", name) for name in coating_orders]
+		frappe.msgprint(_("Coating Order(s) Created: {0}").format(", ".join(formatted_coating_orders)))
+	else:
+		frappe.throw(_("No pending Coating Orders to create"))
+
+
+def make_coating_order(pretreatment_order, qty, uom=None, batch_no=None):
+	doc = frappe.new_doc("Coating Order")
+	doc.pretreatment_order = pretreatment_order.name
+	doc.customer = pretreatment_order.customer
+	doc.is_fabric_provided_by_customer = pretreatment_order.is_fabric_provided_by_customer
+	doc.fabric_item = pretreatment_order.ready_fabric_item
+	doc.batch_no = batch_no
+	doc.qty = flt(qty)
+	doc.uom = uom or "Meter"
+
+	doc.fabric_warehouse = pretreatment_order.fg_warehouse
+	doc.cost_center = pretreatment_order.get("cost_center") or None
+
+	doc.run_method("set_missing_values", get_coating_item=True)
+
+	return doc
 
 
 @frappe.whitelist()

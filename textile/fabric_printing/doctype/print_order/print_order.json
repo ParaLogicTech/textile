@@ -16,7 +16,6 @@
   "is_internal_customer",
   "column_break_mb5rm",
   "notes",
-  "pretreatment_order",
   "packing_slip_required",
   "column_break_kji8i",
   "naming_series",
@@ -727,14 +726,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "pretreatment_order",
-   "fieldtype": "Link",
-   "label": "Pretreatment Order",
-   "no_copy": 1,
-   "options": "Pretreatment Order",
-   "read_only": 1
-  },
-  {
    "default": "0",
    "fieldname": "is_internal_customer",
    "fieldtype": "Check",
@@ -794,10 +785,11 @@
    "read_only": 1
   }
  ],
+ "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-07-23 10:36:56.205042",
+ "modified": "2026-08-25 15:17:06.095357",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Print Order",
@@ -842,6 +834,8 @@
    "role": "Packing User"
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "customer, customer_name, transaction_date, fabric_item_name, process_item_name",
  "sort_field": "transaction_date",
  "sort_order": "DESC",

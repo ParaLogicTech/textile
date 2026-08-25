@@ -64,7 +64,6 @@ class PrintOrder(TextileOrder):
 		self.set_values_for_coated_fabric()
 		self.validate_dates()
 		self.validate_customer()
-		self.validate_pretreatment_order()
 		self.validate_fabric_item("Ready Fabric")
 		self.validate_process_items()
 		self.validate_design_items()

@@ -23,8 +23,8 @@ def get_data():
 				'items': ['Purchase Order', 'Purchase Receipt']
 			},
 			{
-				'label': _("Printing"),
-				'items': ['Print Order']
+				'label': _("Coating"),
+				'items': ['Coating Order']
 			}
 		]
 	}

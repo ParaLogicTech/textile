@@ -13,7 +13,7 @@
   "is_fabric_provided_by_customer",
   "is_internal_customer",
   "column_break_m7kuw",
-  "print_order",
+  "pretreatment_order",
   "notes",
   "column_break_kpcqf",
   "transaction_date",
@@ -25,6 +25,8 @@
   "fabric_details_section",
   "fabric_item",
   "fabric_item_name",
+  "batch_no",
+  "has_batch_no",
   "column_break_zfxmy",
   "fabric_material",
   "fabric_width",
@@ -89,14 +91,6 @@
   {
    "fieldname": "column_break_m7kuw",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "print_order",
-   "fieldtype": "Link",
-   "label": "Print Order",
-   "no_copy": 1,
-   "options": "Print Order",
-   "read_only": 1
   },
   {
    "fieldname": "notes",
@@ -227,11 +221,11 @@
    "label": "Coating Details"
   },
   {
+   "bold": 1,
    "fieldname": "coating_item",
    "fieldtype": "Link",
    "label": "Coating Item",
-   "options": "Item",
-   "reqd": 1
+   "options": "Item"
   },
   {
    "depends_on": "eval:doc.coating_item && doc.coating_item_name != doc.coating_item",
@@ -438,12 +432,41 @@
    "fieldtype": "Link",
    "label": "Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "has_batch_no",
+   "fieldname": "batch_no",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Fabric Batch No",
+   "no_copy": 1,
+   "options": "Batch"
+  },
+  {
+   "default": "0",
+   "fetch_from": "fabric_item.has_batch_no",
+   "fieldname": "has_batch_no",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Has Batch No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pretreatment_order",
+   "fieldtype": "Link",
+   "label": "Pretreatment Order",
+   "no_copy": 1,
+   "options": "Pretreatment Order",
+   "read_only": 1,
+   "search_index": 1
   }
  ],
+ "grid_page_length": 500,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-15 09:59:55.919272",
+ "modified": "2026-08-25 18:30:41.137152",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Coating Order",
@@ -492,6 +515,8 @@
    "share": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "customer, customer_name, transaction_date, fabric_item_name, coating_item_name",
  "sort_field": "transaction_date",
  "sort_order": "DESC",

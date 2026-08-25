@@ -31,7 +31,9 @@ class CoatingOrder(TextileOrder):
 		self.set_missing_values()
 		self.validate_dates()
 		self.validate_customer()
+		self.validate_pretreatment_order()
 		self.validate_fabric_item("Ready Fabric")
+		self.validate_fabric_batch_no(self.fabric_item)
 		self.validate_coating_item()
 		self.validate_qty()
 		self.set_default_coating_bom()
@@ -48,12 +50,17 @@ class CoatingOrder(TextileOrder):
 
 	def before_update_after_submit(self):
 		self.validate_dates()
+		self.validate_fabric_batch_no(self.fabric_item)
 
-	def set_missing_values(self):
-		self.set_fabric_item_details()
+	def set_missing_values(self, get_coating_item=False):
+		self.set_fabric_item_details(get_coating_item=get_coating_item)
 
 	def validate_coating_item(self):
-		validate_textile_item(self.coating_item, "Process Component", "Coating")
+		if self.docstatus == 1 and not self.get("coating_item"):
+			frappe.throw(_("Coating Item is mandatory before submission"))
+
+		if self.get("coating_item"):
+			validate_textile_item(self.coating_item, "Process Component", "Coating")
 
 	def validate_qty(self):
 		if flt(self.qty) <= 0:
@@ -93,8 +100,8 @@ class CoatingOrder(TextileOrder):
 	def set_default_coating_bom(self):
 		self.coating_bom = get_default_coating_bom(self.coating_item, throw=self.docstatus == 1)
 
-	def set_fabric_item_details(self):
-		details = get_fabric_item_details(self.fabric_item, get_coating_item=False, company=self.company)
+	def set_fabric_item_details(self, get_coating_item=False):
+		details = get_fabric_item_details(self.fabric_item, get_coating_item=get_coating_item, company=self.company)
 		for k, v in details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
 				self.set(k, v)
@@ -283,7 +290,10 @@ def make_stock_entry_from_coating_order(coating_order_id, qty):
 		stock_entry.cost_center = coating_order_doc.get("cost_center")
 
 	stock_entry.set_stock_entry_type()
-	stock_entry.get_items(auto_select_batches=True)
+	stock_entry.get_items(auto_select_batches=False)
+
+	exclude_item_codes = [coating_order_doc.fabric_item]
+	stock_entry.auto_select_batches(postprocess=False, exclude_item_codes=exclude_item_codes)
 
 	if frappe.db.get_single_value("Manufacturing Settings", "auto_submit_manufacture_entry"):
 		try:

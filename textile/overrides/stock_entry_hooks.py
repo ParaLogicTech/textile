@@ -171,6 +171,7 @@ class StockEntryDP(StockEntry):
 					'from_warehouse': coating_order_doc.fabric_warehouse,
 					'uom': coating_order_doc.stock_uom,
 					'qty': qty,
+					'batch_no': coating_order_doc.batch_no,
 				}), **items_dict
 			}
 
@@ -181,7 +182,9 @@ class StockEntryDP(StockEntry):
 
 	def add_finished_goods_items_from_bom(self):
 		if self.coating_order:
-			fabric_details = frappe.db.get_value("Coating Order", self.coating_order, ["fabric_item", "fg_warehouse"], as_dict=1)
+			fabric_details = frappe.db.get_value("Coating Order", self.coating_order, [
+				"fabric_item", "fg_warehouse", "batch_no"
+			], as_dict=1)
 			item = frappe.get_cached_doc("Item", fabric_details.fabric_item)
 
 			self.add_to_stock_entry_detail({
@@ -191,6 +194,7 @@ class StockEntryDP(StockEntry):
 					"item_name": item.item_name,
 					"description": item.description,
 					"stock_uom": item.stock_uom,
+					"batch_no": fabric_details.batch_no,
 				}
 			})
 		else:
