@@ -1,6 +1,6 @@
 frappe.provide("textile");
 
-textile.TextileOrder = class TextileOrder extends frappe.ui.form.Controller {
+textile.TextileOrder = class TextileOrder extends erpnext.stock.StockController {
 	setup() {
 		this.setup_queries();
 	}
