@@ -1408,6 +1408,7 @@ def make_fabric_reconciliation_entry(print_order, purpose, for_submit=False):
 			row.qty = unpacked_qty
 			row.uom = "Meter"
 
+	stock_entry.auto_select_batches(postprocess=False)
 	_postprocess_stock_entry(stock_entry, doc, for_submit)
 
 	return stock_entry
