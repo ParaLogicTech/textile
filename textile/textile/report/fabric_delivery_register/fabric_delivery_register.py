@@ -41,6 +41,8 @@ class FabricSalesPurchaseReport(SalesPurchaseDetailsReport):
 	def get_conditions(self):
 		conditions = super().get_conditions()
 
+		conditions.append("im.textile_item_type in ('Greige Fabric', 'Ready Fabric', 'Printed Design')")
+
 		if self.filters.fabric_item:
 			conditions.append("(im.fabric_item = %(fabric_item)s or (im.item_code = %(fabric_item)s))")
 
