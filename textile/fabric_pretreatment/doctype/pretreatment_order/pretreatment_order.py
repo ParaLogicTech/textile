@@ -809,7 +809,7 @@ class PretreatmentOrder(TextileOrder):
 					sales_order.set_skip_delivery_note_for_row(d, update=True)
 
 			if sales_order.docstatus == 1:
-				sales_order.set_skip_delivery_note_for_order(update=True)
+				sales_order.set_skip_delivery_note_for_transaction(update=True)
 				sales_order.set_delivery_status(update=True)
 				sales_order.set_production_packing_status(update=True)
 				sales_order.set_status(update=True)
