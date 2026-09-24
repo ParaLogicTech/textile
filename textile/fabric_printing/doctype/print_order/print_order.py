@@ -1349,6 +1349,8 @@ def make_fabric_transfer_entry(print_order, fabric_transfer_qty=None, for_submit
 	row.qty = fabric_transfer_qty
 	row.uom = "Meter"
 
+	stock_entry.auto_select_batches(postprocess=False)
+
 	_postprocess_stock_entry(stock_entry, doc, for_submit)
 
 	return stock_entry
