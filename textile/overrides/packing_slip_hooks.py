@@ -26,6 +26,8 @@ class PackingSlipDP(PackingSlip):
 		validate_transaction_against_pretreatment_order(self)
 
 	def set_default_package_type(self):
+		super().set_default_package_type()
+
 		if self.package_type:
 			return
 
@@ -149,7 +151,6 @@ def postprocess_work_orders_to_packing_slip(work_orders, packing_slip):
 
 
 def postprocess_mapped_packing_slip(packing_slip):
-	packing_slip.set_default_package_type()
 	packing_slip._add_return_fabric()
 
 
