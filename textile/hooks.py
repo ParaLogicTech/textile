@@ -147,6 +147,10 @@ update_sales_invoice_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
 ]
 
+update_target_packing_slip_mapper = [
+	"textile.overrides.packing_slip_hooks.update_packing_slip_mapper",
+]
+
 update_unpack_from_packing_slip_mapper = [
 	"textile.overrides.packing_slip_hooks.update_unpack_from_packing_slip_mapper",
 ]
