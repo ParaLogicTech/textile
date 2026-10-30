@@ -130,7 +130,8 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Production",
-   "link_count": 4,
+   "link_count": 3,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
@@ -166,19 +167,10 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Pretreatment Production Register",
-   "link_count": 0,
-   "link_to": "Pretreatment Production Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 0,
    "label": "Fulfilment",
-   "link_count": 5,
+   "link_count": 3,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
@@ -214,10 +206,29 @@
   },
   {
    "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
    "is_query_report": 1,
-   "label": "Fabric Delivery Register",
+   "label": "Fabric Ledger",
    "link_count": 0,
-   "link_to": "Fabric Delivery Register",
+   "link_to": "Fabric Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Pretreatment Production Register",
+   "link_count": 0,
+   "link_to": "Pretreatment Production Register",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -234,24 +245,16 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
-   "label": "Reports",
-   "link_count": 1,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 1,
-   "label": "Fabric Ledger",
+   "label": "Fabric Delivery Register",
    "link_count": 0,
-   "link_to": "Fabric Ledger",
+   "link_to": "Fabric Delivery Register",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2024-05-18 06:02:06.546144",
+ "modified": "2026-10-30 15:05:55.757306",
  "modified_by": "Administrator",
  "module": "Fabric Pretreatment",
  "name": "Fabric Pretreatment",

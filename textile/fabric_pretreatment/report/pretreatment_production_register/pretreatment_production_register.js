@@ -8,6 +8,7 @@ textile.group_field_opts_preatpr = [
 	"",
 	"Group by Customer",
 	"Group by Greige Fabric",
+	"Group by Workstation",
 	"Group by Pretreatment Order",
 ];
 
@@ -89,8 +90,8 @@ frappe.query_reports["Pretreatment Production Register"] = {
 			fieldtype: "Select",
 			options: [
 				"",
-				"Customer Provided Fabrics Only",
-				"Exclude Customer Provided Fabrics",
+				"Customer Provided Items Only",
+				"Exclude Customer Provided Items",
 			]
 		},
 		{
@@ -100,14 +101,14 @@ frappe.query_reports["Pretreatment Production Register"] = {
 			options: "Customer",
 		},
 		{
-			"fieldname":"pretreatment_order",
-			"label": __("Pretreatment Order"),
-			"fieldtype": "MultiSelectList",
+			fieldname: "pretreatment_order",
+			label: __("Pretreatment Order"),
+			fieldtype: "MultiSelectList",
 			get_data: function(txt) {
 				let filters = {
 					company: frappe.query_report.get_filter_value("company")
 				}
-				customer = frappe.query_report.get_filter_value("customer");
+				let customer = frappe.query_report.get_filter_value("customer");
 				if (customer) {
 					filters.customer = customer;
 				}
@@ -185,5 +186,5 @@ frappe.query_reports["Pretreatment Production Register"] = {
 			fieldtype: "Check",
 		},
 	],
-	initial_depth: 1
+	initial_depth: 1,
 };

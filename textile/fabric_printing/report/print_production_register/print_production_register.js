@@ -69,8 +69,8 @@ frappe.query_reports["Print Production Register"] = {
 			fieldtype: "Select",
 			options: [
 				"",
-				"Customer Provided Fabrics Only",
-				"Exclude Customer Provided Fabrics",
+				"Customer Provided Items Only",
+				"Exclude Customer Provided Items",
 			]
 		},
 		{
@@ -80,14 +80,14 @@ frappe.query_reports["Print Production Register"] = {
 			options: "Customer",
 		},
 		{
-			"fieldname":"print_order",
-			"label": __("Print Order"),
-			"fieldtype": "MultiSelectList",
+			fieldname: "print_order",
+			label: __("Print Order"),
+			fieldtype: "MultiSelectList",
 			get_data: function(txt) {
 				let filters = {
 					company: frappe.query_report.get_filter_value("company")
 				}
-				customer = frappe.query_report.get_filter_value("customer");
+				let customer = frappe.query_report.get_filter_value("customer");
 				if (customer) {
 					filters.customer = customer;
 				}
@@ -163,5 +163,5 @@ frappe.query_reports["Print Production Register"] = {
 			fieldtype: "Check",
 		},
 	],
-	initial_depth: 2
+	initial_depth: 2,
 };

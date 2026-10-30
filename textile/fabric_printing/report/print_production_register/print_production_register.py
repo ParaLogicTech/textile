@@ -2,9 +2,9 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe import _, scrub, unscrub
-from frappe.utils import cint, cstr, flt, getdate, add_days
-from frappe.desk.query_report import group_report_data
+from frappe import _
+from frappe.utils import cstr, flt, add_days
+from erpnext.manufacturing.report.production_register.production_register import ProductionRegister
 from erpnext.setup.doctype.uom_conversion_factor.uom_conversion_factor import get_uom_conv_factor
 
 
@@ -12,51 +12,42 @@ def execute(filters=None):
 	return PrintProductionRegister(filters).run()
 
 
-class PrintProductionRegister:
-	def __init__(self, filters=None):
-		self.filters = frappe._dict(filters or {})
-		self.filters.from_date = getdate(filters.from_date)
-		self.filters.to_date = getdate(filters.to_date)
+class PrintProductionRegister(ProductionRegister):
+	def validate_filters(self):
+		super().validate_filters()
+		self.filters.based_on = "Manufacture Entry"
 
-		if self.filters.from_date > self.filters.to_date:
-			frappe.throw(_("Date Range is incorrect"))
+	def set_fieldnames(self):
+		super().set_fieldnames()
+		self.qty_fields += ["length", "area", "net_weight"]
 
-		self.show_item_name = frappe.defaults.get_global_default('item_naming_by') != "Item Name"
-		self.show_customer_name = frappe.defaults.get_global_default('cust_master_name') == "Naming Series"
+	def get_select_fields_and_joins(self):
+		select_fields, joins = super().get_select_fields_and_joins()
 
-	def run(self):
-		self.get_data()
-		self.prepare_data()
-		self.get_chart_data()
-		self.data = self.get_grouped_data()
-		self.get_columns()
+		select_fields += [
+			"wo.print_order",
+			"wo.production_item as design_item",
+			"wo.item_name as design_item_name",
+			"wo.fabric_item",
+			"wo.fabric_item_name",
+			"wo.process_item",
+			"wo.process_item_name",
+			"pro.softener_item",
+			"pro.softener_item_name",
+			"im.net_weight_per_unit",
+			"im.weight_uom",
+			"ste.fabric_printer",
+		]
 
-		return self.columns, self.data, None, self.chart_data
+		joins.append("inner join `tabPrint Order` pro on pro.name = wo.print_order")
+
+		joins.remove("left join `tabItem` im ON im.name = wo.production_item")
+		joins.append("left join `tabItem` im ON im.name = wo.fabric_item")
+
+		return select_fields, joins
 
 	def get_data(self):
-		conditions = self.get_conditions()
-
-		self.data = frappe.db.sql("""
-			SELECT se.name as stock_entry, se.posting_date, se.posting_time,
-				timestamp(se.posting_date, se.posting_time) as posting_dt,
-				se.work_order, se.fabric_printer, se.fg_completed_qty as qty,
-				wo.print_order, wo.stock_uom as uom,
-				wo.customer, wo.customer_name,
-				wo.production_item as design_item, wo.item_name as design_item_name,
-				wo.process_item, wo.process_item_name,
-				wo.fabric_item, wo.fabric_item_name,
-				pro.softener_item, pro.softener_item_name,
-				item.net_weight_per_unit, item.weight_uom
-			FROM `tabStock Entry` se
-			INNER JOIN `tabWork Order` wo ON wo.name = se.work_order
-			INNER JOIN `tabPrint Order` pro ON pro.name = wo.print_order
-			LEFT JOIN `tabItem` item ON item.name = wo.fabric_item
-			WHERE se.docstatus = 1
-				AND se.posting_date between %(from_date)s AND %(to_date)s
-				AND se.purpose = 'Manufacture'
-				{conditions}
-			ORDER BY se.posting_date, se.posting_time, se.fabric_printer
-		""".format(conditions=conditions), self.filters, as_dict=1)
+		super().get_data()
 
 		self.fabric_items = list(set([d.fabric_item for d in self.data]))
 		self.square_meter_conversion = {}
@@ -69,35 +60,16 @@ class PrintProductionRegister:
 			""", [self.fabric_items]))
 
 	def get_conditions(self):
-		conditions = []
-
-		if self.filters.company:
-			conditions.append("se.company = %(company)s")
-
-		if self.filters.customer:
-			conditions.append("wo.customer = %(customer)s")
+		conditions = super().get_conditions()
 
 		if self.filters.fabric_item:
 			conditions.append("wo.fabric_item = %(fabric_item)s")
 
 		if self.filters.fabric_material:
-			conditions.append("item.fabric_material = %(fabric_material)s")
+			conditions.append("im.fabric_material = %(fabric_material)s")
 
 		if self.filters.fabric_type:
-			conditions.append("item.fabric_type = %(fabric_type)s")
-
-		if self.filters.get("customer_provided_items"):
-			if self.filters.get("customer_provided_items") == "Customer Provided Fabrics Only":
-				conditions.append("item.is_customer_provided_item = 1")
-			elif self.filters.get("customer_provided_items") == "Exclude Customer Provided Fabrics":
-				conditions.append("item.is_customer_provided_item = 0")
-
-		if self.filters.print_order:
-			if isinstance(self.filters.print_order, str):
-				self.filters.print_order = cstr(self.filters.print_order).strip()
-				self.filters.print_order = [d.strip() for d in self.filters.print_order.split(',') if d]
-
-			conditions.append("wo.print_order in %(print_order)s")
+			conditions.append("im.fabric_type = %(fabric_type)s")
 
 		if self.filters.process_item:
 			conditions.append("wo.process_item = %(process_item)s")
@@ -106,17 +78,20 @@ class PrintProductionRegister:
 			conditions.append("pro.softener_item = %(softener_item)s")
 
 		if self.filters.fabric_printer:
-			conditions.append("se.fabric_printer = %(fabric_printer)s")
+			conditions.append("ste.fabric_printer = %(fabric_printer)s")
 
-		return "AND {}".format(" AND ".join(conditions)) if conditions else ""
+		if self.filters.print_order:
+			if isinstance(self.filters.print_order, str):
+				self.filters.print_order = cstr(self.filters.print_order).strip()
+				self.filters.print_order = [d.strip() for d in self.filters.print_order.split(',') if d]
+
+			conditions.append("wo.print_order in %(print_order)s")
+
+		return conditions
 
 	def prepare_data(self):
+		super().prepare_data()
 		for d in self.data:
-			d.disable_item_formatter = 1
-
-			d.reference_type = "Stock Entry"
-			d.reference = d.stock_entry
-
 			d.length = d.qty * get_uom_conv_factor(d.uom, "Meter")
 
 			if self.square_meter_conversion.get(d.fabric_item):
@@ -125,84 +100,34 @@ class PrintProductionRegister:
 			if d.net_weight_per_unit:
 				d.net_weight = flt(d.net_weight_per_unit) * flt(d.qty) * get_uom_conv_factor(d.weight_uom, "Kg")
 
-	def get_grouped_data(self):
-		data = self.data
-
-		self.group_by = [None]
-		for i in range(3):
-			group_label = self.filters.get("group_by_" + str(i + 1), "").replace("Group by ", "")
-
-			if group_label:
-				self.group_by.append(scrub(group_label))
-
-		if len(self.group_by) <= 1:
-			return data
-
-		return group_report_data(data, self.group_by, calculate_totals=self.calculate_group_totals,
-			totals_only=self.filters.totals_only)
-
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
-		totals = frappe._dict()
+		totals = super().calculate_group_totals(data, group_field, group_value, grouped_by)
 
-		# Copy grouped by into total row
-		for f, g in grouped_by.items():
-			totals[f] = g
+		if totals.get("print_order") and data:
+			totals.customer = data[0].get("customer")
+			totals.process_item = data[0].get("process_item")
+			totals.fabric_item = data[0].get("fabric_item")
+			totals.softener_item = data[0].get("softener_item")
 
-		# Sum
-		uoms = set()
-		sum_fields = ['length', 'area', 'net_weight']
-		for d in data:
-			for f in sum_fields:
-				totals[f] = flt(totals.get(f)) + flt(d.get(f))
+		if totals.get("fabric_item"):
+			totals["fabric_item_name"] = data[0].fabric_item_name
 
-			uoms.add(d.uom)
+		if totals.get("process_item"):
+			totals["process_item_name"] = data[0].process_item_name
 
-		if len(uoms) == 1:
-			totals.uom = list(uoms)[0]
+		if totals.get("softener_item"):
+			totals["softener_item_name"] = data[0].softener_item_name
 
-		if data:
-			if 'print_order' in grouped_by:
-				totals.customer = data[0].get('customer')
-				totals.process_item = data[0].get('process_item')
-				totals.fabric_item = data[0].get('fabric_item')
-				totals.softener_item = data[0].get('softener_item')
-
-		group_reference_doctypes = {
-			"process_item": "Item",
-			"fabric_item": "Item",
-			"softener_item": "Item",
-		}
-
-		# set reference field
-		reference_field = group_field[0] if isinstance(group_field, (list, tuple)) else group_field
-		reference_dt = group_reference_doctypes.get(reference_field, unscrub(cstr(reference_field)))
-
-		totals['reference_type'] = reference_dt
-		if not group_field:
-			totals['reference'] = "'Total'"
-		elif not reference_dt:
-			totals['reference'] = "'{0}'".format(grouped_by.get(reference_field))
-		else:
-			totals['reference'] = grouped_by.get(reference_field)
-
-		if not group_field and self.group_by == [None]:
-			totals['reference'] = "'Total'"
-
-		totals['disable_item_formatter'] = cint(self.show_item_name)
-
-		if totals.get('fabric_item'):
-			totals['fabric_item_name'] = data[0].fabric_item_name
-
-		if totals.get('process_item'):
-			totals['process_item_name'] = data[0].process_item_name
-
-		if totals.get('softener_item'):
-			totals['softener_item_name'] = data[0].softener_item_name
-
-		if totals.get('customer'):
-			totals['customer_name'] = data[0].customer_name
+		if totals.get("customer"):
+			totals["customer_name"] = data[0].customer_name
 
 		return totals
+
+	def fieldname_to_doctype(self, fieldname):
+		if fieldname in ("fabric_item", "process_item", "softener_item", "design_item"):
+			return "Item"
+
+		return super().fieldname_to_doctype(fieldname)
 
 	def get_chart_data(self):
 		dates = []
@@ -256,19 +181,6 @@ class PrintProductionRegister:
 				"width": 90
 			},
 			{
-				"label": _("Printer"),
-				"fieldname": "fabric_printer",
-				"fieldtype": "Link",
-				"options": "Fabric Printer",
-				"width": 80
-			},
-			{
-				"label": _("Process"),
-				"fieldname": "process_item_name",
-				"fieldtype": "Data",
-				"width": 100
-			},
-			{
 				"label": _("Length (Meter)"),
 				"fieldname": "length",
 				"fieldtype": "Float",
@@ -285,6 +197,19 @@ class PrintProductionRegister:
 				"fieldname": "net_weight",
 				"fieldtype": "Float",
 				"width": 100
+			},
+			{
+				"label": _("Process"),
+				"fieldname": "process_item_name",
+				"fieldtype": "Data",
+				"width": 100
+			},
+			{
+				"label": _("Printer"),
+				"fieldname": "fabric_printer",
+				"fieldtype": "Link",
+				"options": "Fabric Printer",
+				"width": 80
 			},
 			{
 				"label": _("Print Order"),
@@ -377,8 +302,13 @@ class PrintProductionRegister:
 			if self.filters.totals_only:
 				# potential empty columns
 				exclude_columns = exclude_columns.union({
-					'posting_dt', 'work_order', 'design_item', 'design_item_name', 'customer', 'customer_name',
-					'fabric_item', 'fabric_item_name', 'print_order', 'process_item_name', 'fabric_printer'
+					'posting_dt', 'print_order',
+					'work_order', 'stock_entry', 'fabric_printer',
+					'design_item', 'design_item_name',
+					'fabric_item', 'fabric_item_name',
+					'process_item', 'process_item_name',
+					'softener_item', 'softener_item_name',
+					'customer', 'customer_name',
 				})
 
 				if "customer" in self.group_by:
@@ -393,6 +323,7 @@ class PrintProductionRegister:
 					exclude_columns.remove('print_order')
 
 				if "process_item" in self.group_by:
+					exclude_columns.remove('process_item')
 					exclude_columns.remove('process_item_name')
 
 				if "fabric_printer" in self.group_by:

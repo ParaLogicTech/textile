@@ -111,46 +111,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Settings",
-   "link_count": 3,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Fabric Printing Settings",
-   "link_count": 0,
-   "link_to": "Fabric Printing Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Print Process Rule",
-   "link_count": 0,
-   "link_to": "Print Process Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Print Pricing Rule",
-   "link_count": 0,
-   "link_to": "Print Pricing Rule",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Production",
-   "link_count": 6,
+   "link_count": 4,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
@@ -196,29 +159,10 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Print Production Register",
-   "link_count": 0,
-   "link_to": "Print Production Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Coating Production Register",
-   "link_count": 0,
-   "link_to": "Coating Production Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 0,
    "label": "Fulfilment",
-   "link_count": 6,
+   "link_count": 4,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
@@ -264,29 +208,10 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Fabric Delivery Register",
-   "link_count": 0,
-   "link_to": "Fabric Delivery Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Fabric Packing List",
-   "link_count": 0,
-   "link_to": "Fabric Packing List",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
-   "link_count": 3,
+   "link_count": 6,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
@@ -312,6 +237,85 @@
   },
   {
    "hidden": 0,
+   "is_query_report": 1,
+   "label": "Print Production Register",
+   "link_count": 0,
+   "link_to": "Print Production Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Coating Production Register",
+   "link_count": 0,
+   "link_to": "Coating Production Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Fabric Packing List",
+   "link_count": 0,
+   "link_to": "Fabric Packing List",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Fabric Delivery Register",
+   "link_count": 0,
+   "link_to": "Fabric Delivery Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fabric Printing Settings",
+   "link_count": 0,
+   "link_to": "Fabric Printing Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Process Rule",
+   "link_count": 0,
+   "link_to": "Print Process Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Print Pricing Rule",
+   "link_count": 0,
+   "link_to": "Print Pricing Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
    "is_query_report": 0,
    "label": "Textile Email Digest",
    "link_count": 0,
@@ -321,7 +325,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-05-18 06:00:09.952615",
+ "modified": "2026-10-30 15:07:21.111112",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",
