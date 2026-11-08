@@ -70,6 +70,12 @@ class SalesOrderDP(SalesOrder):
 
 		return super().get_skip_delivery_note(row)
 
+	def update_item_price_for_row(self, row, price_list, new_rate, party_type=None, party=None):
+		if frappe.get_cached_value("Item", row.item_code, "textile_item_type") == "Printed Design":
+			return
+
+		super().update_item_price_for_row(row, price_list, new_rate, party_type, party)
+
 
 def override_sales_order_dashboard(data):
 	from textile.utils import override_sales_transaction_dashboard
