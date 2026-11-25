@@ -78,7 +78,7 @@ class TextileEmailDigest(Document):
 			now=not is_background,
 			with_container=self.with_container,
 			unsubscribe_message=_("Unsubscribe"),
-			notification_type="Textile Email Digest",
+			notification_key="Textile Email Digest",
 		)
 
 	@frappe.whitelist()
