@@ -1,8 +1,8 @@
 ## Textile ERP App for ERPNext
 
-The Textile App is a manufacturing workspace for [ERPNext](https://github.com/frappe/erpnext) that adds workflows and
-customizations for the textile manufacturing process. It is built and maintained by [ParaLogic](https://paralogic.io)
-and is in production use at textile manufacturers.
+The Textile App is a manufacturing workspace for [ERPNext](https://github.com/ParaLogicTech/erpnext) that adds
+workflows and customizations for the textile manufacturing process. It is built and maintained by
+[ParaLogic](https://paralogic.io) and is in production use at textile manufacturers.
 
 The app workflow and design principle puts the user first, where only minimal user input is required to ensure that
 production process and stock levels stay in sync in real-time.
@@ -34,8 +34,8 @@ Unique BOM concept for highly accurate stock consumptions.
 - **Print Process Rules** pick the process, coating and softener items from the fabric's material and type.
 
 ### 2. Greige fabric pre-treatment ☀️
-Adds a **Pretreatment Order** DocType with process steps for pre-treatment of greige fabrics: singeing, desizing,
-scouring, bleaching and washing.
+Adds a **Pretreatment Order** DocType with process steps for pre-treatment of greige fabrics, e.g. singeing,
+desizing and bleaching.
 - Independent BOMs and operation tracking for each process step.
 - Accurate WIP stock for each process step.
 - **Pretreatment Process Rules** pick the item for each step from the fabric's material and type.
